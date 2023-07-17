@@ -36,11 +36,15 @@ namespace po = boost::program_options;
 
 bool report_stats = true;
 
+enum class Method {
+	Doubling, BlindProbe
+};
+
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
-uint32_t compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
+std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
 													const size_t data_aligned_dim, const unsigned L, Distance* D){
-	if(L*4 > densities.size()) return densities.size(); // why?
+	// if(L*4 > densities.size()) return densities.size(); // why?
 	
 	parlay::sequence<Tvec_point<T>*> start_points;
 	start_points.push_back(data[query_id]);
@@ -54,8 +58,9 @@ uint32_t compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t quer
 	uint32_t dep_ptr = densities.size();
 	for(unsigned i=0; i<L; i++){
 		const auto [id, dist] = beamElts[i];
+		if (id == query_id) continue;
 		// if(id == densities.size()) break;
-		if(densities[id] > query_density){
+		if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
 			if(dist < minimum_dist){
 				minimum_dist = dist;
 				dep_ptr = id;
@@ -65,11 +70,47 @@ uint32_t compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t quer
 	if(dep_ptr == densities.size()){
 		return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L*2, D);
 	}
-	return dep_ptr;
+	return {dep_ptr, minimum_dist};
+}
+
+
+// v, i, densities, data_aligned_dim, Lnn, index
+template<class T>
+std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
+													const size_t data_aligned_dim, const unsigned L, Distance* D){
+	// if(L*4 > densities.size()) return densities.size(); // why?
+	
+	parlay::sequence<Tvec_point<T>*> start_points;
+	start_points.push_back(data[query_id]);
+	auto [pairElts, dist_cmps] = beam_search_blind_probe<T, T>(data[query_id], data, densities,
+																					start_points, L, data_aligned_dim, D);
+	auto [beamElts, visitedElts] = pairElts;
+
+	double query_density = densities[query_id];
+	T* query_ptr = data[query_id]->coordinates.begin();
+	float minimum_dist = std::numeric_limits<float>::max();
+	uint32_t dep_ptr = densities.size();
+	for(unsigned i=0; i<L; i++){
+		const auto [id, dist] = beamElts[i];
+		if (id == query_id) continue;
+		// if(id == densities.size()) break;
+		if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
+			if(dist < minimum_dist){
+				minimum_dist = dist;
+				dep_ptr = id;
+			}
+		} else {
+			std::cout << "Internal error: blind probe retuned invalid points \n.";
+		}
+	}
+	if(dep_ptr == densities.size()){
+		return compute_dep_ptr_blind_probe(data, query_id, densities, data_aligned_dim, L*2, D);
+	}
+	return {dep_ptr, minimum_dist};
 }
 
 void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned num_threads, const std::string& data_path, 
-         const std::string& output_path, const unsigned Lbuild=100, const unsigned max_degree=64, const float alpha=1.2){
+         const std::string& output_path, const std::string& decision_graph_path, const unsigned Lbuild, const unsigned max_degree, const float alpha, Method method ){
 	using std::chrono::high_resolution_clock;
   using std::chrono::duration_cast;
   using std::chrono::duration;
@@ -142,18 +183,28 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
   t.next("Compute density");
 
 
-  std::vector<uint32_t> dep_ptrs(data_num);
-  parlay::parallel_for(0, data_num, [&](size_t i) {
-    dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Lnn, D);
-  });
+  std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+	if (method == Method::Doubling){
+		parlay::parallel_for(0, data_num, [&](size_t i) {
+			dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Lnn, D);
+		});
+	} else if (method == Method::BlindProbe){
+		parlay::parallel_for(0, data_num, [&](size_t i) {
+			dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Lnn, D);
+		});
+	} else {
+		std::cout << "Error: method not implemented " << std::endl;
+		exit(1);
+	}
+
 
   aligned_free(data);
 	t.next("Compute dependent points");
 
   union_find<int> UF(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
-		if(dep_ptrs[i] != densities.size())
-			UF.link(i, dep_ptrs[i]);
+		if(dep_ptrs[i].first != densities.size())
+			UF.link(i, dep_ptrs[i].first);
 	});
 	std::vector<int> cluster(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
@@ -169,23 +220,33 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
     	}
     	fout.close();
 	}
+
+	if(decision_graph_path != ""){    	
+    	std::ofstream fout(decision_graph_path);
+    	for (size_t i = 0; i < data_num; i++){
+    		fout << densities[i] << " " << dep_ptrs[i].second << '\n';
+    	}
+    }
 }
 
 
 
 
 int main(int argc, char** argv){
-	std::string query_file, output_file;
+	std::string query_file, output_file, decision_graph_path;
 
 	// TODO: change to use parse_command_line.h
 	po::options_description desc{"Arguments"};
  	try {
 	    desc.add_options()("query_file",
                        po::value<std::string>(&query_file)->required(),
-                       "Query file in binary format");
+                       "Query file");
 	    desc.add_options()("output_file",
                        po::value<std::string>(&output_file)->default_value(""),
-                       "Output file in binary format");
+                       "Output cluster file");
+			desc.add_options()("decision_graph_path",
+                       po::value<std::string>(&decision_graph_path)->default_value(""),
+                       "Output decision_graph_path");
 	    po::variables_map vm;
 	    po::store(po::parse_command_line(argc, argv, desc), vm);
     	if (vm.count("help")) {
@@ -205,5 +266,7 @@ int main(int argc, char** argv){
   const unsigned max_degree = 4;
   const float alpha = 1.2;
 
-	dpc(K, L, Lnn, num_threads, query_file, output_file, Lbuild, max_degree, alpha);
+	Method method = Method::Doubling;
+
+	dpc(K, L, Lnn, num_threads, query_file, output_file, decision_graph_path, Lbuild, max_degree, alpha, method);
 }
