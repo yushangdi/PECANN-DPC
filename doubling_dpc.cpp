@@ -149,7 +149,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
   t.next("Load data.");
 
   using findex = knn_index<T>;
-  findex I(max_degree, Lbuild, alpha, data_aligned_dim, D);
+  findex I(max_degree, Lbuild, alpha, data_dim, D);
   // I.find_approx_medoid(v);
   parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
           return static_cast<int>(i);});
