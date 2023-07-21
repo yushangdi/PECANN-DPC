@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include "ParlayANN/algorithms/vamana/neighbors.h"
+#include "ParlayANN/algorithms/utils/parse_files.h"
 // #include "ParlayANN/algorithms/vamana/index.h"
 // #include "ParlayANN/algorithms/utils/types.h"
 // #include "ParlayANN/algorithms/utils/beamSearch.h"
@@ -138,6 +139,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
     points[i].id = i; 
     points[i].coordinates = parlay::make_slice(start, end);  
   });
+	add_null_graph(points, max_degree);
   auto v = parlay::tabulate(data_num, [&] (size_t i) -> Tvec_point<T>* {
       return &points[i];});
 
@@ -148,11 +150,17 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
 
   using findex = knn_index<T>;
   findex I(max_degree, Lbuild, alpha, data_aligned_dim, D);
-  I.find_approx_medoid(v);
+  // I.find_approx_medoid(v);
   parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
           return static_cast<int>(i);});
   I.build_index(v, inserts);
   t.next("Built index");
+
+	std::cout << v[8]->out_nbh[0] << std::endl;
+	if(v[8]->out_nbh[0] == -1){
+		std::cout << "node 9 does not have any neighbor\n";
+		exit(1);
+	}
 
   if(report_stats){
     auto [avg_deg, max_deg] = graph_stats(v);
@@ -263,7 +271,7 @@ int main(int argc, char** argv){
   const unsigned Lnn = 2;
   const unsigned num_threads = 8;
   const unsigned Lbuild = 12; 
-  const unsigned max_degree = 4;
+  const unsigned max_degree = 16;
   const float alpha = 1.2;
 
 	Method method = Method::Doubling;

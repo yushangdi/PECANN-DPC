@@ -7,7 +7,9 @@ SRCS = doubling_dpc.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = doubling_dpc
 
-.PHONY: all clean
+DEBUG_CXXFLAGS = -std=c++17 -DPARLAY_SEQUENTIAL -mcx16 -pthread -march=native -g -O0 -DDEBUG   # Debug-specific flags
+
+.PHONY: all clean debug
 
 all: $(TARGET)
 
@@ -16,6 +18,9 @@ $(TARGET): $(OBJS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+debug: CXXFLAGS = $(DEBUG_CXXFLAGS)   # Add debug flags to CXXFLAGS for the debug target
+debug: $(TARGET)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
