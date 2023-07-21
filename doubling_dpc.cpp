@@ -190,15 +190,27 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
   });
   t.next("Compute density");
 
+	Tvec_point<T>** max_density_point = parlay::max_element(v, [&densities](Tvec_point<T>* a, Tvec_point<T>* b){
+		if(densities[a->id] == densities[b->id]){
+			return a->id < b->id;
+		}
+		return densities[a->id] < densities[b->id];
+	});
+	auto max_point_id = max_density_point[0]->id;
 
   std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+	dep_ptrs[max_point_id] = {data_num, -1};
 	if (method == Method::Doubling){
 		parlay::parallel_for(0, data_num, [&](size_t i) {
+			if (i != max_point_id){
 			dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Lnn, D);
+			}
 		});
 	} else if (method == Method::BlindProbe){
 		parlay::parallel_for(0, data_num, [&](size_t i) {
+			if (i != max_point_id){
 			dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Lnn, D);
+			}
 		});
 	} else {
 		std::cout << "Error: method not implemented " << std::endl;
