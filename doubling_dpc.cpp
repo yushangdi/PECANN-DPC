@@ -41,6 +41,19 @@ enum class Method {
 	Doubling, BlindProbe
 };
 
+namespace {
+	void report(double time, std::string str) {
+    std::ios::fmtflags cout_settings = std::cout.flags();
+    std::cout.precision(4);
+    std::cout << std::fixed;
+    // std::cout << name << ": ";
+    if (str.length() > 0)
+      std::cout << str << ": ";
+    std::cout << time << std::endl;
+    std::cout.flags(cout_settings);
+  }
+}
+
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
@@ -117,7 +130,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
   using std::chrono::duration;
   using std::chrono::microseconds;
   using T = float;
-  parlay::internal::timer t("DPC",report_stats);
+  parlay::internal::timer t("DPC");
 
   Distance* D = new Euclidian_Distance();
 
@@ -154,13 +167,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
   parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
           return static_cast<int>(i);});
   I.build_index(v, inserts);
-  t.next("Built index");
-
-	std::cout << v[8]->out_nbh[0] << std::endl;
-	if(v[8]->out_nbh[0] == -1){
-		std::cout << "node 9 does not have any neighbor\n";
-		exit(1);
-	}
+	double build_time = t.next_time();
+  report(build_time, "Built index");
 
   if(report_stats){
     auto [avg_deg, max_deg] = graph_stats(v);
@@ -188,7 +196,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
 			densities[i] =  1/distance;
 		}
   });
-  t.next("Compute density");
+	double density_time = t.next_time();
+  report(density_time, "Compute density");
 
 	Tvec_point<T>** max_density_point = parlay::max_element(v, [&densities](Tvec_point<T>* a, Tvec_point<T>* b){
 		if(densities[a->id] == densities[b->id]){
@@ -216,10 +225,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
 		std::cout << "Error: method not implemented " << std::endl;
 		exit(1);
 	}
-
-
   aligned_free(data);
-	t.next("Compute dependent points");
+	double dependent_time = t.next_time();
+	report(dependent_time, "Compute dependent points");
 
   union_find<int> UF(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
@@ -230,8 +238,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
 	parlay::parallel_for(0, densities.size(), [&](int i){
 		cluster[i] = UF.find(i);
 	});
-
-	t.next("Find clusters");
+	double cluster_time = t.next_time();
+	report(cluster_time, "Find clusters");
+	report(build_time + density_time + dependent_time + cluster_time, "Total");
 
     if(output_path != ""){
     	std::ofstream fout(output_path);
@@ -242,6 +251,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const unsigned 
 	}
 
 	if(decision_graph_path != ""){    	
+		std::cout << "writing decision graph\n";
     	std::ofstream fout(decision_graph_path);
     	for (size_t i = 0; i < data_num; i++){
     		fout << densities[i] << " " << dep_ptrs[i].second << '\n';
