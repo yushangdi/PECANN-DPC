@@ -22,4 +22,7 @@ for i in range(len(data)):
 		data[i, 1] = max_dist
 
 sns.scatterplot(x=data[:, 0], y=data[:, 1])
+plt.xlabel("density")
+plt.ylabel("distance to denpendent point")
 plt.savefig('decision_graph.png')
+print("done")
