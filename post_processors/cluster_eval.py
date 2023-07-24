@@ -4,6 +4,7 @@ from collections import Counter
 import sklearn
 from sklearn import metrics
 import os
+import json
 import sys
 
 assert(len(sys.argv) >= 3)
@@ -23,15 +24,15 @@ with open(cluster_path, 'r') as file:
 
 label_counter = Counter(labels)
 pred_counter = Counter(preds)
-print('labels', label_counter)
-print('preds', pred_counter)
+print('groud truth', label_counter)
+print('clustering', pred_counter)
 TP_count = 0
 for label, label_count in label_counter.items():
 	ids = np.argwhere(labels == label)[:,0]
 	pred, pred_count = stats.mode(preds[ids], axis=None, keepdims=False)
-	print(label, pred)
+	# print(label, pred)
 	if pred_count / (label_count + pred_counter[pred] - pred_count) > 0.5 :
-		print('pass', label, pred)
+		# print('pass', label, pred)
 		TP_count += 1
 
 recall50 = TP_count / len(label_counter)
@@ -50,9 +51,10 @@ result = {}
 result['recall50'] = recall50
 result['precision50'] = precision50
 result['AMI'] = AMI
-result['Arand'] = Arand
+result['ARI'] = Arand
 result['completeness'] = completeness
 result['homogeneity'] = homogeneity
 
-print(result)
+pretty_json = json.dumps(result, indent=4)
+print(pretty_json)
 
