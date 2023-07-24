@@ -42,6 +42,11 @@ struct union_find {
   // to smaller vertex).
   // Does not use ranks.
   void link(vertex u, vertex v) {
+    if(u < v){
+      auto tmp = u;
+      u = v;
+      v = tmp;
+    }
     parents[u] = v;
   }
 };

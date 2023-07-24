@@ -45,6 +45,29 @@ std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair
 	return cluster;
 }
 
+template<class T>
+void bruteforce_dependent_point(const unsigned threshold, const std::size_t data_num, const parlay::sequence<unsigned>& sorted_points,
+																	const parlay::sequence<Tvec_point<T>>& points,
+ 																	const std::vector<T>& densities, std::vector<std::pair<uint32_t, double>>& dep_ptrs, const float density_cutoff,
+																	Distance* D, const size_t data_dim){
+	parlay::parallel_for(0, threshold, [&] (size_t ii) {
+		float m_dist = std::numeric_limits<float>::max();
+		size_t id = data_num;
+		auto i = sorted_points[ii];
+		if (densities[i] > density_cutoff){ // skip noise points
+			for(size_t jj=0; jj<ii; jj++){
+				auto j = sorted_points[jj];
+				auto dist = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
+				if(dist <= m_dist){
+					m_dist = dist;
+					id = j;
+				}
+			}
+		}
+		dep_ptrs[i] = {id, m_dist};
+	});
+}
+
 void dpc_bruteforce(const unsigned K, const std::string& data_path, float density_cutoff, float distance_cutoff,
          const std::string& output_path, const std::string& decision_graph_path){
   using T = float;
@@ -77,6 +100,11 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
   report(density_time, "Compute density");
 
 	std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+	// auto sorted_points= parlay::sequence<unsigned>::from_function(data_num, [](unsigned i){return i;});
+	//  parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
+	// 	return densities[i] > densities[j]  || (densities[i] == densities[j] && i > j);
+	// });
+	// bruteforce_dependent_point(data_num, data_num, sorted_points, points, densities, dep_ptrs, density_cutoff, D, data_dim);
 	parlay::parallel_for(0, data_num, [&] (size_t i) {
 		float m_dist = std::numeric_limits<float>::max();
 		size_t id = data_num;

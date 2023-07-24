@@ -15,6 +15,10 @@ num_cluster = -1
 if (len(sys.argv) > 2):
 	num_cluster = int(sys.argv[2])
 
+suffix = ""
+if (len(sys.argv) > 3):
+	suffix = sys.argv[3]
+
 print(f'reading decision_graph from {decision_graph_path}')
 
 with open(decision_graph_path, 'r') as file:
@@ -51,9 +55,13 @@ if i != -1:
 	else:
 			print("num_cluster+1th largest value doesn't exist.", num_cluster)
 
+top_indices = np.argsort(data[:, 1])[::-1][:num_cluster]
+for idx in top_indices:
+		x, y = data[idx]
+		plt.text(x, y, f'ID:{idx}', ha='right', va='bottom')
 
 
 plt.xlabel("density")
 plt.ylabel("distance to denpendent point")
-plt.savefig('results/decision_graph.png')
+plt.savefig('results/decision_graph%s.png' % suffix)
 print("done")

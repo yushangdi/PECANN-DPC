@@ -182,6 +182,14 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	double density_time = t.next_time();
   report(density_time, "Compute density");
 
+	// sort in desending order
+	auto sorted_points= parlay::sequence<unsigned>::from_function(data_num, [](unsigned i){return i;});
+	// parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
+	// 	return densities[i] > densities[j]  || (densities[i] == densities[j] && i > j);
+	// });
+	// auto max_point_id = sorted_points[0];
+	// unsigned threshold = log(data_num);
+
 	Tvec_point<T>** max_density_point = parlay::max_element(v, [&densities](Tvec_point<T>* a, Tvec_point<T>* b){
 		if(densities[a->id] == densities[b->id]){
 			return a->id < b->id;
@@ -189,12 +197,19 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 		return densities[a->id] < densities[b->id];
 	});
 	auto max_point_id = max_density_point[0]->id;
+	unsigned threshold = 0;
 
   std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+
+	//compute the top log n density points using bruteforce
+	std::cout << "threshold: " << threshold << std::endl;
+	bruteforce_dependent_point(0, threshold, sorted_points, points, densities, dep_ptrs, density_cutoff, D, data_dim);
+
 	std::vector<unsigned> num_rounds(data_num, 0);
 	dep_ptrs[max_point_id] = {data_num, -1};
 	if (method == Method::Doubling){
-		parlay::parallel_for(0, data_num, [&](size_t i) {
+		parlay::parallel_for(threshold, data_num, [&](size_t j) {
+			auto i = sorted_points[j];
 			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
 				unsigned Li = Lnn;
 				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Li, D);
@@ -202,7 +217,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 			}
 		});
 	} else if (method == Method::BlindProbe){
-		parlay::parallel_for(0, data_num, [&](size_t i) {
+		parlay::parallel_for(threshold, data_num, [&](size_t j) {
+			auto i = sorted_points[j];
 			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
 				unsigned Li = Lnn;
 				dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
@@ -223,7 +239,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	report(build_time + density_time + dependent_time + cluster_time, "Total");
 
 	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
-	// writeVectorToFile(num_rounds, "results/num_rounds.txt");
+	writeVectorToFile(num_rounds, "results/num_rounds.txt");
 }
 
 }
