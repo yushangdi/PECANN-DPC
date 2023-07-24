@@ -12,7 +12,7 @@ cluster_n = int(sys.argv[1])
 approx_n = int(sys.argv[2])
 
 cluster_sizes = []
-
+plot = True
 
 with open("./data/gaussian_%s_%s.data" % (cluster_n, approx_n), 'w') as f:
 	for i in range(cluster_n):
@@ -25,12 +25,14 @@ with open("./data/gaussian_%s_%s.data" % (cluster_n, approx_n), 'w') as f:
 		ys = np.random.normal(my, 2, n)
 		lines = [f'{str(x)} {str(y)}\n' for x, y in zip(xs, ys)]
 		f.writelines(lines)
-		sns.scatterplot(x = xs, y = ys)
+		if plot:
+			sns.scatterplot(x = xs, y = ys)
 
 
 with open('./data/gaussian_%s_%s.gt'  % (cluster_n, approx_n), 'w') as f:
 	for i, cluster_size in enumerate(cluster_sizes):
 		f.writelines([f'{str(i+1)}\n' for j in range(cluster_size)])
 
-plt.savefig("./data/gaussian_%s_%s.png" % (cluster_n, approx_n))
+if plot:
+	plt.savefig("./data/gaussian_%s_%s.png" % (cluster_n, approx_n))
 print("done")
