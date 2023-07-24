@@ -5,6 +5,9 @@ import sys
 
 assert(len(sys.argv) >= 2)
 
+# first arg is the path to decision graph input data, the second arg is the number of clusters. 
+# The number that separates the ith and i+1th largest y values is plotted.
+
 decision_graph_path = sys.argv[1]
 
 num_cluster = -1
