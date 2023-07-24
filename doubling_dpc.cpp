@@ -30,16 +30,13 @@
 #include "parlay/internal/get_time.h"
 
 #include "union_find.h"
-
+#include "methods.h"
 
 // g++ -std=c++17 -O3 -DHOMEGROWN -mcx16 -pthread -march=native -DNDEBUG -IParlayANN/parlaylib/include doubling_dpc.cpp -I/home/ubuntu/boost_1_82_0 -o doubling_dpc -lboost_program_options
 namespace po = boost::program_options;
 
 bool report_stats = true;
 
-enum class Method {
-	Doubling, BlindProbe
-};
 
 namespace {
 	void report(double time, std::string str) {
@@ -356,9 +353,11 @@ int main(int argc, char** argv){
   unsigned int Lbuild = 12; 
   unsigned int max_degree = 16;
   float alpha = 1.2;
+	Method method = Method::Doubling;
 
-	po::options_description desc("Allowed options");
+	po::options_description desc("DPC");
     desc.add_options()
+				("help", "produce help message")
         ("K", po::value<unsigned int>(&K)->default_value(6), "the number of nearest neighbor used for computing the density.")
         ("L", po::value<unsigned int>(&L)->default_value(12), "L value used for density computation.")
         ("Lnn", po::value<unsigned int>(&Lnn)->default_value(2), "the starting Lnn value used for dependent point computation.")
@@ -371,27 +370,47 @@ int main(int argc, char** argv){
         ("density_cutoff", po::value<float>(&density_cutoff)->default_value(0), "Density below which points are treated as noise")
         ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
         ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
+				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
     ;
 
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        if (vm.count("help")) {
+            std::cout << desc << std::endl;
+            return 0;
+        }
+        po::notify(vm);
+    } catch(const po::error &e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        if (vm.count("help") || argc == 1) {
+            std::cout << desc << "\n";
+            return 0;
+        }
         return 1;
     }
 
-
-	Method method = Method::Doubling;
-
+	std::cout << "query_file=" << query_file << "\n";
+	std::cout << "output_file=" << output_file << "\n";
+	std::cout << "decision_graph_path=" << decision_graph_path << "\n";
+	std::cout << "density_cutoff=" << density_cutoff << "\n";
+	std::cout << "dist_cutoff=" << dist_cutoff << "\n";
 	std::cout << "num_thread: " << parlay::num_workers() << std::endl;
 
 	if(bruteforce){
-		std::cout << "using brute force\n";
+		std::cout << "method= brute force\n";
 		dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, 
 	    output_file, decision_graph_path);
 	} else {
+
+    std::cout << "method= " << method << std::endl;
+    std::cout << "K=" << K << "\n";
+    std::cout << "L=" << L << "\n";
+    std::cout << "Lnn=" << Lnn << "\n";
+    std::cout << "Lbuild=" << Lbuild << "\n";
+    std::cout << "max_degree=" << max_degree << "\n";
+    std::cout << "alpha=" << alpha << "\n";
+
 		dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, 
 				output_file, decision_graph_path, Lbuild, max_degree, alpha, method);
 	}
