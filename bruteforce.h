@@ -30,7 +30,8 @@ namespace DPC {
 template<class T>
 std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair<uint32_t, double>>& dep_ptrs, 
 																float density_cutoff, float dist_cutoff){
-  union_find<int> UF(densities.size());
+  // union_find<int> UF(densities.size());
+	ParUF<int> UF(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
 		if(dep_ptrs[i].first != densities.size()){ // the max density point
 			if(densities[i] > density_cutoff && dep_ptrs[i].second <= dist_cutoff){
