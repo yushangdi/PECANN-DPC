@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <vector>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>  // For boost::to_lower
 
@@ -86,5 +88,20 @@ void output(const std::vector<T>& densities, const std::vector<int>& cluster, co
     	}
     }
 }
+
+template<typename T>
+void writeVectorToFile(const std::vector<T>& vec, const std::string& filepath) {
+    std::ofstream outFile(filepath);
+    if (!outFile) {
+        std::cerr << "Error opening file: " << filepath << std::endl;
+        return;
+    }
+    for (const T& item : vec) {
+        outFile << item << '\n';
+    }
+    outFile.close();
+}
+
+
 
 }

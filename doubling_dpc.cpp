@@ -36,7 +36,7 @@ namespace DPC {
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
-													const size_t data_aligned_dim, const unsigned L, Distance* D){
+													const size_t data_aligned_dim, unsigned& L, Distance* D){
 	// if(L*4 > densities.size()) return densities.size(); // why?
 	
 	parlay::sequence<Tvec_point<T>*> start_points;
@@ -61,7 +61,8 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 		}
 	}
 	if(dep_ptr == densities.size()){
-		return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L*2, D);
+		L *= 2;
+		return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L, D);
 	}
 	return {dep_ptr, minimum_dist};
 }
@@ -70,7 +71,7 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
-													const size_t data_aligned_dim, const unsigned L, Distance* D){
+													const size_t data_aligned_dim, unsigned& L, Distance* D){
 	// if(L*4 > densities.size()) return densities.size(); // why?
 	
 	parlay::sequence<Tvec_point<T>*> start_points;
@@ -97,7 +98,8 @@ std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_po
 		}
 	}
 	if(dep_ptr == densities.size()){
-		return compute_dep_ptr_blind_probe(data, query_id, densities, data_aligned_dim, L*2, D);
+		L *= 2;
+		return compute_dep_ptr_blind_probe(data, query_id, densities, data_aligned_dim, L, D);
 	}
 	return {dep_ptr, minimum_dist};
 }
@@ -189,17 +191,22 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	auto max_point_id = max_density_point[0]->id;
 
   std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+	std::vector<unsigned> num_rounds(data_num, 0);
 	dep_ptrs[max_point_id] = {data_num, -1};
 	if (method == Method::Doubling){
 		parlay::parallel_for(0, data_num, [&](size_t i) {
 			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
-			dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Lnn, D);
+				unsigned Li = Lnn;
+				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Li, D);
+				num_rounds[i] = Li;
 			}
 		});
 	} else if (method == Method::BlindProbe){
 		parlay::parallel_for(0, data_num, [&](size_t i) {
 			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
-			dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Lnn, D);
+				unsigned Li = Lnn;
+				dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
+				num_rounds[i] = Li;
 			}
 		});
 	} else {
@@ -216,6 +223,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	report(build_time + density_time + dependent_time + cluster_time, "Total");
 
 	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
+	// writeVectorToFile(num_rounds, "results/num_rounds.txt");
 }
 
 }
