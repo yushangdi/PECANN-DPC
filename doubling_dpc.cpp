@@ -13,14 +13,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "ParlayANN/algorithms/vamana/neighbors.h"
-#include "ParlayANN/algorithms/utils/parse_files.h"
-// #include "ParlayANN/algorithms/vamana/index.h"
-// #include "ParlayANN/algorithms/utils/types.h"
-// #include "ParlayANN/algorithms/utils/beamSearch.h"
-// #include "ParlayANN/algorithms/utils/stats.h"
-
-
 #include "IO.h"
 
 #include "parlay/parallel.h"
@@ -30,7 +22,8 @@
 #include "parlay/internal/get_time.h"
 
 #include "union_find.h"
-#include "methods.h"
+#include "utils.h"
+#include "bruteforce.h"
 
 // g++ -std=c++17 -O3 -DHOMEGROWN -mcx16 -pthread -march=native -DNDEBUG -IParlayANN/parlaylib/include doubling_dpc.cpp -I/home/ubuntu/boost_1_82_0 -o doubling_dpc -lboost_program_options
 namespace po = boost::program_options;
@@ -38,19 +31,8 @@ namespace po = boost::program_options;
 bool report_stats = true;
 
 
-namespace {
-	void report(double time, std::string str) {
-    std::ios::fmtflags cout_settings = std::cout.flags();
-    std::cout.precision(4);
-    std::cout << std::fixed;
-    // std::cout << name << ": ";
-    if (str.length() > 0)
-      std::cout << str << ": ";
-    std::cout << time << std::endl;
-    std::cout.flags(cout_settings);
-  }
-}
 
+namespace DPC {
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
@@ -145,105 +127,6 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
   });
 }
 
-template<class T>
-void output(const std::vector<T>& densities, const std::vector<int>& cluster, const std::vector<std::pair<uint32_t, double>>& dep_ptrs, 
-						const std::string& output_path, const std::string& decision_graph_path){
-    if(output_path != ""){
-    	std::ofstream fout(output_path);
-    	for (size_t i = 0; i < cluster.size(); i++){
-    		fout << cluster[i] << std::endl;
-    	}
-    	fout.close();
-	}
-
-	if(decision_graph_path != ""){    	
-		std::cout << "writing decision graph\n";
-    	std::ofstream fout(decision_graph_path);
-    	for (size_t i = 0; i < densities.size(); i++){
-    		fout << densities[i] << " " << dep_ptrs[i].second << '\n';
-    	}
-    }
-}
-
-template<class T>
-std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair<uint32_t, double>>& dep_ptrs, 
-																float density_cutoff, float dist_cutoff){
-  union_find<int> UF(densities.size());
-	parlay::parallel_for(0, densities.size(), [&](int i){
-		if(dep_ptrs[i].first != densities.size()){ // the max density point
-			if(densities[i] > density_cutoff && dep_ptrs[i].second <= dist_cutoff){
-				UF.link(i, dep_ptrs[i].first);
-			}
-		}
-	});
-	std::vector<int> cluster(densities.size());
-	parlay::parallel_for(0, densities.size(), [&](int i){
-		cluster[i] = UF.find(i);
-	});
-	return cluster;
-}
-
-void dpc_bruteforce(const unsigned K, const std::string& data_path, float density_cutoff, float distance_cutoff,
-         const std::string& output_path, const std::string& decision_graph_path){
-  using T = float;
-	T* data = nullptr;
-	size_t data_num, data_dim, data_aligned_dim;
-	load_text_file(data_path, data, data_num, data_dim,
-                               data_aligned_dim);
-	std::cout<<"data_num: "<<data_num<<std::endl;
-
-  auto points = parlay::sequence<Tvec_point<T>>(data_num);
-  parlay::parallel_for(0, data_num, [&] (size_t i) {
-    T* start = data + (i * data_aligned_dim);
-    T* end = data + ((i+1) * data_aligned_dim);
-    points[i].id = i; 
-    points[i].coordinates = parlay::make_slice(start, end);  
-  });
-  Distance* D = new Euclidian_Distance();
-
-  parlay::internal::timer t("DPC");
-
-	std::vector<float> densities(data_num);
-	parlay::parallel_for(0, data_num, [&] (size_t i) {
-		std::vector<float> dists(data_num);
-		for(size_t j=0; j<data_num; j++) dists[j] = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
-		std::nth_element(dists.begin(), dists.begin()+K-1, dists.end());
-		densities[i] = 1/dists[K-1];
-	}, 1);
-
-	double density_time = t.next_time();
-  report(density_time, "Compute density");
-
-	std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
-	parlay::parallel_for(0, data_num, [&] (size_t i) {
-		float m_dist = std::numeric_limits<float>::max();
-		size_t id = data_num;
-		for(size_t j=0; j<data_num; j++){
-			if(densities[j] > densities[i] || (densities[j] == densities[i] && j > i)){
-				auto dist = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
-				if(dist <= m_dist){
-					m_dist = dist;
-					id = j;
-				}
-			}
-
-		}
-		dep_ptrs[i] = {id, m_dist};
-	}, 1);
-  aligned_free(data);
-	double dependent_time = t.next_time();
-	report(dependent_time, "Compute dependent points");
-
-
-	const auto& cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff);
-	double cluster_time = t.next_time();
-	report(cluster_time, "Find clusters");
-	report(density_time + dependent_time + cluster_time, "Total");
-
-	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
-}
-
-
 
 void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::string& data_path, float density_cutoff, float distance_cutoff,
          const std::string& output_path, const std::string& decision_graph_path, const unsigned Lbuild, const unsigned max_degree, const float alpha, Method method ){
@@ -276,15 +159,10 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	add_null_graph(points, max_degree);
   auto v = parlay::tabulate(data_num, [&] (size_t i) -> Tvec_point<T>* {
       return &points[i];});
-
-	// auto density_query_pts = parlay::tabulate(data_num, [&] (size_t i) -> Tvec_point<T>* {
-  //     return &points[i];});
-
   t.next("Load data.");
 
   using findex = knn_index<T>;
   findex I(max_degree, Lbuild, alpha, data_dim, D);
-  // I.find_approx_medoid(v);
   parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
           return static_cast<int>(i);});
   I.build_index(v, inserts);
@@ -340,10 +218,10 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
 }
 
-
-
+}
 
 int main(int argc, char** argv){
+	using Method = DPC::Method;
 	std::string query_file, output_file, decision_graph_path;
 	float density_cutoff, dist_cutoff;
 	bool bruteforce = false;
@@ -399,7 +277,7 @@ int main(int argc, char** argv){
 
 	if(bruteforce){
 		std::cout << "method= brute force\n";
-		dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, 
+		DPC::dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, 
 	    output_file, decision_graph_path);
 	} else {
 
@@ -411,7 +289,7 @@ int main(int argc, char** argv){
     std::cout << "max_degree=" << max_degree << "\n";
     std::cout << "alpha=" << alpha << "\n";
 
-		dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, 
+		DPC::dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, 
 				output_file, decision_graph_path, Lbuild, max_degree, alpha, method);
 	}
 
