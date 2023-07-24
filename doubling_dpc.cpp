@@ -204,6 +204,8 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
   });
   Distance* D = new Euclidian_Distance();
 
+  parlay::internal::timer t("DPC");
+
 	std::vector<float> densities(data_num);
 	parlay::parallel_for(0, data_num, [&] (size_t i) {
 		std::vector<float> dists(data_num);
@@ -211,6 +213,9 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 		std::nth_element(dists.begin(), dists.begin()+K-1, dists.end());
 		densities[i] = 1/dists[K-1];
 	}, 1);
+
+	double density_time = t.next_time();
+  report(density_time, "Compute density");
 
 	std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
 		for(size_t i=0; i<data_num; i++) {
@@ -230,9 +235,16 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 		}
 		dep_ptrs[i] = {id, m_dist};
 	}
+  aligned_free(data);
+	double dependent_time = t.next_time();
+	report(dependent_time, "Compute dependent points");
 
 
 	const auto& cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff);
+	double cluster_time = t.next_time();
+	report(cluster_time, "Find clusters");
+	report(density_time + dependent_time + cluster_time, "Total");
+
 	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
 }
 
@@ -384,6 +396,7 @@ int main(int argc, char** argv){
 	Method method = Method::Doubling;
 
 	if(bruteforce){
+		std::cout << "using brute force\n";
 		dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, 
 	    output_file, decision_graph_path);
 	} else {
