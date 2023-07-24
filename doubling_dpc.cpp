@@ -49,7 +49,7 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 	T* query_ptr = data[query_id]->coordinates.begin();
 	float minimum_dist = std::numeric_limits<float>::max();
 	uint32_t dep_ptr = densities.size();
-	for(unsigned i=0; i<L; i++){
+	for(unsigned i=0; i<beamElts.size(); i++){
 		const auto [id, dist] = beamElts[i];
 		if (id == query_id) continue;
 		// if(id == densities.size()) break;
@@ -83,7 +83,7 @@ std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_po
 	T* query_ptr = data[query_id]->coordinates.begin();
 	float minimum_dist = std::numeric_limits<float>::max();
 	uint32_t dep_ptr = densities.size();
-	for(unsigned i=0; i<L; i++){
+	for(unsigned i=0; i<beamElts.size(); i++){
 		const auto [id, dist] = beamElts[i];
 		if (id == query_id) continue;
 		// if(id == densities.size()) break;
