@@ -31,5 +31,4 @@ Evaluate clustering
 Running bruteforce exact method:
 ```bash
 ./doubling_dpc --query_file ./data/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000_bruteforce.dg --output_file ./results/gaussian_4_1000_bruteforce.cluster --dist_cutoff 95 --bruteforce true
-using brute force
 ```

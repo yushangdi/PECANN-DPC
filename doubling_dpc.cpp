@@ -218,23 +218,21 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
   report(density_time, "Compute density");
 
 	std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
-		for(size_t i=0; i<data_num; i++) {
-		std::vector<float> dists(data_num, std::numeric_limits<float>::max());
-		// TODO: skip noise points
-		for(size_t j=0; j<data_num; j++){ 
-			if(densities[j] > densities[i] || (densities[j] == densities[i] && j < i))
-				dists[j] = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
-		}
+	parlay::parallel_for(0, data_num, [&] (size_t i) {
 		float m_dist = std::numeric_limits<float>::max();
 		size_t id = data_num;
 		for(size_t j=0; j<data_num; j++){
-			if(dists[j] <= m_dist){
-				m_dist = dists[j];
-				id = j;
+			if(densities[j] > densities[i] || (densities[j] == densities[i] && j > i)){
+				auto dist = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
+				if(dist <= m_dist){
+					m_dist = dist;
+					id = j;
+				}
 			}
+
 		}
 		dep_ptrs[i] = {id, m_dist};
-	}
+	}, 1);
   aligned_free(data);
 	double dependent_time = t.next_time();
 	report(dependent_time, "Compute dependent points");
@@ -363,7 +361,7 @@ int main(int argc, char** argv){
     desc.add_options()
         ("K", po::value<unsigned int>(&K)->default_value(6), "the number of nearest neighbor used for computing the density.")
         ("L", po::value<unsigned int>(&L)->default_value(12), "L value used for density computation.")
-        ("Lnn", po::value<unsigned int>(&Lnn)->default_value(2), "Lnn value used for dependent point computation.")
+        ("Lnn", po::value<unsigned int>(&Lnn)->default_value(2), "the starting Lnn value used for dependent point computation.")
         ("Lbuild", po::value<unsigned int>(&Lbuild)->default_value(12), "Retain closest Lbuild number of nodes during the greedy search of construction.")
         ("max_degree", po::value<unsigned int>(&max_degree)->default_value(16), "max_degree value used for constructing the graph.")
         ("alpha", po::value<float>(&alpha)->default_value(1.2), "alpha value")
@@ -386,6 +384,8 @@ int main(int argc, char** argv){
 
 
 	Method method = Method::Doubling;
+
+	std::cout << "num_thread: " << parlay::num_workers() << std::endl;
 
 	if(bruteforce){
 		std::cout << "using brute force\n";
