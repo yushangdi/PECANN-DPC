@@ -14,7 +14,8 @@ mkdir results
 
 plot decision graph:
 ```bash
-python3 post_processors/plot_decision_graph.py results/gaussian_4_1000.dg 
+python3 post_processors/plot_decision_graph.py results/gaussian_4_1000.dg 4 
+python3 post_processors/plot_decision_graph.py results/gaussian_4_1000_bruteforce.dg 4 2
 ```
 
 Write cluster result

@@ -46,6 +46,8 @@ std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair
 	return cluster;
 }
 
+// Compute the dependent points for sorted_points[0:threshold). `data_num` is the default value is dependent point does not exist.
+// sorted_points have to be sorted in descending density order. Only search [:i] for point i.
 template<class T>
 void bruteforce_dependent_point(const unsigned threshold, const std::size_t data_num, const parlay::sequence<unsigned>& sorted_points,
 																	const parlay::sequence<Tvec_point<T>>& points,
@@ -65,6 +67,30 @@ void bruteforce_dependent_point(const unsigned threshold, const std::size_t data
 				}
 			}
 		}
+		dep_ptrs[i] = {id, m_dist};
+	});
+}
+
+// Compute the dependent points for unfinished_points. `data_num` is the default value is dependent point does not exist.
+// search through all points in points
+template<class T>
+void bruteforce_dependent_point_all(const std::size_t data_num, const parlay::sequence<unsigned>& unfinished_points,
+																	const parlay::sequence<Tvec_point<T>>& points,
+ 																	const std::vector<T>& densities, std::vector<std::pair<uint32_t, double>>& dep_ptrs, 
+																	Distance* D, const size_t data_dim){
+	parlay::parallel_for(0, unfinished_points.size(), [&] (size_t ii) {
+		float m_dist = std::numeric_limits<float>::max();
+		size_t id = data_num;
+		auto i = unfinished_points[ii];
+			for(size_t j=0; j<points.size(); j++){
+				if(densities[j] > densities[i] || (densities[j] == densities[i] && j > i)){
+					auto dist = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
+					if(dist <= m_dist){
+						m_dist = dist;
+						id = j;
+					}
+				}
+			}
 		dep_ptrs[i] = {id, m_dist};
 	});
 }

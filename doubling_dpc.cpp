@@ -45,7 +45,11 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 	uint32_t dep_ptr;
 	float minimum_dist;
 
-	while(true){
+	if(round_limit == -1){
+		round_limit = densities.size(); // effectively no limit on round.
+	}
+
+	for(int round = 0; round < round_limit; ++round){
 		auto [pairElts, dist_cmps] = beam_search<T>(data[query_id], data, 
 																						start_points, L, data_aligned_dim, D);
 		auto [beamElts, visitedElts] = pairElts;
@@ -194,43 +198,55 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
   report(density_time, "Compute density");
 
 	// sort in desending order
-	auto sorted_points= parlay::sequence<unsigned>::from_function(data_num, [](unsigned i){return i;});
-	parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
-		return densities[i] > densities[j]  || (densities[i] == densities[j] && i > j);
-	});
-	auto max_point_id = sorted_points[0];
-	unsigned threshold = log(data_num);
-
-	// Tvec_point<T>** max_density_point = parlay::max_element(v, [&densities](Tvec_point<T>* a, Tvec_point<T>* b){
-	// 	if(densities[a->id] == densities[b->id]){
-	// 		return a->id < b->id;
-	// 	}
-	// 	return densities[a->id] < densities[b->id];
+	// auto sorted_points= parlay::sequence<unsigned>::from_function(data_num, [](unsigned i){return i;});
+	// parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
+	// 	return densities[i] > densities[j]  || (densities[i] == densities[j] && i > j);
 	// });
-	// auto max_point_id = max_density_point[0]->id;
-	// unsigned threshold = 0;
+	// auto max_point_id = sorted_points[0];
+	// unsigned threshold = log(data_num);
+
+	Tvec_point<T>** max_density_point = parlay::max_element(v, [&densities](Tvec_point<T>* a, Tvec_point<T>* b){
+		if(densities[a->id] == densities[b->id]){
+			return a->id < b->id;
+		}
+		return densities[a->id] < densities[b->id];
+	});
+	auto max_point_id = max_density_point[0]->id;
+	unsigned threshold = 0;
 
   std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
-
+	// dep_ptrs[max_point_id] = {data_num, -1};
+	parlay::parallel_for(0, data_num, [&](size_t i) {dep_ptrs[i] = {data_num, -1};});
+	auto unfinished_points= parlay::sequence<unsigned>::from_function(data_num, [](unsigned i){return i;});
+	unfinished_points = parlay::filter(unfinished_points, [&](size_t i){
+				return i!= max_point_id && densities[i] > density_cutoff; // skip noise points
+	});
 	//compute the top log n density points using bruteforce
-	std::cout << "threshold: " << threshold << std::endl;
+	// std::cout << "threshold: " << threshold << std::endl;
 	// bruteforce_dependent_point(0, data_num, sorted_points, points, densities, dep_ptrs, density_cutoff, D, data_dim);
-	bruteforce_dependent_point(threshold, data_num, sorted_points, points, densities, dep_ptrs, density_cutoff, D, data_dim);
+	// bruteforce_dependent_point(threshold, data_num, sorted_points, points, densities, dep_ptrs, density_cutoff, D, data_dim);
 
-	std::vector<unsigned> num_rounds(data_num, 0);
-	dep_ptrs[max_point_id] = {data_num, -1};
+	std::vector<unsigned> num_rounds(data_num, Lnn); // the L used when dependent point is found.
 	if (method == Method::Doubling){
-		parlay::parallel_for(threshold, data_num, [&](size_t j) {
-			auto i = sorted_points[j];
-			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
-				unsigned Li = Lnn;
-				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, Li, D);
-				num_rounds[i] = Li;
-			}
-		});
+		int round_limit = 4;
+		while(unfinished_points.size() > 300){
+			parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
+				// auto i = sorted_points[j];
+				auto i = unfinished_points[j];
+					dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, num_rounds[i], D, round_limit);
+				// }
+			});
+			unfinished_points = parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i){
+				return dep_ptrs[i].first == data_num;
+			});
+			std::cout << "number: " << unfinished_points.size() << std::endl;
+		}
+		std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
+		bruteforce_dependent_point_all(data_num, unfinished_points, points, densities, dep_ptrs, D, data_dim);
 	} else if (method == Method::BlindProbe){
 		parlay::parallel_for(threshold, data_num, [&](size_t j) {
-			auto i = sorted_points[j];
+			// auto i = sorted_points[j];
+			auto i = unfinished_points[j];
 			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
 				unsigned Li = Lnn;
 				dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
@@ -263,7 +279,7 @@ int main(int argc, char** argv){
 	bool bruteforce = false;
   unsigned int K = 6;
   unsigned int L = 12;
-  unsigned int Lnn = 2;
+  unsigned int Lnn = 4;
   unsigned int Lbuild = 12; 
   unsigned int max_degree = 16;
   float alpha = 1.2;
@@ -274,7 +290,7 @@ int main(int argc, char** argv){
 				("help", "produce help message")
         ("K", po::value<unsigned int>(&K)->default_value(6), "the number of nearest neighbor used for computing the density.")
         ("L", po::value<unsigned int>(&L)->default_value(12), "L value used for density computation.")
-        ("Lnn", po::value<unsigned int>(&Lnn)->default_value(2), "the starting Lnn value used for dependent point computation.")
+        ("Lnn", po::value<unsigned int>(&Lnn)->default_value(4), "the starting Lnn value used for dependent point computation.")
         ("Lbuild", po::value<unsigned int>(&Lbuild)->default_value(12), "Retain closest Lbuild number of nodes during the greedy search of construction.")
         ("max_degree", po::value<unsigned int>(&max_degree)->default_value(16), "max_degree value used for constructing the graph.")
         ("alpha", po::value<float>(&alpha)->default_value(1.2), "alpha value")

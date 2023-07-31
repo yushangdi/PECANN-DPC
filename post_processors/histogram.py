@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def read_results_from_file(filepath):
     with open(filepath, 'r') as f:
@@ -15,3 +16,6 @@ def plot_histogram(data):
 if __name__ == "__main__":
     results = read_results_from_file("results/num_rounds.txt")  # Change filename if different
     plot_histogram(results)
+    top_indices = np.argsort(results)[::-1][:10]
+    for idx in top_indices:
+        print(idx, results[idx])
