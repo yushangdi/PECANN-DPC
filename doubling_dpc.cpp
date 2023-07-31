@@ -36,34 +36,45 @@ namespace DPC {
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
-													const size_t data_aligned_dim, unsigned& L, Distance* D){
+													const size_t data_aligned_dim, unsigned& L, Distance* D, int round_limit = -1){
 	// if(L*4 > densities.size()) return densities.size(); // why?
 	
 	parlay::sequence<Tvec_point<T>*> start_points;
 	start_points.push_back(data[query_id]);
-	auto [pairElts, dist_cmps] = beam_search<T>(data[query_id], data, 
-																					start_points, L, data_aligned_dim, D);
-	auto [beamElts, visitedElts] = pairElts;
 
-	double query_density = densities[query_id];
-	T* query_ptr = data[query_id]->coordinates.begin();
-	float minimum_dist = std::numeric_limits<float>::max();
-	uint32_t dep_ptr = densities.size();
-	for(unsigned i=0; i<beamElts.size(); i++){
-		const auto [id, dist] = beamElts[i];
-		if (id == query_id) continue;
-		// if(id == densities.size()) break;
-		if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
-			if(dist < minimum_dist){
-				minimum_dist = dist;
-				dep_ptr = id;
+	uint32_t dep_ptr;
+	float minimum_dist;
+
+	while(true){
+		auto [pairElts, dist_cmps] = beam_search<T>(data[query_id], data, 
+																						start_points, L, data_aligned_dim, D);
+		auto [beamElts, visitedElts] = pairElts;
+
+		double query_density = densities[query_id];
+		T* query_ptr = data[query_id]->coordinates.begin();
+		minimum_dist = std::numeric_limits<float>::max();
+		dep_ptr = densities.size();
+		for(unsigned i=0; i<beamElts.size(); i++){
+			const auto [id, dist] = beamElts[i];
+			if (id == query_id) continue;
+			// if(id == densities.size()) break;
+			if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
+				if(dist < minimum_dist){
+					minimum_dist = dist;
+					dep_ptr = id;
+				}
 			}
 		}
-	}
-	if(dep_ptr == densities.size()){
+		if(dep_ptr != densities.size()){
+			break;
+		}
 		L *= 2;
-		return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L, D);
 	}
+
+	// if(dep_ptr == densities.size()){
+	// 	L *= 2;
+	// 	return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L, D);
+	// }
 	return {dep_ptr, minimum_dist};
 }
 
