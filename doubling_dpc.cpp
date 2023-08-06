@@ -21,6 +21,9 @@
 #include "parlay/slice.h"
 #include "parlay/internal/get_time.h"
 
+#include "ParlayANN/algorithms/utils/beamSearch.h"
+#include "ParlayANN/algorithms/utils/NSGDist.h"
+
 #include "union_find.h"
 #include "utils.h"
 #include "bruteforce.h"
@@ -84,40 +87,40 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 
 
 // v, i, densities, data_aligned_dim, Lnn, index
-template<class T>
-std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
-													const size_t data_aligned_dim, unsigned& L, Distance* D){
-	// if(L*4 > densities.size()) return densities.size(); // why?
+// template<class T>
+// std::pair<uint32_t, double> compute_dep_ptr_blind_probe(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
+// 													const size_t data_aligned_dim, unsigned& L, Distance* D){
+// 	// if(L*4 > densities.size()) return densities.size(); // why?
 	
-	parlay::sequence<Tvec_point<T>*> start_points;
-	start_points.push_back(data[query_id]);
-	auto [pairElts, dist_cmps] = beam_search_blind_probe<T, T>(data[query_id], data, densities,
-																					start_points, L, data_aligned_dim, D);
-	auto [beamElts, visitedElts] = pairElts;
+// 	parlay::sequence<Tvec_point<T>*> start_points;
+// 	start_points.push_back(data[query_id]);
+// 	auto [pairElts, dist_cmps] = beam_search_blind_probe<T, T>(data[query_id], data, densities,
+// 																					start_points, L, data_aligned_dim, D);
+// 	auto [beamElts, visitedElts] = pairElts;
 
-	double query_density = densities[query_id];
-	T* query_ptr = data[query_id]->coordinates.begin();
-	float minimum_dist = std::numeric_limits<float>::max();
-	uint32_t dep_ptr = densities.size();
-	for(unsigned i=0; i<beamElts.size(); i++){
-		const auto [id, dist] = beamElts[i];
-		if (id == query_id) continue;
-		// if(id == densities.size()) break;
-		if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
-			if(dist < minimum_dist){
-				minimum_dist = dist;
-				dep_ptr = id;
-			}
-		} else {
-			std::cout << "Internal error: blind probe retuned invalid points \n.";
-		}
-	}
-	if(dep_ptr == densities.size()){
-		L *= 2;
-		return compute_dep_ptr_blind_probe(data, query_id, densities, data_aligned_dim, L, D);
-	}
-	return {dep_ptr, minimum_dist};
-}
+// 	double query_density = densities[query_id];
+// 	T* query_ptr = data[query_id]->coordinates.begin();
+// 	float minimum_dist = std::numeric_limits<float>::max();
+// 	uint32_t dep_ptr = densities.size();
+// 	for(unsigned i=0; i<beamElts.size(); i++){
+// 		const auto [id, dist] = beamElts[i];
+// 		if (id == query_id) continue;
+// 		// if(id == densities.size()) break;
+// 		if(densities[id] > query_density || (densities[id] == query_density && id > query_id)){
+// 			if(dist < minimum_dist){
+// 				minimum_dist = dist;
+// 				dep_ptr = id;
+// 			}
+// 		} else {
+// 			std::cout << "Internal error: blind probe retuned invalid points \n.";
+// 		}
+// 	}
+// 	if(dep_ptr == densities.size()){
+// 		L *= 2;
+// 		return compute_dep_ptr_blind_probe(data, query_id, densities, data_aligned_dim, L, D);
+// 	}
+// 	return {dep_ptr, minimum_dist};
+// }
 
 
 template<class T>
@@ -132,7 +135,7 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
     auto [pairElts, dist_cmps] = beam_search(v[i], v, 
 																						start_points, beamSizeQ, data_aligned_dim, D, K);
     auto [beamElts, visitedElts] = pairElts;
-		auto less = [&](pid a, pid b) {
+		auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first); };
 		auto sorted_nn = parlay::sort(beamElts, less);
 		T distance = sorted_nn[K].second;
@@ -243,16 +246,16 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 		}
 		std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
 		bruteforce_dependent_point_all(data_num, unfinished_points, points, densities, dep_ptrs, D, data_dim);
-	} else if (method == Method::BlindProbe){
-		parlay::parallel_for(threshold, data_num, [&](size_t j) {
-			// auto i = sorted_points[j];
-			auto i = unfinished_points[j];
-			if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
-				unsigned Li = Lnn;
-				dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
-				num_rounds[i] = Li;
-			}
-		});
+	// } else if (method == Method::BlindProbe){
+	// 	parlay::parallel_for(threshold, data_num, [&](size_t j) {
+	// 		// auto i = sorted_points[j];
+	// 		auto i = unfinished_points[j];
+	// 		if (i != max_point_id && densities[i] > density_cutoff){ // skip noise points
+	// 			unsigned Li = Lnn;
+	// 			dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
+	// 			num_rounds[i] = Li;
+	// 		}
+	// 	});
 	} else {
 		std::cout << "Error: method not implemented " << std::endl;
 		exit(1);
