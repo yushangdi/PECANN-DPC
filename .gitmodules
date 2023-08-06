@@ -4,3 +4,6 @@
 [submodule "DiskANN"]
 	path = DiskANN
 	url = git@github.com:michaelyhuang23/DiskANN.git
+[submodule "ParDPC"]
+	path = ParDPC
+	url = https://github.com/yushangdi/ParDPC.git
