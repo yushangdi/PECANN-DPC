@@ -119,8 +119,8 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 	parlay::parallel_for(0, data_num, [&] (size_t i) {
 		std::vector<float> dists(data_num);
 		for(size_t j=0; j<data_num; j++) dists[j] = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
-		std::nth_element(dists.begin(), dists.begin()+K-1, dists.end());
-		densities[i] = 1/dists[K-1];
+		std::nth_element(dists.begin(), dists.begin()+K, dists.end());
+		densities[i] = 1/dists[K];
 	});
 
 	double density_time = t.next_time();
