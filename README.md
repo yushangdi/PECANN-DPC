@@ -28,8 +28,8 @@ Write cluster result
 ```bash
 ./doubling_dpc --query_file ./data/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg --dist_cutoff 95 --output_file ./results/gaussian_4_1000.cluster
 ./doubling_dpc --query_file ./data/gaussian_4_10000.data --decision_graph_path ./results/gaussian_4_10000.dg --dist_cutoff 726 --output_file ./results/gaussian_4_10000.cluster --Lbuild 6
-./doubling_dpc --query_file ./data/gaussian_4_10000_128.data --decision_graph_path ./results/gaussian_4_10000_128.dg --dist_cutoff 94496 --output_file ./results/gaussian_4_10000_128.cluster --Lbuild 120
-./doubling_dpc --query_file ./data/gaussian_4_1000_128.data --decision_graph_path ./results/gaussian_4_1000_128.dg --dist_cutoff 94496 --output_file ./results/gaussian_4_1000_128.cluster --Lbuild 120
+./doubling_dpc --query_file ./data/gaussian_4_10000_128.data --decision_graph_path ./results/gaussian_4_10000_128.dg --dist_cutoff 110102 --output_file ./results/gaussian_4_10000_128.cluster --Lbuild 60
+./doubling_dpc --query_file ./data/gaussian_4_1000_128.data --decision_graph_path ./results/gaussian_4_1000_128.dg --dist_cutoff 94496 --output_file ./results/gaussian_4_1000_128.cluster --Lbuild 8
  ```
 
 Evaluate clustering

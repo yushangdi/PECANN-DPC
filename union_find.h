@@ -43,15 +43,9 @@ struct union_find {
   }
 
   // Version of union that is safe for parallelism
-  // when no cycles are created (e.g. only link from larger
-  // to smaller vertex).
+  // when no cycles are created (e.g. only link from lower density to higher density.
   // Does not use ranks.
   void link(vertex u, vertex v) {
-    if(u < v){
-      auto tmp = u;
-      u = v;
-      v = tmp;
-    }
     parents[u] = v;
   }
 };

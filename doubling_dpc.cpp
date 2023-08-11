@@ -185,7 +185,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
   findex I(max_degree, Lbuild, alpha, data_dim, D);
   parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
           return static_cast<int>(i);});
-  I.build_index(v, inserts);
+  I.build_index_multiple_starts(v, inserts, Lbuild-1); // threshold cannot exceed Lbuild-1
 	double build_time = t.next_time();
   report(build_time, "Built index");
 
