@@ -82,7 +82,7 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 	// 	L *= 2;
 	// 	return compute_dep_ptr(data, query_id, densities, data_aligned_dim, L, D);
 	// }
-	return {dep_ptr, minimum_dist};
+	return {dep_ptr, sqrt(minimum_dist)};
 }
 
 
@@ -142,7 +142,7 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 		if(distance <= 0){
 			densities[i] =  std::numeric_limits<T>::max();
 		}else{
-			densities[i] =  1.0/distance;
+			densities[i] =  1.0/sqrt(distance);
 		}
   });
 }
@@ -236,7 +236,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 			parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
 				// auto i = sorted_points[j];
 				auto i = unfinished_points[j];
-					dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, num_rounds[i], D, round_limit);
+				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, num_rounds[i], D, round_limit);
 				// }
 			});
 			unfinished_points = parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i){

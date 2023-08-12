@@ -67,7 +67,7 @@ void bruteforce_dependent_point(const unsigned threshold, const std::size_t data
 				}
 			}
 		}
-		dep_ptrs[i] = {id, m_dist};
+		dep_ptrs[i] = {id, sqrt(m_dist)};
 	});
 }
 
@@ -91,7 +91,7 @@ void bruteforce_dependent_point_all(const std::size_t data_num, const parlay::se
 					}
 				}
 			}
-		dep_ptrs[i] = {id, m_dist};
+		dep_ptrs[i] = {id, sqrt(m_dist)};
 	});
 }
 
@@ -120,7 +120,7 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 		std::vector<float> dists(data_num);
 		for(size_t j=0; j<data_num; j++) dists[j] = D->distance(points[i].coordinates.begin(), points[j].coordinates.begin(), data_dim);
 		std::nth_element(dists.begin(), dists.begin()+K, dists.end());
-		densities[i] = 1/dists[K];
+		densities[i] = 1/sqrt(dists[K]);
 	});
 
 	double density_time = t.next_time();
@@ -147,7 +147,7 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 
       }
     }
-		dep_ptrs[i] = {id, m_dist};
+		dep_ptrs[i] = {id, sqrt(m_dist)};
 	});
   aligned_free(data);
 	double dependent_time = t.next_time();
