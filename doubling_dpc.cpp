@@ -127,6 +127,7 @@ template<class T>
 void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& densities, const unsigned L, 
 												const unsigned K, const size_t data_num, const size_t data_dim, Distance* D){
 	auto beamSizeQ = L;
+	std::atomic<int> num_bruteforce = 0;
 	parlay::parallel_for(0, data_num, [&](size_t i) {
     // parlay::sequence<int> neighbors = parlay::sequence<int>(k);
 		// what is cut and limit?
@@ -136,13 +137,14 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 																						start_points, beamSizeQ, data_dim, D, K);
     auto [beamElts, visitedElts] = pairElts;
 		T distance;
-		if(beamElts.size() <= K){
+		if(beamElts.size() <= K){ // found less than K neighbors during the search
 			std::vector<float> dists(data_num);
 			parlay::parallel_for(0, data_num, [&](size_t j) {
 				dists[j] = D->distance(v[i]->coordinates.begin(), v[j]->coordinates.begin(), data_dim);
 			});
 			std::nth_element(dists.begin(), dists.begin()+K, dists.end());
 			distance = dists[K];
+			std::atomic_fetch_add(&num_bruteforce, 1);
 		} else {
 			auto less = [&](id_dist a, id_dist b) {
 				return a.second < b.second || (a.second == b.second && a.first < b.first); };
@@ -155,6 +157,7 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 			densities[i] =  1.0/sqrt(distance);
 		}
   });
+	std::cout << "num bruteforce " << num_bruteforce.load() << std::endl;
 }
 
 

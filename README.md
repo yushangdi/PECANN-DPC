@@ -71,15 +71,32 @@ wget http://cs.joensuu.fi/sipu/datasets/KDDCUP04Bio.txt
 
 S2
 ```bash
+# bruteforce
 ./doubling_dpc --query_file ./data/s_dataset/s2.txt --decision_graph_path ./results/s2_bruteforce.dg --output_file ./results/s2_bruteforce.cluster --dist_cutoff 102873 --bruteforce true
 python3 post_processors/plot_decision_graph.py results/s2_bruteforce.dg 15 s2_bruteforce
 python post_processors/cluster_eval.py ./data/s_dataset/s2-label.gt results/s2_bruteforce.cluster 
 python data_processors/plot.py data/s_dataset/s2.txt results/s2_bruteforce.cluster results/s2.png 0 1
 
-
+# ANN method
 ./doubling_dpc --query_file ./data/s_dataset/s2.txt --decision_graph_path ./results/s2.dg --output_file ./results/s2.cluster --dist_cutoff 102873
 python3 post_processors/plot_decision_graph.py results/s2.dg 15 s2
 python3 post_processors/cluster_eval.py ./data/s_dataset/s2-label.gt results/s2.cluster 
 python3 post_processors/cluster_eval.py results/s2_bruteforce.cluster results/s2.cluster 
+```
 
+
+
+S3
+```bash
+# bruteforce
+./doubling_dpc --query_file ./data/s_dataset/s3.txt --decision_graph_path ./results/s3_bruteforce.dg --output_file ./results/s3_bruteforce.cluster --dist_cutoff 102873 --bruteforce true
+python3 post_processors/plot_decision_graph.py results/s3_bruteforce.dg 15 s3_bruteforce
+python post_processors/cluster_eval.py ./data/s_dataset/s3-label.gt results/s3_bruteforce.cluster 
+python data_processors/plot.py data/s_dataset/s3.txt results/s3_bruteforce.cluster results/s3.png 0 1
+
+# ANN method
+./doubling_dpc --query_file ./data/s_dataset/s3.txt --decision_graph_path ./results/s3.dg --output_file ./results/s3.cluster --dist_cutoff 102873
+python3 post_processors/plot_decision_graph.py results/s3.dg 15 s3
+python3 post_processors/cluster_eval.py ./data/s_dataset/s3-label.gt results/s3.cluster 
+python3 post_processors/cluster_eval.py results/s3_bruteforce.cluster results/s3.cluster 
 ```
