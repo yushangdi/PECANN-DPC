@@ -39,7 +39,7 @@ namespace DPC {
 // v, i, densities, data_aligned_dim, Lnn, index
 template<class T>
 std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> data, std::size_t query_id, const std::vector<T>& densities, 
-													const size_t data_aligned_dim, unsigned& L, Distance* D, int round_limit = -1){
+													const size_t data_dim, unsigned& L, Distance* D, int round_limit = -1){
 	// if(L*4 > densities.size()) return densities.size(); // why?
 	
 	parlay::sequence<Tvec_point<T>*> start_points;
@@ -54,7 +54,7 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 
 	for(int round = 0; round < round_limit; ++round){
 		auto [pairElts, dist_cmps] = beam_search<T>(data[query_id], data, 
-																						start_points, L, data_aligned_dim, D);
+																						start_points, L, data_dim, D);
 		auto [beamElts, visitedElts] = pairElts;
 
 		double query_density = densities[query_id];
@@ -125,7 +125,7 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 
 template<class T>
 void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& densities, const unsigned L, 
-												const unsigned K, const size_t data_num, const size_t data_aligned_dim, Distance* D){
+												const unsigned K, const size_t data_num, const size_t data_dim, Distance* D){
 	auto beamSizeQ = L;
 	parlay::parallel_for(0, data_num, [&](size_t i) {
     // parlay::sequence<int> neighbors = parlay::sequence<int>(k);
@@ -133,12 +133,22 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 		parlay::sequence<Tvec_point<T>*> start_points;
     start_points.push_back(v[i]);
     auto [pairElts, dist_cmps] = beam_search(v[i], v, 
-																						start_points, beamSizeQ, data_aligned_dim, D, K);
+																						start_points, beamSizeQ, data_dim, D, K);
     auto [beamElts, visitedElts] = pairElts;
-		auto less = [&](id_dist a, id_dist b) {
-      return a.second < b.second || (a.second == b.second && a.first < b.first); };
-		auto sorted_nn = parlay::sort(beamElts, less);
-		T distance = sorted_nn[K].second;
+		T distance;
+		if(beamElts.size() <= K){
+			std::vector<float> dists(data_num);
+			parlay::parallel_for(0, data_num, [&](size_t j) {
+				dists[j] = D->distance(v[i]->coordinates.begin(), v[j]->coordinates.begin(), data_dim);
+			});
+			std::nth_element(dists.begin(), dists.begin()+K, dists.end());
+			distance = dists[K];
+		} else {
+			auto less = [&](id_dist a, id_dist b) {
+				return a.second < b.second || (a.second == b.second && a.first < b.first); };
+			auto sorted_nn = parlay::sort(beamElts, less);
+			distance = sorted_nn[K].second;
+		}
 		if(distance <= 0){
 			densities[i] =  std::numeric_limits<T>::max();
 		}else{
@@ -196,7 +206,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
   }
 
 	std::vector<T> densities(data_num);
-	compute_densities(v, densities, L, K, data_num, data_aligned_dim, D);
+	compute_densities(v, densities, L, K, data_num, data_dim, D);
 	double density_time = t.next_time();
   report(density_time, "Compute density");
 
@@ -236,7 +246,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 			parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
 				// auto i = sorted_points[j];
 				auto i = unfinished_points[j];
-				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_aligned_dim, num_rounds[i], D, round_limit);
+				dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_dim, num_rounds[i], D, round_limit);
 				// }
 			});
 			unfinished_points = parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i){

@@ -63,5 +63,5 @@ for idx in top_indices:
 
 plt.xlabel("density")
 plt.ylabel("distance to denpendent point")
-plt.savefig('results/decision_graph%s.png' % suffix)
+plt.savefig('results/decision_graph_%s.png' % suffix)
 print("done")

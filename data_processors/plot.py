@@ -1,26 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+from sklearn.preprocessing import LabelEncoder
 
+filename = sys.argv[1]
+cluster_path = sys.argv[2]
+image_path = sys.argv[3]
+d1 = int(sys.argv[4])
+d2 = int(sys.argv[5])
 
-def plot_dims(filename, i, j):
+def plot_dims(filename, d1, d2):
     # Read data
     with open(filename, 'r') as f:
         lines = f.readlines()
 
-    data = []
-    for line in lines:
-        data.append(list(map(float, line.strip().split())))
+    with open(cluster_path, 'r') as file:
+        preds = np.array([line.rstrip() for line in file])
+    encoder = LabelEncoder()
+    encoded_preds = encoder.fit_transform(preds)
+    unique_encoded = np.unique(encoded_preds)
+    unique_labels = encoder.inverse_transform(unique_encoded)
+
+    data = [list(map(float, line.strip().split())) for line in lines]
     data = np.array(data)
     
     # Plot i and j dimensions
-    plt.scatter(data[:, i-1], data[:, j-1])
-    plt.xlabel(f'Dimension {i}')
-    plt.ylabel(f'Dimension {j}')
-    plt.title(f'Plot of Dimension {i} vs Dimension {j}')
-    plt.savefig("./data/tmp.png")
+    fig = plt.scatter(data[:, d1], data[:, d2], c=encoded_preds, cmap='tab20', s = 4)
+    # for i, label in zip(unique_encoded, unique_labels):
+    #     plt.scatter(data[encoded_preds == i, d1], data[encoded_preds == i, d2], label=label, s = 4)
 
-# Test the function
-i = int(sys.argv[1])
-j = int(sys.argv[2])
-plot_dims("./data/gaussian_4_10000_128.data", i, j)
+    
+    plt.xlabel(f'Dimension {d1}')
+    plt.ylabel(f'Dimension {d2}')
+    plt.title(f'Plot of Dimension {d1} vs Dimension {d2}')
+    # plt.legend(loc='upper right')
+    plt.savefig(image_path)
+
+
+plot_dims(filename, d1, d2)
