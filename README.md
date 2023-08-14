@@ -63,10 +63,12 @@ wget http://cs.joensuu.fi/sipu/datasets/s-originals.zip
 wget http://cs.joensuu.fi/sipu/datasets/unbalance-gt-pa.zip
 ```
 
-Get KDD, no groundtruth
+Get KDD, Facial, no groundtruth
 
 ```bash
 wget http://cs.joensuu.fi/sipu/datasets/KDDCUP04Bio.txt
+wget https://archive.ics.uci.edu/static/public/317/grammatical+facial+expressions.zip
+unzip grammatical+facial+expressions.zip -d faical
 ```
 
 S2
@@ -99,4 +101,36 @@ python data_processors/plot.py data/s_dataset/s3.txt results/s3_bruteforce.clust
 python3 post_processors/plot_decision_graph.py results/s3.dg 15 s3
 python3 post_processors/cluster_eval.py ./data/s_dataset/s3-label.gt results/s3.cluster 
 python3 post_processors/cluster_eval.py results/s3_bruteforce.cluster results/s3.cluster 
+```
+
+Unbalanced
+```bash
+# bruteforce
+./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance_bruteforce.dg --output_file ./results/unbalance_bruteforce.cluster --dist_cutoff 30000 --bruteforce true
+python3 post_processors/plot_decision_graph.py results/unbalance_bruteforce.dg 8 unbalance_bruteforce
+python post_processors/cluster_eval.py ./data/unbalance.gt results/unbalance_bruteforce.cluster 
+python data_processors/plot.py data/unbalance.txt results/unbalance_bruteforce.cluster results/unbalance.png 0 1
+
+# ANN method
+./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance.dg --output_file ./results/unbalance.cluster --dist_cutoff 30000 
+python3 post_processors/plot_decision_graph.py results/unbalance.dg 8 unbalance
+python3 post_processors/cluster_eval.py ./data/unbalance.gt results/unbalance.cluster 
+python3 post_processors/cluster_eval.py results/unbalance_bruteforce.cluster results/unbalance.cluster 
+python data_processors/plot.py data/unbalance.txt results/unbalance.cluster results/unbalance.png 0 1
+```
+
+Facial
+```bash
+# bruteforce
+./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance_bruteforce.dg --output_file ./results/unbalance_bruteforce.cluster --dist_cutoff 30000 --bruteforce true
+python3 post_processors/plot_decision_graph.py results/unbalance_bruteforce.dg 8 unbalance_bruteforce
+python post_processors/cluster_eval.py ./data/unbalance.gt results/unbalance_bruteforce.cluster 
+python data_processors/plot.py data/unbalance.txt results/unbalance_bruteforce.cluster results/unbalance.png 0 1
+
+# ANN method
+./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance.dg --output_file ./results/unbalance.cluster --dist_cutoff 30000 
+python3 post_processors/plot_decision_graph.py results/unbalance.dg 8 unbalance
+python3 post_processors/cluster_eval.py ./data/unbalance.gt results/unbalance.cluster 
+python3 post_processors/cluster_eval.py results/unbalance_bruteforce.cluster results/unbalance.cluster 
+python data_processors/plot.py data/unbalance.txt results/unbalance.cluster results/unbalance.png 0 1
 ```
