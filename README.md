@@ -1,8 +1,16 @@
 # DPC-ANN
 
 
+
 Change line 3 in Makefile to the location of boost library.
 ```bash
+sudo apt-get install libboost-program-options-dev
+git submodule init
+git submodule update
+cd ParlayANN
+git submodule init
+git submodule update
+cd ../
 make
 ```
 
@@ -133,4 +141,15 @@ python3 post_processors/plot_decision_graph.py results/unbalance.dg 8 unbalance
 python3 post_processors/cluster_eval.py ./data/unbalance.gt results/unbalance.cluster 
 python3 post_processors/cluster_eval.py results/unbalance_bruteforce.cluster results/unbalance.cluster 
 python data_processors/plot.py data/unbalance.txt results/unbalance.cluster results/unbalance.png 0 1
+```
+
+
+MNIST
+```bash
+# bruteforce
+./doubling_dpc --query_file ./data/mnist.txt --decision_graph_path ./results/mnist_bruteforce.dg --output_file ./results/mnist_bruteforce.cluster --dist_cutoff 8 --bruteforce true
+python3 post_processors/plot_decision_graph.py results/mnist_bruteforce.dg 10 mnist_bruteforce
+python post_processors/cluster_eval.py ./data/mnist.gt results/mnist_bruteforce.cluster 
+python data_processors/plot.py data/mnist.txt results/mnist_bruteforce.cluster results/mnist.png 0 1
+
 ```
