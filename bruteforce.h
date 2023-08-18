@@ -29,12 +29,12 @@
 namespace DPC {
 template<class T>
 std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair<uint32_t, double>>& dep_ptrs, 
-																float density_cutoff, float dist_cutoff){
+																float density_cutoff, float dist_cutoff, float center_density_cutoff){
   // union_find<int> UF(densities.size());
 	ParUF<int> UF(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
 		if(dep_ptrs[i].first != densities.size()){ // the max density point
-			if(densities[i] > density_cutoff && dep_ptrs[i].second <= dist_cutoff){
+			if(densities[i] > density_cutoff && dep_ptrs[i].second <= dist_cutoff && densities[i] < center_density_cutoff){
 				UF.link(i, dep_ptrs[i].first);
 			}
 		}
@@ -95,7 +95,7 @@ void bruteforce_dependent_point_all(const std::size_t data_num, const parlay::se
 	});
 }
 
-void dpc_bruteforce(const unsigned K, const std::string& data_path, float density_cutoff, float distance_cutoff,
+void dpc_bruteforce(const unsigned K, const std::string& data_path, float density_cutoff, float distance_cutoff, float center_density_cutoff,
          const std::string& output_path, const std::string& decision_graph_path){
   using T = float;
 	T* data = nullptr;
@@ -154,7 +154,7 @@ void dpc_bruteforce(const unsigned K, const std::string& data_path, float densit
 	report(dependent_time, "Compute dependent points");
 
 
-	const auto& cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff);
+	const auto& cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff, center_density_cutoff);
 	double cluster_time = t.next_time();
 	report(cluster_time, "Find clusters");
 	report(density_time + dependent_time + cluster_time, "Total");

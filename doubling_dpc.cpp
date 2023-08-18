@@ -161,7 +161,7 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 }
 
 
-void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::string& data_path, float density_cutoff, float distance_cutoff,
+void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::string& data_path, float density_cutoff, float distance_cutoff, float center_density_cutoff,
          const std::string& output_path, const std::string& decision_graph_path, const unsigned Lbuild, const unsigned max_degree, const float alpha, Method method ){
 	// using std::chrono::high_resolution_clock;
   // using std::chrono::duration_cast;
@@ -277,7 +277,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	double dependent_time = t.next_time();
 	report(dependent_time, "Compute dependent points");
 
-	auto cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff);
+	auto cluster = cluster_points(densities, dep_ptrs, density_cutoff, distance_cutoff, center_density_cutoff);
 	double cluster_time = t.next_time();
 	report(cluster_time, "Find clusters");
 	report(build_time + density_time + dependent_time + cluster_time, "Total");
@@ -291,7 +291,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 int main(int argc, char** argv){
 	using Method = DPC::Method;
 	std::string query_file, output_file, decision_graph_path;
-	float density_cutoff, dist_cutoff;
+	float density_cutoff, dist_cutoff, center_density_cutoff;
 	bool bruteforce = false;
   unsigned int K = 6;
   unsigned int L = 12;
@@ -314,6 +314,7 @@ int main(int argc, char** argv){
         ("output_file", po::value<std::string>(&output_file)->default_value(""), "Output cluster file")
         ("decision_graph_path", po::value<std::string>(&decision_graph_path)->default_value(""), "Output decision_graph_path")
         ("density_cutoff", po::value<float>(&density_cutoff)->default_value(0), "Density below which points are treated as noise")
+				("center_density_cutoff", po::value<float>(&center_density_cutoff)->default_value(std::numeric_limits<float>::max()), "Density below which points are sorted into the same cluster")
         ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
         ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
 				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
@@ -340,12 +341,13 @@ int main(int argc, char** argv){
 	std::cout << "output_file=" << output_file << "\n";
 	std::cout << "decision_graph_path=" << decision_graph_path << "\n";
 	std::cout << "density_cutoff=" << density_cutoff << "\n";
+	std::cout << "center_density_cutoff=" << center_density_cutoff << "\n";
 	std::cout << "dist_cutoff=" << dist_cutoff << "\n";
 	std::cout << "num_thread: " << parlay::num_workers() << std::endl;
 
 	if(bruteforce){
 		std::cout << "method= brute force\n";
-		DPC::dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, 
+		DPC::dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, center_density_cutoff,
 	    output_file, decision_graph_path);
 	} else {
 
@@ -357,7 +359,7 @@ int main(int argc, char** argv){
     std::cout << "max_degree=" << max_degree << "\n";
     std::cout << "alpha=" << alpha << "\n";
 
-		DPC::dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, 
+		DPC::dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, center_density_cutoff,
 				output_file, decision_graph_path, Lbuild, max_degree, alpha, method);
 	}
 
