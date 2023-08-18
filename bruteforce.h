@@ -34,7 +34,7 @@ std::vector<int> cluster_points(std::vector<T>& densities, std::vector<std::pair
 	ParUF<int> UF(densities.size());
 	parlay::parallel_for(0, densities.size(), [&](int i){
 		if(dep_ptrs[i].first != densities.size()){ // the max density point
-			if(densities[i] > density_cutoff && dep_ptrs[i].second <= dist_cutoff && densities[i] < center_density_cutoff){
+			if(densities[i] > density_cutoff && (dep_ptrs[i].second <= dist_cutoff || densities[i] < center_density_cutoff)){
 				UF.link(i, dep_ptrs[i].first);
 			}
 		}

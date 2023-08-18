@@ -283,6 +283,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	report(build_time + density_time + dependent_time + cluster_time, "Total");
 
 	output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
+	std::set<int> unique_cluster_ids(cluster.begin(), cluster.end());
+	std::cout << "Num. cluster = " << unique_cluster_ids.size() << std::endl;
 	writeVectorToFile(num_rounds, "results/num_rounds.txt");
 }
 

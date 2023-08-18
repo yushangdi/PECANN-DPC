@@ -35,6 +35,17 @@ for i in range(len(data)):
 
 sns.scatterplot(x=data[:, 0], y=data[:, 1])
 
+# filtered_data = data[(data[:, 0] > 0.7) & (data[:, 1] > 3)]
+# sns.scatterplot(x=filtered_data[:, 0], y=filtered_data[:, 1])
+
+# Compute the product for each point
+products = data[:, 0] * data[:, 1]
+# Get the indices that would sort the products
+sorted_indices = np.argsort(products)
+# Get the top 10 points
+top_points = data[sorted_indices[-10:][::-1]]  # We reverse the indices to get the largest values
+sns.scatterplot(x=top_points[:, 0], y=top_points[:, 1])
+
 
 if i != -1:
 	# Extract the second column
