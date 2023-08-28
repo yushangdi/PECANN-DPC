@@ -269,7 +269,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 	std::vector<unsigned> num_rounds(data_num, Lnn); // the L used when dependent point is found.
 	if (method == Method::Doubling){
 		int round_limit = 4;
-		while(unfinished_points.size() > 300){
+		int prev_number = std::numeric_limits<int>::max();
+		while(unfinished_points.size() > 300 && prev_number > unfinished_points.size()){ // stop if unfinished_points number does not decrease
+			prev_number = unfinished_points.size();
 			parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
 				// auto i = sorted_points[j];
 				auto i = unfinished_points[j];
