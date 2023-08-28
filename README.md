@@ -153,3 +153,19 @@ python post_processors/cluster_eval.py ./data/mnist.gt results/mnist_bruteforce.
 python data_processors/plot.py data/mnist.txt results/mnist_bruteforce.cluster results/mnist.png 0 1
 
 ```
+
+## PyNNDescent
+
+`max_degree` is the k used to build the graph. We look at the 2-hop neighbors of each node in each round, and retain the k-th closeset neighbors.
+
+`Lbuild` ->cluster_size,  the leaf size of the cluster trees.
+`num_clusters`: only used for pyNNDescent. the number of cluster trees to use when initializing the graph. roughly linear with the graph constructin time.
+
+
+`alpha`: prune parameter, similar to Vamana.
+
+-Lbuild 100 -num_clusters 10
+
+Only graph construction is different. All other parts are the same.
+
+<!-- (v, k, R, beamSize, beamSizeQ, alpha, delta, qpts, groundTruth, res_file, graph_built, D) -->

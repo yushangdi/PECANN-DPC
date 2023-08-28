@@ -23,6 +23,7 @@
 
 #include "ParlayANN/algorithms/utils/beamSearch.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
+#include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
 
 #include "union_find.h"
 #include "utils.h"
@@ -125,9 +126,19 @@ std::pair<uint32_t, double> compute_dep_ptr(parlay::sequence<Tvec_point<T>*> dat
 
 template<class T>
 void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& densities, const unsigned L, 
-												const unsigned K, const size_t data_num, const size_t data_dim, Distance* D){
+												const unsigned K, const size_t data_num, const size_t data_dim, Distance* D, const GraphType graph_type){
 	auto beamSizeQ = L;
 	std::atomic<int> num_bruteforce = 0;
+	// potential TODO: add a random option. The graph search order is random if random flag is on. Should be on for pyDNN
+	// should this random just be on for all searches?
+	// size_t n = v.size();
+  // parlay::random_generator gen;
+  // std::uniform_int_distribution<long> dis(0, n-1);
+  // auto indices = parlay::tabulate(q.size(), [&](size_t i) {
+  //   auto r = gen[i];
+  //   return dis(r);
+  // });
+
 	parlay::parallel_for(0, data_num, [&](size_t i) {
     // parlay::sequence<int> neighbors = parlay::sequence<int>(k);
 		// what is cut and limit?
@@ -162,7 +173,8 @@ void compute_densities(parlay::sequence<Tvec_point<T>*>& v, std::vector<T>& dens
 
 
 void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::string& data_path, float density_cutoff, float distance_cutoff, float center_density_cutoff,
-         const std::string& output_path, const std::string& decision_graph_path, const unsigned Lbuild, const unsigned max_degree, const float alpha, Method method ){
+         const std::string& output_path, const std::string& decision_graph_path, const unsigned Lbuild, const unsigned max_degree, const float alpha, const unsigned num_clusters, 
+				 Method method, GraphType graph_type){
 	// using std::chrono::high_resolution_clock;
   // using std::chrono::duration_cast;
   // using std::chrono::duration;
@@ -194,11 +206,23 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
       return &points[i];});
   t.next("Load data.");
 
-  using findex = knn_index<T>;
-  findex I(max_degree, Lbuild, alpha, data_dim, D);
-  parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
-          return static_cast<int>(i);});
-  I.build_index_multiple_starts(v, inserts, Lbuild-1); // threshold cannot exceed Lbuild-1
+	if (graph_type == GraphType::Vamana){
+		using findex = knn_index<T>;
+		findex I(max_degree, Lbuild, alpha, data_dim, D);
+		parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
+						return static_cast<int>(i);});
+		I.build_index_multiple_starts(v, inserts, Lbuild-1); // threshold cannot exceed Lbuild-1
+	} else if (graph_type == GraphType::pyNNDescent){
+		using findex = pyNN_index<T>;
+		// .05: terminate graph construction if < .05 neighbor change is happening.
+		findex I(max_degree, data_dim, .05, D);
+		auto cluster_size = Lbuild;
+    I.build_index(v, cluster_size, num_clusters, alpha);
+	} else {
+		std::cout << "Error: method not implemented " << std::endl;
+		exit(1);
+	}
+
 	double build_time = t.next_time();
   report(build_time, "Built index");
 
@@ -209,7 +233,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
   }
 
 	std::vector<T> densities(data_num);
-	compute_densities(v, densities, L, K, data_num, data_dim, D);
+	compute_densities(v, densities, L, K, data_num, data_dim, D, graph_type);
 	double density_time = t.next_time();
   report(density_time, "Compute density");
 
@@ -290,6 +314,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 
 int main(int argc, char** argv){
 	using Method = DPC::Method;
+	using GraphType = DPC::GraphType;
 	std::string query_file, output_file, decision_graph_path;
 	float density_cutoff, dist_cutoff, center_density_cutoff;
 	bool bruteforce = false;
@@ -298,8 +323,10 @@ int main(int argc, char** argv){
   unsigned int Lnn = 4;
   unsigned int Lbuild = 12; 
   unsigned int max_degree = 16;
+	unsigned int num_clusters = 4; // only used for pyNNDescent.
   float alpha = 1.2;
 	Method method = Method::Doubling;
+	GraphType graph_type = GraphType::Vamana;
 
 	po::options_description desc("DPC");
     desc.add_options()
@@ -310,6 +337,7 @@ int main(int argc, char** argv){
         ("Lbuild", po::value<unsigned int>(&Lbuild)->default_value(12), "Retain closest Lbuild number of nodes during the greedy search of construction.")
         ("max_degree", po::value<unsigned int>(&max_degree)->default_value(16), "max_degree value used for constructing the graph.")
         ("alpha", po::value<float>(&alpha)->default_value(1.2), "alpha value")
+				("num_clusters", po::value<unsigned int>(&num_clusters)->default_value(4), "number of clusters, only used for pyNNDescent graph method.")
         ("query_file", po::value<std::string>(&query_file)->required(), "Data set file")
         ("output_file", po::value<std::string>(&output_file)->default_value(""), "Output cluster file")
         ("decision_graph_path", po::value<std::string>(&decision_graph_path)->default_value(""), "Output decision_graph_path")
@@ -318,6 +346,8 @@ int main(int argc, char** argv){
         ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
         ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
 				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
+				("graph_type", po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana), "Graph type(Vamana or pyNNDescent). Only works when bruteforce=false.")
+
     ;
 
     po::variables_map vm;
@@ -350,17 +380,20 @@ int main(int argc, char** argv){
 		DPC::dpc_bruteforce(K, query_file, density_cutoff, dist_cutoff, center_density_cutoff,
 	    output_file, decision_graph_path);
 	} else {
-
-    std::cout << "method= " << method << std::endl;
+		std::cout << "graph_type=" << graph_type << std::endl;
+    std::cout << "method=" << method << std::endl;
     std::cout << "K=" << K << "\n";
     std::cout << "L=" << L << "\n";
     std::cout << "Lnn=" << Lnn << "\n";
     std::cout << "Lbuild=" << Lbuild << "\n";
     std::cout << "max_degree=" << max_degree << "\n";
     std::cout << "alpha=" << alpha << "\n";
+		if(graph_type == GraphType::pyNNDescent){
+			std::cout << "num_clusters=" << num_clusters << "\n";
+		}
 
 		DPC::dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff, center_density_cutoff,
-				output_file, decision_graph_path, Lbuild, max_degree, alpha, method);
+				output_file, decision_graph_path, Lbuild, max_degree, alpha, num_clusters, method, graph_type);
 	}
 
 }

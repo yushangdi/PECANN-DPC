@@ -31,6 +31,10 @@ enum class Method {
 	Doubling, BlindProbe
 };
 
+enum class GraphType {
+    Vamana, pyNNDescent
+};
+
 // Overload the stream insertion operator for the Method enum class
 std::ostream& operator<<(std::ostream& os, const Method& method) {
     switch (method) {
@@ -46,6 +50,41 @@ std::ostream& operator<<(std::ostream& os, const Method& method) {
     }
     return os;
 }
+
+
+std::ostream& operator<<(std::ostream& os, const GraphType& g) {
+    switch (g) {
+        case GraphType::Vamana:
+            os << "Vamana";
+            break;
+        case GraphType::pyNNDescent:
+            os << "pyNNDescent";
+            break;
+        default:
+            os << "Unknown Method";
+            break;
+    }
+    return os;
+}
+
+std::istream& operator>>(std::istream& in, GraphType& type) {
+    std::string token;
+    in >> token;
+    if (token == "v") type = GraphType::Vamana;
+    else if (token == "p") type = GraphType::pyNNDescent;
+    else in.setstate(std::ios_base::failbit);
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, Method& method) {
+    std::string token;
+    in >> token;
+    if (token == "Doubling") method = Method::Doubling;
+    else if (token == "BlindProbe") method = Method::BlindProbe;
+    else in.setstate(std::ios_base::failbit);
+    return in;
+}
+
 
 void validate(boost::any& v,
               const std::vector<std::string>& values,
