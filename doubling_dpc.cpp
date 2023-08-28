@@ -397,8 +397,10 @@ int main(int argc, char** argv){
     std::cout << "Lnn=" << Lnn << "\n";
     std::cout << "Lbuild=" << Lbuild << "\n";
     std::cout << "max_degree=" << max_degree << "\n";
-    std::cout << "alpha=" << alpha << "\n";
-		if(graph_type == GraphType::pyNNDescent){
+		if (graph_type != GraphType::HCNNG){
+    	std::cout << "alpha=" << alpha << "\n";
+		}
+		if(graph_type == GraphType::pyNNDescent || graph_type == GraphType::HCNNG){
 			std::cout << "num_clusters=" << num_clusters << "\n";
 		}
 
