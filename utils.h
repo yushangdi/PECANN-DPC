@@ -32,7 +32,7 @@ enum class Method {
 };
 
 enum class GraphType {
-    Vamana, pyNNDescent
+    Vamana, pyNNDescent, HCNNG
 };
 
 // Overload the stream insertion operator for the Method enum class
@@ -60,6 +60,9 @@ std::ostream& operator<<(std::ostream& os, const GraphType& g) {
         case GraphType::pyNNDescent:
             os << "pyNNDescent";
             break;
+        case GraphType::HCNNG:
+            os << "HCNNG";
+            break;
         default:
             os << "Unknown Method";
             break;
@@ -72,6 +75,7 @@ std::istream& operator>>(std::istream& in, GraphType& type) {
     in >> token;
     if (token == "v") type = GraphType::Vamana;
     else if (token == "p") type = GraphType::pyNNDescent;
+    else if (token == "h") type = GraphType::HCNNG;
     else in.setstate(std::ios_base::failbit);
     return in;
 }

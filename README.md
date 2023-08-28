@@ -173,3 +173,7 @@ Only graph construction is different. All other parts are the same.
 ```bash
  ./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance.dg --output_file ./results/unbalance.cluster --dist_cutoff 30000 --graph_type p --Lbuild 200 --num_clusters 1
  ```
+
+ ## NCHHG
+
+`max_degree` is the MST degree used.

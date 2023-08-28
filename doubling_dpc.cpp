@@ -24,6 +24,7 @@
 #include "ParlayANN/algorithms/utils/beamSearch.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 #include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
+#include "ParlayANN/algorithms/HCNNG/hcnng_index.h"
 
 #include "union_find.h"
 #include "utils.h"
@@ -218,6 +219,11 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn, const std::stri
 		findex I(max_degree, data_dim, .05, D);
 		auto cluster_size = Lbuild;
     I.build_index(v, cluster_size, num_clusters, alpha);
+	} else if (graph_type == GraphType::HCNNG){
+		using findex = hcnng_index<T>;
+		findex I(max_degree, data_dim, D);
+		auto cluster_size = Lbuild;
+    I.build_index(v, num_clusters, cluster_size);
 	} else {
 		std::cout << "Error: method not implemented " << std::endl;
 		exit(1);
@@ -350,7 +356,7 @@ int main(int argc, char** argv){
         ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
         ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
 				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
-				("graph_type", po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana), "Graph type(Vamana or pyNNDescent). Only works when bruteforce=false.")
+				("graph_type", po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana), "Graph type (Vamana or pyNNDescent or HCNNG). Only works when bruteforce=false.")
 
     ;
 
