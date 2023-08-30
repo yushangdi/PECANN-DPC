@@ -352,7 +352,7 @@ int main(int argc, char** argv){
         ("output_file", po::value<std::string>(&output_file)->default_value(""), "Output cluster file")
         ("decision_graph_path", po::value<std::string>(&decision_graph_path)->default_value(""), "Output decision_graph_path")
         ("density_cutoff", po::value<float>(&density_cutoff)->default_value(0), "Density below which points are treated as noise")
-				("center_density_cutoff", po::value<float>(&center_density_cutoff)->default_value(std::numeric_limits<float>::max()), "Density below which points are sorted into the same cluster")
+				("center_density_cutoff", po::value<float>(&center_density_cutoff)->default_value(0), "Density below which points are sorted into the same cluster")
         ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
         ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
 				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
