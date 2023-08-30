@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -DHOMEGROWN -mcx16 -pthread -march=native -DNDEBUG
-INCLUDES = -IParlayANN/parlaylib/include -I/home/ubuntu/boost_1_83_0
+INCLUDES = -IParlayANN/parlaylib/include -I/home/ubuntu/boost_1_82_0
 LIBS = -lboost_program_options
 
 SRCS = doubling_dpc.cpp
