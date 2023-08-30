@@ -316,47 +316,25 @@ int main(int argc, char **argv) {
   Method method = Method::Doubling;
   GraphType graph_type = GraphType::Vamana;
 
-  po::options_description desc("DPC");
-  desc.add_options()("help", "produce help message")(
-      "K", po::value<unsigned int>(&K)->default_value(6),
-      "the number of nearest neighbor used for computing the density.")(
-      "L", po::value<unsigned int>(&L)->default_value(12),
-      "L value used for density computation.")(
-      "Lnn", po::value<unsigned int>(&Lnn)->default_value(4),
-      "the starting Lnn value used for dependent point computation.")(
-      "Lbuild", po::value<unsigned int>(&Lbuild)->default_value(12),
-      "Retain closest Lbuild number of nodes during the greedy search of "
-      "construction.")("max_degree",
-                       po::value<unsigned int>(&max_degree)->default_value(16),
-                       "max_degree value used for constructing the graph.")(
-      "alpha", po::value<float>(&alpha)->default_value(1.2), "alpha value")(
-      "num_clusters", po::value<unsigned int>(&num_clusters)->default_value(4),
-      "number of clusters, only used for pyNNDescent graph method.")(
-      "query_file", po::value<std::string>(&query_file)->required(),
-      "Data set file")("output_file",
-                       po::value<std::string>(&output_file)->default_value(""),
-                       "Output cluster file")(
-      "decision_graph_path",
-      po::value<std::string>(&decision_graph_path)->default_value(""),
-      "Output decision_graph_path")(
-      "density_cutoff", po::value<float>(&density_cutoff)->default_value(0),
-      "Density below which points are treated as noise")(
-      "center_density_cutoff",
-      po::value<float>(&center_density_cutoff)
-          ->default_value(0),
-      "Density below which points are sorted into the same cluster")(
-      "dist_cutoff",
-      po::value<float>(&dist_cutoff)
-          ->default_value(std::numeric_limits<float>::max()),
-      "Distance below which points are sorted into the same cluster")(
-      "bruteforce", po::value<bool>(&bruteforce)->default_value(false),
-      "Whether bruteforce method is used.")(
-      "method", po::value<Method>(&method)->default_value(Method::Doubling),
-      "Method (Doubling or BlindProbe). Only works when bruteforce=false.")(
-      "graph_type",
-      po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana),
-      "Graph type (Vamana or pyNNDescent or HCNNG). Only works when "
-      "bruteforce=false.")
+	po::options_description desc("DPC");
+    desc.add_options()
+				("help", "produce help message")
+        ("K", po::value<unsigned int>(&K)->default_value(6), "the number of nearest neighbor used for computing the density.")
+        ("L", po::value<unsigned int>(&L)->default_value(12), "L value used for density computation.")
+        ("Lnn", po::value<unsigned int>(&Lnn)->default_value(4), "the starting Lnn value used for dependent point computation.")
+        ("Lbuild", po::value<unsigned int>(&Lbuild)->default_value(12), "Retain closest Lbuild number of nodes during the greedy search of construction.")
+        ("max_degree", po::value<unsigned int>(&max_degree)->default_value(16), "max_degree value used for constructing the graph.")
+        ("alpha", po::value<float>(&alpha)->default_value(1.2), "alpha value")
+				("num_clusters", po::value<unsigned int>(&num_clusters)->default_value(4), "number of clusters, only used for pyNNDescent graph method.")
+        ("query_file", po::value<std::string>(&query_file)->required(), "Data set file")
+        ("output_file", po::value<std::string>(&output_file)->default_value(""), "Output cluster file")
+        ("decision_graph_path", po::value<std::string>(&decision_graph_path)->default_value(""), "Output decision_graph_path")
+        ("density_cutoff", po::value<float>(&density_cutoff)->default_value(0), "Density below which points are treated as noise")
+				("center_density_cutoff", po::value<float>(&center_density_cutoff)->default_value(0), "Density below which points are sorted into the same cluster")
+        ("dist_cutoff", po::value<float>(&dist_cutoff)->default_value(std::numeric_limits<float>::max()), "Distance below which points are sorted into the same cluster")
+        ("bruteforce", po::value<bool>(&bruteforce)->default_value(false), "Whether bruteforce method is used.")
+				("method", po::value<Method>(&method)->default_value(Method::Doubling), "Method (Doubling or BlindProbe). Only works when bruteforce=false.")
+				("graph_type", po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana), "Graph type (Vamana or pyNNDescent or HCNNG). Only works when bruteforce=false.")
 
       ;
 
