@@ -32,6 +32,7 @@ cluster_points(std::vector<T> &densities,
                std::vector<std::pair<uint32_t, double>> &dep_ptrs,
                float density_cutoff, float dist_cutoff,
                float center_density_cutoff) {
+  // union_find<int> UF(densities.size());
   ParUF<int> UF(densities.size());
   parlay::parallel_for(0, densities.size(), [&](int i) {
     if (dep_ptrs[i].first != densities.size()) { // the max density point
@@ -142,6 +143,14 @@ void dpc_bruteforce(const unsigned K, const std::string &data_path,
   report(density_time, "Compute density");
 
   std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+  // auto sorted_points= parlay::sequence<unsigned>::from_function(data_num,
+  // [](unsigned i){return i;});
+  //  parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
+  // 	return densities[i] > densities[j]  || (densities[i] == densities[j] &&
+  // i > j);
+  // });
+  // bruteforce_dependent_point(data_num, data_num, sorted_points, points,
+  // densities, dep_ptrs, density_cutoff, D, data_dim);
   parlay::parallel_for(0, data_num, [&](size_t i) {
     float m_dist = std::numeric_limits<float>::max();
     size_t id = data_num;
