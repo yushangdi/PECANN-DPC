@@ -35,4 +35,5 @@
 doubling_dpc
 results/*
 .vscode/
-data/
+data/*
+!data/gaussian_example
