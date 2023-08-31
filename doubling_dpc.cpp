@@ -96,15 +96,16 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> data, std::size_t query_id,
 // template<class T>
 // std::pair<uint32_t, double>
 // compute_dep_ptr_blind_probe(parlay::sequence<Tvec_point<T>*> data,
-// std::size_t query_id, const std::vector<T>& densities, 													const size_t
-// data_aligned_dim, unsigned& L, Distance* D){
+// std::size_t query_id, const std::vector<T>& densities,
+// const size_t data_aligned_dim, unsigned& L, Distance* D){
 // 	// if(L*4 > densities.size()) return densities.size(); // why?
 
 // 	parlay::sequence<Tvec_point<T>*> start_points;
 // 	start_points.push_back(data[query_id]);
 // 	auto [pairElts, dist_cmps] = beam_search_blind_probe<T,
-// T>(data[query_id], data, densities, 																					start_points, L, data_aligned_dim, D);
-// 	auto [beamElts, visitedElts] = pairElts;
+// T>(data[query_id], data, densities,
+// start_points, L, data_aligned_dim, D); 	auto [beamElts, visitedElts] =
+// pairElts;
 
 // 	double query_density = densities[query_id];
 // 	T* query_ptr = data[query_id]->coordinates.begin();
@@ -114,13 +115,14 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> data, std::size_t query_id,
 // 		const auto [id, dist] = beamElts[i];
 // 		if (id == query_id) continue;
 // 		// if(id == densities.size()) break;
-// 		if(densities[id] > query_density || (densities[id] == query_density
-// && id > query_id)){ 			if(dist < minimum_dist){ 				minimum_dist = dist; 				dep_ptr =
-// id;
+// 		if(densities[id] > query_density || (densities[id] ==
+// query_density
+// && id > query_id)){ 			if(dist < minimum_dist){
+// minimum_dist = dist; 				dep_ptr = id;
 // 			}
 // 		} else {
-// 			std::cout << "Internal error: blind probe retuned invalid
-// points \n.";
+// 			std::cout << "Internal error: blind probe retuned
+// invalid points \n.";
 // 		}
 // 	}
 // 	if(dep_ptr == densities.size()){
@@ -260,8 +262,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   // sort in desending order
   // auto sorted_points= parlay::sequence<unsigned>::from_function(data_num,
   // [](unsigned i){return i;}); parlay::sort_inplace(sorted_points,
-  // [&densities](unsigned i, unsigned j){ 	return densities[i] > densities[j] ||
-  // (densities[i] == densities[j] && i > j);
+  // [&densities](unsigned i, unsigned j){ 	return densities[i] >
+  // densities[j]
+  // || (densities[i] == densities[j] && i > j);
   // });
   // auto max_point_id = sorted_points[0];
   // unsigned threshold = log(data_num);
@@ -325,9 +328,11 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     // 	parlay::parallel_for(threshold, data_num, [&](size_t j) {
     // 		// auto i = sorted_points[j];
     // 		auto i = unfinished_points[j];
-    // 		if (i != max_point_id && densities[i] > density_cutoff){ // skip noise
-    // points 			unsigned Li = Lnn; 			dep_ptrs[i] = compute_dep_ptr_blind_probe(v, i,
-    // densities, data_aligned_dim, Li, D); 			num_rounds[i] = Li;
+    // 		if (i != max_point_id && densities[i] > density_cutoff){ // skip
+    // noise
+    // points 			unsigned Li = Lnn; dep_ptrs[i] =
+    // compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
+    // num_rounds[i] = Li;
     // 		}
     // 	});
   } else {
@@ -355,7 +360,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
 int main(int argc, char **argv) {
   using Method = DPC::Method;
   using GraphType = DPC::GraphType;
-  std::string query_file, output_file, decision_graph_path;
+  std::string query_file, output_file, decision_graph_path, graph_type_str;
   float density_cutoff, dist_cutoff, center_density_cutoff;
   bool bruteforce = false;
   unsigned int K = 6;
@@ -366,7 +371,6 @@ int main(int argc, char **argv) {
   unsigned int num_clusters = 4; // only used for pyNNDescent.
   float alpha = 1.2;
   Method method = Method::Doubling;
-  GraphType graph_type = GraphType::Vamana;
 
   po::options_description desc("DPC");
   desc.add_options()("help", "produce help message")(
@@ -405,11 +409,9 @@ int main(int argc, char **argv) {
       "method", po::value<Method>(&method)->default_value(Method::Doubling),
       "Method (Doubling or BlindProbe). Only works when bruteforce=false.")(
       "graph_type",
-      po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana),
+      po::value<std::string>(&graph_type_str)->default_value("Vamana"),
       "Graph type (Vamana or pyNNDescent or HCNNG). Only works when "
-      "bruteforce=false.")
-
-      ;
+      "bruteforce=false.");
 
   po::variables_map vm;
   try {
@@ -426,6 +428,18 @@ int main(int argc, char **argv) {
       return 0;
     }
     return 1;
+  }
+
+  GraphType graph_type;
+  if (graph_type_str == "Vamana") {
+    graph_type = GraphType::Vamana;
+  } else if (graph_type_str == "pyNNDescent") {
+    graph_type = GraphType::pyNNDescent;
+  } else if (graph_type_str == "HCNNG") {
+    graph_type = GraphType::HCNNG;
+  } else {
+    throw std::invalid_argument(
+        "Graph type must be one of Vamana or pyNNDescent or HCNNG");
   }
 
   std::cout << "query_file=" << query_file << "\n";

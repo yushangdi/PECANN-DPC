@@ -6,6 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 
 
 def plot_dims(filename, image_path, cluster_path, d1=0, d2=1):
+    print("Plotting cluster with data " + filename + " " + image_path + " " + cluster_path)
     # Read data
     with open(filename, 'r') as f:
         lines = f.readlines()
@@ -31,6 +32,8 @@ def plot_dims(filename, image_path, cluster_path, d1=0, d2=1):
     plt.title(f'Plot of Dimension {d1} vs Dimension {d2}')
     # plt.legend(loc='upper right')
     plt.savefig(image_path)
+
+    plt.close()
 
 
 if __name__ == "__main__":
