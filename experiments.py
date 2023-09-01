@@ -42,7 +42,6 @@ cutoffs = {
 
 def get_times_from_stdout(keys, stdout):
     stdout = stdout.decode("utf-8")
-    print(stdout)
     result = [""] * len(keys)
     split_lines = [line.split(":") for line in str(stdout).split("\n")]
     split_lines = [line for line in split_lines if len(line) == 2]
