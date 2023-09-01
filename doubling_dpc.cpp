@@ -330,8 +330,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     // 		auto i = unfinished_points[j];
     // 		if (i != max_point_id && densities[i] > density_cutoff){ // skip
     // noise
-    // points 			unsigned Li = Lnn; dep_ptrs[i] =
-    // compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
+    // points 			unsigned Li = Lnn; 			dep_ptrs[i]
+    // = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
     // num_rounds[i] = Li;
     // 		}
     // 	});
@@ -360,7 +360,7 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
 int main(int argc, char **argv) {
   using Method = DPC::Method;
   using GraphType = DPC::GraphType;
-  std::string query_file, output_file, decision_graph_path, graph_type_str;
+  std::string query_file, output_file, decision_graph_path;
   float density_cutoff, dist_cutoff, center_density_cutoff;
   bool bruteforce = false;
   unsigned int K = 6;
@@ -371,6 +371,7 @@ int main(int argc, char **argv) {
   unsigned int num_clusters = 4; // only used for pyNNDescent.
   float alpha = 1.2;
   Method method = Method::Doubling;
+  GraphType graph_type = GraphType::Vamana;
 
   po::options_description desc("DPC");
   desc.add_options()("help", "produce help message")(
@@ -409,9 +410,11 @@ int main(int argc, char **argv) {
       "method", po::value<Method>(&method)->default_value(Method::Doubling),
       "Method (Doubling or BlindProbe). Only works when bruteforce=false.")(
       "graph_type",
-      po::value<std::string>(&graph_type_str)->default_value("Vamana"),
+      po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana),
       "Graph type (Vamana or pyNNDescent or HCNNG). Only works when "
-      "bruteforce=false.");
+      "bruteforce=false.")
+
+      ;
 
   po::variables_map vm;
   try {
@@ -428,18 +431,6 @@ int main(int argc, char **argv) {
       return 0;
     }
     return 1;
-  }
-
-  GraphType graph_type;
-  if (graph_type_str == "Vamana") {
-    graph_type = GraphType::Vamana;
-  } else if (graph_type_str == "pyNNDescent") {
-    graph_type = GraphType::pyNNDescent;
-  } else if (graph_type_str == "HCNNG") {
-    graph_type = GraphType::HCNNG;
-  } else {
-    throw std::invalid_argument(
-        "Graph type must be one of Vamana or pyNNDescent or HCNNG");
   }
 
   std::cout << "query_file=" << query_file << "\n";

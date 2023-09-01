@@ -27,7 +27,7 @@ time_check_headers = [
     "Find clusters",
     "Total",
 ]
-headers = quality_headers + [t + " time" for t in time_check_headers]
+headers = [t + " time" for t in time_check_headers] + quality_headers
 with open(cluster_results_file, "w") as f:
     f.write("dataset,method,comparison," + ",".join(headers) + "\n")
 
@@ -85,8 +85,8 @@ for dataset in ["s2", "mnist", "s3", "unbalance"]:
         with open(cluster_results_file, "a") as f:
             fields = (
                 [dataset, method, "ground truth"]
-                + [str(cluster_results[h]) for h in quality_headers]
                 + times
+                + [str(cluster_results[h]) for h in quality_headers]
             )
             f.write(",".join(fields) + "\n")
 
@@ -99,8 +99,8 @@ for dataset in ["s2", "mnist", "s3", "unbalance"]:
             with open(cluster_results_file, "a") as f:
                 fields = (
                     [dataset, method, "bruteforce"]
-                    + [str(cluster_results[h]) for h in quality_headers]
                     + times
+                    + [str(cluster_results[h]) for h in quality_headers]
                 )
                 f.write(",".join(fields) + "\n")
 
