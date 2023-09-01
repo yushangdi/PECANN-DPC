@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Get current directory
 BASEDIR=$(dirname "$0")
 

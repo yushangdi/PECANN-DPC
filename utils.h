@@ -67,11 +67,11 @@ std::ostream &operator<<(std::ostream &os, const GraphType &g) {
 std::istream &operator>>(std::istream &in, GraphType &type) {
   std::string token;
   in >> token;
-  if (token == "v")
+  if (token == "Vamana")
     type = GraphType::Vamana;
-  else if (token == "p")
+  else if (token == "pyNNDescent")
     type = GraphType::pyNNDescent;
-  else if (token == "h")
+  else if (token == "HCNNG")
     type = GraphType::HCNNG;
   else
     in.setstate(std::ios_base::failbit);
