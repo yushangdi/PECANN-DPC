@@ -77,3 +77,13 @@ def make_results_folder(dataset):
         dataset_folder = dataset
     os.makedirs(f"results/{dataset_folder}", exist_ok=True)
     return dataset_folder
+
+
+def get_cutoff(dataset):
+    # From analyzing decision graph
+    return {
+        "mnist": "--dist_cutoff 3 --center_density_cutoff 0.7 ",
+        "s2": "--dist_cutoff 102873 ",
+        "s3": "--dist_cutoff 102873 ",
+        "unbalance": "--dist_cutoff 30000 ",
+    }[dataset]

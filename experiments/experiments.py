@@ -16,18 +16,11 @@ from utils import (
     create_results_file,
     eval_cluster_and_write_results,
     make_results_folder,
+    get_cutoff,
 )
 
 
 cluster_results_file = create_results_file()
-
-# Used to determine cluster centroids (from analyzing decision graph)
-cutoffs = {
-    "mnist": "--dist_cutoff 3 --center_density_cutoff 0.7 ",
-    "s2": "--dist_cutoff 102873 ",
-    "s3": "--dist_cutoff 102873 ",
-    "unbalance": "--dist_cutoff 30000 ",
-}
 
 for dataset in ["s2", "mnist", "s3", "unbalance"]:
     dataset_folder = make_results_folder(dataset)
@@ -39,7 +32,7 @@ for dataset in ["s2", "mnist", "s3", "unbalance"]:
             f"./doubling_dpc --query_file {query_file} "
             + f"--decision_graph_path {prefix}.dg "
             + f"--output_file {prefix}.cluster "
-            + cutoffs[dataset]
+            + get_cutoff(dataset)
         )
         if method == "bruteforce":
             dpc_command += f"--bruteforce true "
