@@ -54,8 +54,7 @@ def eval_cluster_and_write_results(
 ):
     times = get_times_from_stdout(keys=time_check_headers, stdout=dpc_stdout)
     cluster_results = eval_cluster(
-        gt_path=gt_cluster_path,
-        cluster_path=cluster_path,
+        gt_path=gt_cluster_path, cluster_path=cluster_path, verbose=False
     )
     with open(results_file, "a") as f:
         fields = (

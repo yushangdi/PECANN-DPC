@@ -7,10 +7,11 @@ import os
 import json
 import sys
 
-def eval_cluster(gt_path, cluster_path):
+def eval_cluster(gt_path, cluster_path, verbose=True):
 
-	print(f'reading gt from {gt_path}')
-	print(f'reading result from {cluster_path}')
+	if verbose:
+		print(f'reading gt from {gt_path}')
+		print(f'reading result from {cluster_path}')
 
 	with open(gt_path, 'r') as file:
 		labels = np.array([int(line.rstrip()) for line in file])
@@ -21,8 +22,9 @@ def eval_cluster(gt_path, cluster_path):
 
 	label_counter = Counter(labels)
 	pred_counter = Counter(preds)
-	print('groud truth', label_counter)
-	print('clustering', pred_counter)
+	if verbose:
+		print('groud truth', label_counter)
+		print('clustering', pred_counter)
 	TP_count = 0
 	for label, label_count in label_counter.items():
 		ids = np.argwhere(labels == label)[:,0]
