@@ -31,13 +31,13 @@ options = []
 #  and reduce the search space with the vamana search
 
 
-exponential_range = [2, 4, 8, 16, 32, 64, 128]
+exponential_range = [4, 8, 16, 32, 64, 128]
 for (
     max_degree,
     beam_search_construction,
     beam_search_clustering,
 ) in itertools.product(exponential_range, exponential_range, exponential_range):
-    for alpha in [1, 1.1, 1.2, 1.3, 1.5, 2]:
+    for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
         for beam_search_density in [8, 16, 32, 64, 128]:
             options.append(
                 (

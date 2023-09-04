@@ -38,4 +38,6 @@ results/*
 data/*
 !data/gaussian_example
 
+*.png
+
 __pycache__
