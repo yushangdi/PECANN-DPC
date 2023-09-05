@@ -460,8 +460,8 @@ int main(int argc, char **argv) {
     if (graph_type == GraphType::pyNNDescent ||
         graph_type == GraphType::HCNNG) {
       std::cout << "num_clusters=" << num_clusters << "\n";
-      if (Lbuild < 50) {
-        std::cerr << "Please use Lbuild >= 50 for pyNNDescent and HCNNG\n";
+      if (Lbuild < 8) {
+        std::cerr << "Please use Lbuild >= 8 for pyNNDescent and HCNNG\n";
         std::cerr << "Lbuild = " << Lbuild << std::endl;
         exit(1);
       }
