@@ -1,4 +1,4 @@
-from datetime import datetime
+import time
 
 # Should already have parent folder on path for this to work
 from post_processors.cluster_eval import eval_cluster
@@ -34,7 +34,7 @@ def get_times_from_stdout(keys, stdout):
 
 
 def create_results_file():
-    timestr = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
+    timestr = time.strftime("%Y%m%d-%H%M%S")
     cluster_results_file = f"results/cluster_analysis_{timestr}.csv"
 
     with open(cluster_results_file, "w") as f:
