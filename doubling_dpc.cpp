@@ -330,8 +330,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     // 		auto i = unfinished_points[j];
     // 		if (i != max_point_id && densities[i] > density_cutoff){ // skip
     // noise
-    // points 			unsigned Li = Lnn; 			dep_ptrs[i]
-    // = compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
+    // points 			unsigned Li = Lnn; dep_ptrs[i] =
+    // compute_dep_ptr_blind_probe(v, i, densities, data_aligned_dim, Li, D);
     // num_rounds[i] = Li;
     // 		}
     // 	});
@@ -460,6 +460,11 @@ int main(int argc, char **argv) {
     if (graph_type == GraphType::pyNNDescent ||
         graph_type == GraphType::HCNNG) {
       std::cout << "num_clusters=" << num_clusters << "\n";
+      if (Lbuild < 50) {
+        std::cerr << "Please use Lbuild >= 50 for pyNNDescent and HCNNG\n";
+        std::cerr << "Lbuild = " << Lbuild << std::endl;
+        exit(1);
+      }
     }
 
     DPC::dpc(K, L, Lnn, query_file, density_cutoff, dist_cutoff,
