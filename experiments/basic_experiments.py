@@ -19,28 +19,30 @@ from utils import (
     get_cutoff,
 )
 
+import dpc_ann
+
+from contextlib import redirect_stdout
+import io
+
 
 cluster_results_file = create_results_file()
 
-for dataset in ["s2", "mnist", "s3", "unbalance"]:
+for dataset in ["s2", "s3", "unbalance", "mnist"]:
     dataset_folder = make_results_folder(dataset)
-    for method in ["bruteforce", "HCNNG", "pyNNDescent", "Vamana"]:
+    for method in ["BruteForce", "HCNNG", "pyNNDescent", "Vamana"]:
         query_file = f"data/{dataset_folder}/{dataset}.txt"
         prefix = f"results/{dataset_folder}/{dataset}_{method}"
 
-        dpc_command = (
-            f"./doubling_dpc --query_file {query_file} "
-            + f"--decision_graph_path {prefix}.dg "
-            + f"--output_file {prefix}.cluster "
-            + get_cutoff(dataset)
-        )
-        if method == "bruteforce":
-            dpc_command += f"--bruteforce true "
-        else:
-            dpc_command += f"--graph_type {method}"
-
-        # Run DPC
-        stdout = subprocess.check_output(dpc_command, shell=True)
+        # TODO: Return times instead of capturing output
+        stdout = io.StringIO()
+        with redirect_stdout(f):
+            dpc_ann.dpc(
+                query_file=query_file,
+                decision_graph_path=f"{prefix}.dg ",
+                output_file=f"{prefix}.cluster ",
+                graph_type={method},
+                **get_cutoff(dataset),
+            )
 
         # Eval cluster against ground truth and write results
         eval_cluster_and_write_results(

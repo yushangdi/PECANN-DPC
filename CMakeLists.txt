@@ -8,9 +8,9 @@ find_package(OpenMP)
 
 set(COMPILE_OPTIONS
 
-    $<$<CONFIG:Debug>:-std=c++17 -DPARLAY_SEQUENTIAL -mcx16 -pthread -march=native -g -O0 -DDEBUG >
+    $<$<CONFIG:Debug>:-std=c++17 -DPARLAY_SEQUENTIAL -mcx16 -pthread -march=native -g -O0 -DDEBUG -fPIC>
     
-    $<$<CONFIG:Release>:-std=c++17 -O3 -DHOMEGROWN -mcx16 -pthread -march=native -DNDEBUG>
+    $<$<CONFIG:Release>:-std=c++17 -O3 -DHOMEGROWN -mcx16 -pthread -march=native -DNDEBUG -fPIC>
 )
 
 # -------------------------- Includes ------------------------------------------
@@ -30,8 +30,6 @@ target_compile_options(dpc_ann_cc PRIVATE ${COMPILE_OPTIONS})
 
 # ----------------- Nanobind to create python bindings -------------------------
 
-# Only need to do if building the python package
-if (SKBUILD)
 
 find_package(Python 3 COMPONENTS Interpreter Development.Module REQUIRED)
 
@@ -52,9 +50,11 @@ list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 find_package(nanobind CONFIG REQUIRED)
 
 nanobind_add_module(
-  dpc_ann
+  dpc_ann_ext
   src/python_bindings.cpp
 )
+
+target_link_libraries(dpc_ann_ext PUBLIC dpc_ann_cc)
 
 # Ignore nanobind warnings (temporary)
 get_property(
@@ -67,15 +67,11 @@ set_target_properties(
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${nanobind_includes}"
 )
 
-endif()
 
-# ----------------- Build package ---------------------------------------
+# -------------------- Build package / exe ----------------------------------
 
 
 if (NOT SKBUILD)
-
-# # Create python so file
-# target_compile_options(dpc_ann PRIVATE ${COMPILE_OPTIONS})
 
 # Create executable
 find_package(Boost COMPONENTS program_options REQUIRED)
@@ -86,6 +82,6 @@ target_compile_options(dpc_ann_exe PRIVATE ${COMPILE_OPTIONS})
 else()
 
 # Install python package using scikit-build
-install(TARGETS dpc_ann LIBRARY DESTINATION dpc_ann)
+install(TARGETS dpc_ann_ext LIBRARY DESTINATION dpc_ann)
 
 endif()

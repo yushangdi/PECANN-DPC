@@ -6,7 +6,6 @@
 #include <iostream>
 #include <vector>
 
-
 namespace DPC {
 
 inline void report(double time, std::string str) {
@@ -89,8 +88,8 @@ inline std::istream &operator>>(std::istream &in, Method &method) {
   return in;
 }
 
-inline void validate(boost::any &v, const std::vector<std::string> &values, Method *,
-              int) {
+inline void validate(boost::any &v, const std::vector<std::string> &values,
+                     Method *, int) {
   namespace po = boost::program_options;
 
   po::validators::check_first_occurrence(v);
@@ -109,10 +108,10 @@ inline void validate(boost::any &v, const std::vector<std::string> &values, Meth
 }
 
 template <class T>
-inline void output(const std::vector<T> &densities, const std::vector<int> &cluster,
-            const std::vector<std::pair<uint32_t, double>> &dep_ptrs,
-            const std::string &output_path,
-            const std::string &decision_graph_path) {
+inline void
+output(const std::vector<T> &densities, const std::vector<int> &cluster,
+       const std::vector<std::pair<uint32_t, double>> &dep_ptrs,
+       const std::string &output_path, const std::string &decision_graph_path) {
   if (output_path != "") {
     std::ofstream fout(output_path);
     for (size_t i = 0; i < cluster.size(); i++) {
@@ -131,7 +130,8 @@ inline void output(const std::vector<T> &densities, const std::vector<int> &clus
 }
 
 template <typename T>
-inline void writeVectorToFile(const std::vector<T> &vec, const std::string &filepath) {
+inline void writeVectorToFile(const std::vector<T> &vec,
+                              const std::string &filepath) {
   std::ofstream outFile(filepath);
   if (!outFile) {
     std::cerr << "Error opening file: " << filepath << std::endl;
