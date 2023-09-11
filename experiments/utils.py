@@ -23,7 +23,6 @@ headers = [t + " time" for t in time_check_headers] + quality_headers
 
 
 def get_times_from_stdout(keys, stdout):
-    stdout = stdout.decode("utf-8")
     result = [""] * len(keys)
     split_lines = [line.split(":") for line in str(stdout).split("\n")]
     split_lines = [line for line in split_lines if len(line) == 2]
@@ -81,8 +80,8 @@ def make_results_folder(dataset):
 def get_cutoff(dataset):
     # From analyzing decision graph
     return {
-        "mnist": {"dist_cutoff": 3, "center_density_cutoff": 0.7},
-        "s2": {"dist_cutoff": 102873},
-        "s3": {"dist_cutoff": 102873},
-        "unbalance": {"dist_cutoff": 3},
+        "mnist": {"distance_cutoff": 3, "center_density_cutoff": 0.7},
+        "s2": {"distance_cutoff": 102873},
+        "s3": {"distance_cutoff": 102873},
+        "unbalance": {"distance_cutoff": 3},
     }[dataset]

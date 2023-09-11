@@ -35,12 +35,12 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
 
         # TODO: Return times instead of capturing output
         stdout = io.StringIO()
-        with redirect_stdout(f):
+        with redirect_stdout(stdout):
             dpc_ann.dpc(
-                query_file=query_file,
+                data_path=query_file,
                 decision_graph_path=f"{prefix}.dg ",
-                output_file=f"{prefix}.cluster ",
-                graph_type={method},
+                output_path=f"{prefix}.cluster",
+                # graph_type={method},
                 **get_cutoff(dataset),
             )
 
@@ -52,7 +52,7 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
             results_file=cluster_results_file,
             dataset=dataset,
             method=method,
-            dpc_stdout=stdout,
+            dpc_stdout=stdout.getvalue(),
         )
 
         # Eval cluster against brute force DPC
