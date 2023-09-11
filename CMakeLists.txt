@@ -16,11 +16,12 @@ set(COMPILE_OPTIONS
 # -------------------------- Includes ------------------------------------------
 
 include_directories("ParlayANN/parlaylib/include")
+include_directories(".")
 
 # --------------------- Create CC Library --------------------------------------
 
 set(CC_SOURCES
-    doubling_dpc.cpp
+    src/doubling_dpc.cpp
     )
 
 
@@ -28,6 +29,9 @@ add_library(dpc_ann_cc STATIC ${CC_SOURCES})
 target_compile_options(dpc_ann_cc PRIVATE ${COMPILE_OPTIONS})
 
 # ----------------- Nanobind to create python bindings -------------------------
+
+# Only need to do if building the python package
+if (SKBUILD)
 
 find_package(Python 3 COMPONENTS Interpreter Development.Module REQUIRED)
 
@@ -49,7 +53,7 @@ find_package(nanobind CONFIG REQUIRED)
 
 nanobind_add_module(
   dpc_ann
-  python_bindings.cc
+  src/python_bindings.cpp
 )
 
 # Ignore nanobind warnings (temporary)
@@ -63,17 +67,20 @@ set_target_properties(
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${nanobind_includes}"
 )
 
+endif()
+
 # ----------------- Build package ---------------------------------------
 
 
 if (NOT SKBUILD)
 
 # # Create python so file
-# target_link_libraries(dpc_ann PUBLIC dpc_ann_cc)
 # target_compile_options(dpc_ann PRIVATE ${COMPILE_OPTIONS})
 
 # Create executable
-add_executable(dpc_ann_exe ${CC_SOURCES})
+find_package(Boost COMPONENTS program_options REQUIRED)
+add_executable(dpc_ann_exe src/dpc_commandline.cpp)
+target_link_libraries(dpc_ann_exe PUBLIC dpc_ann_cc Boost::program_options)
 target_compile_options(dpc_ann_exe PRIVATE ${COMPILE_OPTIONS})
 
 else()
