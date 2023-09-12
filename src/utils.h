@@ -4,11 +4,15 @@
 #include <boost/program_options.hpp>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
 namespace DPC {
 
+inline std::unordered_map<std::string, double> time_reports;
+
 inline void report(double time, std::string str) {
+  time_reports[str] = time;
   std::ios::fmtflags cout_settings = std::cout.flags();
   std::cout.precision(4);
   std::cout << std::fixed;

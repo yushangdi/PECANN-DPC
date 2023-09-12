@@ -22,16 +22,6 @@ time_check_headers = [
 headers = [t + " time" for t in time_check_headers] + quality_headers
 
 
-def get_times_from_stdout(keys, stdout):
-    result = [""] * len(keys)
-    split_lines = [line.split(":") for line in str(stdout).split("\n")]
-    split_lines = [line for line in split_lines if len(line) == 2]
-    for header, value in split_lines:
-        if header in keys:
-            result[keys.index(header)] = value.strip()
-    return result
-
-
 def create_results_file():
     timestr = time.strftime("%Y%m%d-%H%M%S")
     cluster_results_file = f"results/cluster_analysis_{timestr}.csv"
@@ -48,10 +38,13 @@ def eval_cluster_and_write_results(
     compare_to_ground_truth,
     results_file,
     dataset,
-    method,
-    dpc_stdout,
+    graph_type,
+    time_reports,
 ):
-    times = get_times_from_stdout(keys=time_check_headers, stdout=dpc_stdout)
+    times = [
+        (str(time_reports[key]) if key in time_reports else "")
+        for key in time_check_headers
+    ]
     cluster_results = eval_cluster(
         gt_path=gt_cluster_path, cluster_path=cluster_path, verbose=False
     )
@@ -59,7 +52,7 @@ def eval_cluster_and_write_results(
         fields = (
             [
                 dataset,
-                method,
+                graph_type,
                 "ground truth" if compare_to_ground_truth else "brute force",
             ]
             + times
