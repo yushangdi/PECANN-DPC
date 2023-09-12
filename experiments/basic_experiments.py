@@ -29,7 +29,6 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
         query_file = f"data/{dataset_folder}/{dataset}.txt"
         prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
-        # TODO: Return times instead of capturing output
         time_reports = dpc_ann.dpc(
             data_path=query_file,
             decision_graph_path=f"{prefix}.dg ",
