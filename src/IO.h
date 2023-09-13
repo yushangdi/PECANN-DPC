@@ -145,6 +145,7 @@ inline void load_text_file(const std::string &text_file, float *&data,
   std::cout << " done." << std::endl;
 }
 
+// This struct does not own the passed in pointer
 struct RawDataset {
   size_t num_data;
   size_t data_dim;
@@ -157,7 +158,6 @@ struct RawDataset {
               << ", data_dim=" << data_dim << std::endl;
   }
 
-  // Need to free data manually if using this constructor
   RawDataset(float *data, size_t num_data, size_t data_dim)
       : num_data(num_data), data_dim(data_dim), aligned_dim(data_dim),
         data(data) {}

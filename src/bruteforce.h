@@ -147,8 +147,9 @@ void dpc_bruteforce(const unsigned K, ParsedDataset points,
       for (size_t j = 0; j < points.size; j++) {
         if (densities[j] > densities[i] ||
             (densities[j] == densities[i] && j > i)) {
-          auto dist = D->distance(points[i].coordinates.begin(),
-                                  points[j].coordinates.begin(), points.size);
+          auto dist =
+              D->distance(points[i].coordinates.begin(),
+                          points[j].coordinates.begin(), points.data_dim);
           if (dist <= m_dist) {
             m_dist = dist;
             id = j;
