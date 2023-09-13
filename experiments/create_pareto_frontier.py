@@ -6,6 +6,10 @@ from pathlib import Path
 import sys
 from tqdm import tqdm
 import numpy as np
+import multiprocessing
+import argparse
+
+import dpc_ann
 
 # Change to DPC-ANN folder and add to path
 abspath = Path(__file__).resolve().parent.parent
@@ -19,9 +23,22 @@ from utils import (
     get_cutoff,
 )
 
-import dpc_ann
 
-dataset = "mnist"
+parser = argparse.ArgumentParser(description="Process ground truth and dataset paths.")
+parser.add_argument(
+    "dataset",
+    help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
+)
+parser.add_argument(
+    "timeout",
+    help="How long to wait in seconds before killing one of the running jobs",
+    default=20,
+)
+args = parser.parse_args()
+
+dataset = args.dataset
+timeout_s = args.timeout
+
 
 cluster_results_file = create_results_file()
 
@@ -103,10 +120,7 @@ def try_command(graph_type, command):
     )
 
 
-import multiprocessing
-timeout_s = 20
 for graph_type, command in tqdm(options):
-
     p = multiprocessing.Process(target=try_command, args=(graph_type, command))
     p.start()
 
@@ -117,5 +131,4 @@ for graph_type, command in tqdm(options):
         p.join()
         print(graph_type, "timed out!")
     elif exitcode != 0:
-        print(graph_type, "had exit code", str(p.exitcode)+ "!")
-        
+        print(graph_type, "had exit code", str(p.exitcode) + "!")
