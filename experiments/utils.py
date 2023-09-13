@@ -22,17 +22,6 @@ time_check_headers = [
 headers = [t + " time" for t in time_check_headers] + quality_headers
 
 
-def get_times_from_stdout(keys, stdout):
-    stdout = stdout.decode("utf-8")
-    result = [""] * len(keys)
-    split_lines = [line.split(":") for line in str(stdout).split("\n")]
-    split_lines = [line for line in split_lines if len(line) == 2]
-    for header, value in split_lines:
-        if header in keys:
-            result[keys.index(header)] = value.strip()
-    return result
-
-
 def create_results_file():
     timestr = time.strftime("%Y%m%d-%H%M%S")
     cluster_results_file = f"results/cluster_analysis_{timestr}.csv"
@@ -49,10 +38,13 @@ def eval_cluster_and_write_results(
     compare_to_ground_truth,
     results_file,
     dataset,
-    method,
-    dpc_stdout,
+    graph_type,
+    time_reports,
 ):
-    times = get_times_from_stdout(keys=time_check_headers, stdout=dpc_stdout)
+    times = [
+        (str(time_reports[key]) if key in time_reports else "")
+        for key in time_check_headers
+    ]
     cluster_results = eval_cluster(
         gt_path=gt_cluster_path, cluster_path=cluster_path, verbose=False
     )
@@ -60,7 +52,7 @@ def eval_cluster_and_write_results(
         fields = (
             [
                 dataset,
-                method,
+                graph_type,
                 "ground truth" if compare_to_ground_truth else "brute force",
             ]
             + times
@@ -81,8 +73,8 @@ def make_results_folder(dataset):
 def get_cutoff(dataset):
     # From analyzing decision graph
     return {
-        "mnist": "--dist_cutoff 3 --center_density_cutoff 0.7 ",
-        "s2": "--dist_cutoff 102873 ",
-        "s3": "--dist_cutoff 102873 ",
-        "unbalance": "--dist_cutoff 30000 ",
+        "mnist": {"distance_cutoff": 3, "center_density_cutoff": 0.7},
+        "s2": {"distance_cutoff": 102873},
+        "s3": {"distance_cutoff": 102873},
+        "unbalance": {"distance_cutoff": 30000},
     }[dataset]

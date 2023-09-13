@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import subprocess
 import os
 from pathlib import Path
 import sys
@@ -19,28 +18,26 @@ from utils import (
     get_cutoff,
 )
 
+import dpc_ann
+
 
 cluster_results_file = create_results_file()
 
-for dataset in ["s2", "mnist", "s3", "unbalance"]:
+for dataset in ["s2", "s3", "unbalance", "mnist"]:
     dataset_folder = make_results_folder(dataset)
-    for method in ["bruteforce", "HCNNG", "pyNNDescent", "Vamana"]:
+    for graph_type in ["BruteForce", "HCNNG", "pyNNDescent", "Vamana"]:
         query_file = f"data/{dataset_folder}/{dataset}.txt"
-        prefix = f"results/{dataset_folder}/{dataset}_{method}"
+        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
-        dpc_command = (
-            f"./doubling_dpc --query_file {query_file} "
-            + f"--decision_graph_path {prefix}.dg "
-            + f"--output_file {prefix}.cluster "
-            + get_cutoff(dataset)
+        time_reports = dpc_ann.dpc(
+            data_path=query_file,
+            decision_graph_path=f"{prefix}.dg ",
+            output_path=f"{prefix}.cluster",
+            graph_type=graph_type,
+            **get_cutoff(dataset),
         )
-        if method == "bruteforce":
-            dpc_command += f"--bruteforce true "
-        else:
-            dpc_command += f"--graph_type {method}"
 
-        # Run DPC
-        stdout = subprocess.check_output(dpc_command, shell=True)
+        print(time_reports)
 
         # Eval cluster against ground truth and write results
         eval_cluster_and_write_results(
@@ -49,19 +46,19 @@ for dataset in ["s2", "mnist", "s3", "unbalance"]:
             compare_to_ground_truth=True,
             results_file=cluster_results_file,
             dataset=dataset,
-            method=method,
-            dpc_stdout=stdout,
+            graph_type=graph_type,
+            time_reports=time_reports,
         )
 
         # Eval cluster against brute force DPC
         eval_cluster_and_write_results(
-            gt_cluster_path=f"results/{dataset_folder}/{dataset}_bruteforce.cluster",
+            gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
             cluster_path=f"{prefix}.cluster",
             compare_to_ground_truth=False,
             results_file=cluster_results_file,
             dataset=dataset,
-            method=method,
-            dpc_stdout=stdout,
+            graph_type=graph_type,
+            time_reports=time_reports,
         )
 
         # Plot clusters

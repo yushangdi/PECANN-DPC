@@ -37,6 +37,8 @@ results/*
 .vscode/
 data/*
 !data/gaussian_example
+build
+compile_commands.json
 
 *.png
 

@@ -4,18 +4,15 @@
 #include <boost/program_options.hpp>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
-
-#include "ParlayANN/algorithms/utils/parse_files.h"
-#include "ParlayANN/algorithms/vamana/neighbors.h"
-// #include "ParlayANN/algorithms/vamana/index.h"
-// #include "ParlayANN/algorithms/utils/types.h"
-// #include "ParlayANN/algorithms/utils/beamSearch.h"
-// #include "ParlayANN/algorithms/utils/stats.h"
 
 namespace DPC {
 
-void report(double time, std::string str) {
+inline std::unordered_map<std::string, double> time_reports;
+
+inline void report(double time, std::string str) {
+  time_reports[str] = time;
   std::ios::fmtflags cout_settings = std::cout.flags();
   std::cout.precision(4);
   std::cout << std::fixed;
@@ -28,10 +25,10 @@ void report(double time, std::string str) {
 
 enum class Method { Doubling, BlindProbe };
 
-enum class GraphType { Vamana, pyNNDescent, HCNNG };
+enum class GraphType { Vamana, pyNNDescent, HCNNG, BruteForce };
 
 // Overload the stream insertion operator for the Method enum class
-std::ostream &operator<<(std::ostream &os, const Method &method) {
+inline std::ostream &operator<<(std::ostream &os, const Method &method) {
   switch (method) {
   case Method::Doubling:
     os << "Doubling";
@@ -46,7 +43,7 @@ std::ostream &operator<<(std::ostream &os, const Method &method) {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const GraphType &g) {
+inline std::ostream &operator<<(std::ostream &os, const GraphType &g) {
   switch (g) {
   case GraphType::Vamana:
     os << "Vamana";
@@ -57,6 +54,9 @@ std::ostream &operator<<(std::ostream &os, const GraphType &g) {
   case GraphType::HCNNG:
     os << "HCNNG";
     break;
+  case GraphType::BruteForce:
+    os << "BruteForce";
+    break;
   default:
     os << "Unknown Method";
     break;
@@ -64,7 +64,7 @@ std::ostream &operator<<(std::ostream &os, const GraphType &g) {
   return os;
 }
 
-std::istream &operator>>(std::istream &in, GraphType &type) {
+inline std::istream &operator>>(std::istream &in, GraphType &type) {
   std::string token;
   in >> token;
   if (token == "Vamana")
@@ -73,12 +73,14 @@ std::istream &operator>>(std::istream &in, GraphType &type) {
     type = GraphType::pyNNDescent;
   else if (token == "HCNNG")
     type = GraphType::HCNNG;
+  else if (token == "BruteForce")
+    type = GraphType::BruteForce;
   else
     in.setstate(std::ios_base::failbit);
   return in;
 }
 
-std::istream &operator>>(std::istream &in, Method &method) {
+inline std::istream &operator>>(std::istream &in, Method &method) {
   std::string token;
   in >> token;
   if (token == "Doubling")
@@ -90,8 +92,8 @@ std::istream &operator>>(std::istream &in, Method &method) {
   return in;
 }
 
-void validate(boost::any &v, const std::vector<std::string> &values, Method *,
-              int) {
+inline void validate(boost::any &v, const std::vector<std::string> &values,
+                     Method *, int) {
   namespace po = boost::program_options;
 
   po::validators::check_first_occurrence(v);
@@ -110,10 +112,10 @@ void validate(boost::any &v, const std::vector<std::string> &values, Method *,
 }
 
 template <class T>
-void output(const std::vector<T> &densities, const std::vector<int> &cluster,
-            const std::vector<std::pair<uint32_t, double>> &dep_ptrs,
-            const std::string &output_path,
-            const std::string &decision_graph_path) {
+inline void
+output(const std::vector<T> &densities, const std::vector<int> &cluster,
+       const std::vector<std::pair<uint32_t, double>> &dep_ptrs,
+       const std::string &output_path, const std::string &decision_graph_path) {
   if (output_path != "") {
     std::ofstream fout(output_path);
     for (size_t i = 0; i < cluster.size(); i++) {
@@ -132,7 +134,8 @@ void output(const std::vector<T> &densities, const std::vector<int> &cluster,
 }
 
 template <typename T>
-void writeVectorToFile(const std::vector<T> &vec, const std::string &filepath) {
+inline void writeVectorToFile(const std::vector<T> &vec,
+                              const std::string &filepath) {
   std::ofstream outFile(filepath);
   if (!outFile) {
     std::cerr << "Error opening file: " << filepath << std::endl;

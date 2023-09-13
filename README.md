@@ -1,6 +1,21 @@
 # DPC-ANN
 
 
+```bash
+pip3 install nanobind
+mkdir build
+cd build
+cmake ..
+make
+cd ../
+pip3 install .
+```
+
+Run directly from commandline:
+```bash
+./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg 
+```
+
 
 Change line 3 in Makefile to the location of boost library.
 ```bash
