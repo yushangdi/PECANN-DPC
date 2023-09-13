@@ -104,7 +104,6 @@ def try_command(graph_type, command):
 
 
 import multiprocessing
-# import time
 timeout_s = 20
 for graph_type, command in tqdm(options):
 
