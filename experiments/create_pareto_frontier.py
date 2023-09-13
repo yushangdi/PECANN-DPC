@@ -69,7 +69,7 @@ dataset_folder = make_results_folder(dataset)
 
 data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
-for graph_type, command in tqdm(options):
+def try_command(graph_type, command):
     prefix = f"results/{dataset_folder}/{dataset}_{method}"
 
     times = dpc_ann.dpc_numpy(
@@ -101,3 +101,22 @@ for graph_type, command in tqdm(options):
         graph_type=graph_type,
         time_reports=times,
     )
+
+
+import multiprocessing
+# import time
+timeout_s = 20
+for graph_type, command in tqdm(options):
+
+    p = multiprocessing.Process(target=try_command, args=(graph_type, command))
+    p.start()
+
+    exitcode = p.join(timeout=timeout_s)
+
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        print(graph_type, "timed out!")
+    elif exitcode != 0:
+        print(graph_type, "had exit code", str(p.exitcode)+ "!")
+        
