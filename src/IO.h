@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -143,3 +144,21 @@ inline void load_text_file(const std::string &text_file, float *&data,
   }
   std::cout << " done." << std::endl;
 }
+
+struct RawDataset {
+  size_t num_data;
+  size_t data_dim;
+  size_t aligned_dim;
+  float *data;
+
+  RawDataset(const std::string &data_path) {
+    load_text_file(data_path, data, num_data, data_dim, aligned_dim);
+    std::cout << "Loaded text file: num_data=" << num_data
+              << ", data_dim=" << data_dim << std::endl;
+  }
+
+  // Need to free data manually if using this constructor
+  RawDataset(float *data, size_t num_data, size_t data_dim)
+      : num_data(num_data), data_dim(data_dim), aligned_dim(data_dim),
+        data(data) {}
+};

@@ -27,6 +27,7 @@
 #include "ParlayANN/algorithms/utils/parse_files.h"
 #include "ParlayANN/algorithms/vamana/neighbors.h"
 
+#include "ann_utils.h"
 #include "bruteforce.h"
 #include "union_find.h"
 #include "utils.h"
@@ -183,9 +184,8 @@ void compute_densities(parlay::sequence<Tvec_point<T> *> &v,
 }
 
 void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
-                const std::string &data_path, float density_cutoff,
-                float distance_cutoff, float center_density_cutoff,
-                const std::string &output_path,
+                ParsedDataset data, float density_cutoff, float distance_cutoff,
+                float center_density_cutoff, const std::string &output_path,
                 const std::string &decision_graph_path, const unsigned Lbuild,
                 const unsigned max_degree, const float alpha,
                 const unsigned num_clusters, Method method,
@@ -199,29 +199,14 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
 
   Distance *D = new Euclidian_Distance();
 
-  T *data = nullptr;
-  size_t data_num, data_dim, data_aligned_dim;
-  load_text_file(data_path, data, data_num, data_dim, data_aligned_dim);
-  // diskann::load_aligned_bin<float>(data_path, data, data_num, data_dim,
-  //                         data_aligned_dim);
-
-  std::cout << "data_num: " << data_num << std::endl;
-
-  auto points = parlay::sequence<Tvec_point<T>>(data_num);
-  parlay::parallel_for(0, data_num, [&](size_t i) {
-    T *start = data + (i * data_aligned_dim);
-    T *end = data + ((i + 1) * data_aligned_dim);
-    points[i].id = i;
-    points[i].coordinates = parlay::make_slice(start, end);
-  });
-  add_null_graph(points, max_degree);
+  add_null_graph(data.points, max_degree);
   auto v = parlay::tabulate(
-      data_num, [&](size_t i) -> Tvec_point<T> * { return &points[i]; });
+      data.size, [&](size_t i) -> Tvec_point<T> * { return &data.points[i]; });
   t.next("Load data.");
 
   if (graph_type == GraphType::Vamana) {
     using findex = knn_index<T>;
-    findex I(max_degree, Lbuild, alpha, data_dim, D);
+    findex I(max_degree, Lbuild, alpha, data.data_dim, D);
     parlay::sequence<int> inserts = parlay::tabulate(
         v.size(), [&](size_t i) { return static_cast<int>(i); });
     I.build_index_multiple_starts(
@@ -229,12 +214,12 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   } else if (graph_type == GraphType::pyNNDescent) {
     using findex = pyNN_index<T>;
     // .05: terminate graph construction if < .05 neighbor change is happening.
-    findex I(max_degree, data_dim, .05, D);
+    findex I(max_degree, data.data_dim, .05, D);
     auto cluster_size = Lbuild;
     I.build_index(v, cluster_size, num_clusters, alpha);
   } else if (graph_type == GraphType::HCNNG) {
     using findex = hcnng_index<T>;
-    findex I(max_degree, data_dim, D);
+    findex I(max_degree, data.data_dim, D);
     auto cluster_size = Lbuild;
     I.build_index(v, num_clusters, cluster_size);
   } else {
@@ -252,8 +237,9 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     t.next("stats");
   }
 
-  std::vector<T> densities(data_num);
-  compute_densities(v, densities, L, K, data_num, data_dim, D, graph_type);
+  std::vector<T> densities(data.size);
+  compute_densities(v, densities, L, K, data.size, data.data_dim, D,
+                    graph_type);
   double density_time = t.next_time();
   report(density_time, "Compute density");
 
@@ -277,13 +263,13 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   auto max_point_id = max_density_point[0]->id;
   unsigned threshold = 0;
 
-  std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+  std::vector<std::pair<uint32_t, double>> dep_ptrs(data.size);
   // dep_ptrs[max_point_id] = {data_num, -1};
-  parlay::parallel_for(0, data_num, [&](size_t i) {
-    dep_ptrs[i] = {data_num, -1};
+  parlay::parallel_for(0, data.size, [&](size_t i) {
+    dep_ptrs[i] = {data.size, -1};
   });
   auto unfinished_points = parlay::sequence<unsigned>::from_function(
-      data_num, [](unsigned i) { return i; });
+      data.size, [](unsigned i) { return i; });
   unfinished_points = parlay::filter(unfinished_points, [&](size_t i) {
     return i != max_point_id &&
            densities[i] > density_cutoff; // skip noise points
@@ -296,7 +282,7 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   //  densities, dep_ptrs, density_cutoff, D, data_dim);
 
   std::vector<unsigned> num_rounds(
-      data_num, Lnn); // the L used when dependent point is found.
+      data.size, Lnn); // the L used when dependent point is found.
   if (method == Method::Doubling) {
     int round_limit = 4;
     int prev_number = std::numeric_limits<int>::max();
@@ -309,19 +295,19 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
       parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
         // auto i = sorted_points[j];
         auto i = unfinished_points[j];
-        dep_ptrs[i] = compute_dep_ptr(v, i, densities, data_dim, num_rounds[i],
-                                      D, round_limit);
+        dep_ptrs[i] = compute_dep_ptr(v, i, densities, data.data_dim,
+                                      num_rounds[i], D, round_limit);
         // }
       });
       unfinished_points =
-          parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i) {
-            return dep_ptrs[i].first == data_num;
+          parlay::filter(unfinished_points, [&dep_ptrs, &data](size_t i) {
+            return dep_ptrs[i].first == data.size;
           });
       std::cout << "number: " << unfinished_points.size() << std::endl;
     }
     std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
-    bruteforce_dependent_point_all(data_num, unfinished_points, points,
-                                   densities, dep_ptrs, D, data_dim);
+    bruteforce_dependent_point_all(data.size, unfinished_points, data.points,
+                                   densities, dep_ptrs, D, data.data_dim);
     // } else if (method == Method::BlindProbe){
     // 	parlay::parallel_for(threshold, data_num, [&](size_t j) {
     // 		// auto i = sorted_points[j];
@@ -337,7 +323,6 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     std::cout << "Error: method not implemented " << std::endl;
     exit(1);
   }
-  aligned_free(data);
   double dependent_time = t.next_time();
   report(dependent_time, "Compute dependent points");
 
@@ -353,14 +338,17 @@ void approx_dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   writeVectorToFile(num_rounds, "results/num_rounds.txt");
 }
 
-void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
-         const std::string &data_path, float density_cutoff,
-         float distance_cutoff, float center_density_cutoff,
-         const std::string &output_path, const std::string &decision_graph_path,
-         const unsigned Lbuild, const unsigned max_degree, const float alpha,
-         const unsigned num_clusters, Method method, GraphType graph_type) {
+std::unordered_map<std::string, double>
+dpc(const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
+    float density_cutoff, float distance_cutoff, float center_density_cutoff,
+    const std::string &output_path, const std::string &decision_graph_path,
+    const unsigned Lbuild, const unsigned max_degree, const float alpha,
+    const unsigned num_clusters, Method method, GraphType graph_type) {
 
-  std::cout << "query_file=" << data_path << "\n";
+  time_reports.clear();
+
+  ParsedDataset parsed_data(raw_data);
+
   std::cout << "output_file=" << output_path << "\n";
   std::cout << "decision_graph_path=" << decision_graph_path << "\n";
   std::cout << "density_cutoff=" << density_cutoff << "\n";
@@ -372,10 +360,10 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   // can get rid of this helper method
   if (graph_type == GraphType::BruteForce) {
     std::cout << "method= brute force\n";
-    DPC::dpc_bruteforce(K, data_path, density_cutoff, distance_cutoff,
+    DPC::dpc_bruteforce(K, parsed_data, density_cutoff, distance_cutoff,
                         center_density_cutoff, output_path,
                         decision_graph_path);
-    return;
+    return time_reports;
   }
 
   std::cout << "graph_type=" << graph_type << std::endl;
@@ -397,9 +385,11 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     }
   }
 
-  approx_dpc(K, L, Lnn, data_path, density_cutoff, distance_cutoff,
+  approx_dpc(K, L, Lnn, parsed_data, density_cutoff, distance_cutoff,
              center_density_cutoff, output_path, decision_graph_path, Lbuild,
              max_degree, alpha, num_clusters, method, graph_type);
+
+  return time_reports;
 }
 
 } // namespace DPC

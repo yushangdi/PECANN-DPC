@@ -1,1 +1,1 @@
-from .dpc_ann_ext import dpc
+from .dpc_ann_ext import *
