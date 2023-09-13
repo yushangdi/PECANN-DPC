@@ -44,9 +44,3 @@ unzip grammatical+facial+expressions.zip -d facial
 
 cd ../..
 python3 data_processors/mnist.py
-cd data
-rm -rf MNIST/raw
-rmdir MNIST
-mkdir -p mnist
-mv mnist.gt mnist/
-mv mnist.txt mnist/
