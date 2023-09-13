@@ -76,5 +76,5 @@ def get_cutoff(dataset):
         "mnist": {"distance_cutoff": 3, "center_density_cutoff": 0.7},
         "s2": {"distance_cutoff": 102873},
         "s3": {"distance_cutoff": 102873},
-        "unbalance": {"distance_cutoff": 3},
+        "unbalance": {"distance_cutoff": 30000},
     }[dataset]
