@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sys
 from tqdm import tqdm
+import numpy as np
 
 # Change to DPC-ANN folder and add to path
 abspath = Path(__file__).resolve().parent.parent
@@ -55,7 +56,7 @@ for (
                     "graph_type": graph_type,
                 }
                 if graph_type in ["pyNNDescent", "HCNNG"]:
-                    if beam_search_construction < 8:
+                    if beam_search_construction < 16:
                         continue
                     for num_clusters in range(1, 6):
                         new_command_line = dict(command_line)
@@ -66,14 +67,15 @@ for (
 
 dataset_folder = make_results_folder(dataset)
 
-for method, command in tqdm(options):
-    query_file = f"data/{dataset_folder}/{dataset}.txt"
+data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
+
+for graph_type, command in tqdm(options):
     prefix = f"results/{dataset_folder}/{dataset}_{method}"
 
-    times = dpc_ann.dpc(
+    times = dpc_ann.dpc_numpy(
         **command,
         **get_cutoff(dataset),
-        data_path=query_file,
+        data=data,
         decision_graph_path=f"{prefix}.dg ",
         output_path=f"{prefix}.cluster",
     )
