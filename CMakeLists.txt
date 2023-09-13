@@ -3,6 +3,7 @@ project(DPC-ANN LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenMP)
+find_package(Threads REQUIRED)
 
 # -------------------------- Options ------------------------------------------
 
@@ -27,6 +28,7 @@ set(CC_SOURCES
 
 add_library(dpc_ann_cc STATIC ${CC_SOURCES})
 target_compile_options(dpc_ann_cc PRIVATE ${COMPILE_OPTIONS})
+target_link_libraries(dpc_ann_cc Threads::Threads)
 
 # ----------------- Nanobind to create python bindings -------------------------
 
