@@ -110,7 +110,7 @@ def try_command(graph_type, command):
 
     # Eval cluster against brute force DPC
     eval_cluster_and_write_results(
-        gt_cluster_path=f"results/{dataset_folder}/{dataset}_bruteforce.cluster",
+        gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
         cluster_path=f"{prefix}.cluster",
         compare_to_ground_truth=False,
         results_file=cluster_results_file,
