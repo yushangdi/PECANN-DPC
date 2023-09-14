@@ -33,6 +33,7 @@ parser.add_argument(
     "timeout",
     help="How long to wait in seconds before killing one of the running jobs",
     default=20,
+    type=int
 )
 args = parser.parse_args()
 
@@ -86,6 +87,17 @@ dataset_folder = make_results_folder(dataset)
 
 data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
+ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
+if not os.path.isfile(ground_truth_cluster_path):
+    dpc_ann.dpc_numpy(
+        graph_type="BruteForce",
+        decision_graph_path=f"results/{dataset_folder}/{dataset}_BruteForce.dg",
+        output_path=ground_truth_cluster_path,
+        **get_cutoff(dataset),
+        data=data
+    )
+
+
 def try_command(graph_type, command):
     prefix = f"results/{dataset_folder}/{dataset}_{method}"
 
@@ -93,7 +105,7 @@ def try_command(graph_type, command):
         **command,
         **get_cutoff(dataset),
         data=data,
-        decision_graph_path=f"{prefix}.dg ",
+        decision_graph_path=f"{prefix}.dg",
         output_path=f"{prefix}.cluster",
     )
 
