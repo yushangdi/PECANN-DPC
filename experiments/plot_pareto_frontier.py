@@ -43,6 +43,8 @@ def main():
 
     def plot_pareto(comparison, graph_type):
         _, pareto_df = dfs[((comparison, graph_type))]
+        if len(pareto_df) == 0:
+            return
         plt.plot(
             pareto_df["Total time"],
             pareto_df["ARI"],

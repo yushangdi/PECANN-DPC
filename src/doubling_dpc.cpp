@@ -38,7 +38,7 @@ namespace DPC {
 // v, i, densities, data_aligned_dim, Lnn, index
 template <class T>
 std::pair<uint32_t, double>
-compute_dep_ptr(parlay::sequence<Tvec_point<T> *> data, std::size_t query_id,
+compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
                 const std::vector<T> &densities, const size_t data_dim,
                 unsigned &L, Distance *D, int round_limit = -1) {
   // if(L*4 > densities.size()) return densities.size(); // why?
