@@ -5,6 +5,11 @@ import os
 from pathlib import Path
 import sys
 from tqdm import tqdm
+import numpy as np
+import multiprocessing
+import argparse
+
+import dpc_ann
 
 # Change to DPC-ANN folder and add to path
 abspath = Path(__file__).resolve().parent.parent
@@ -18,9 +23,22 @@ from utils import (
     get_cutoff,
 )
 
-import dpc_ann
 
-dataset = "mnist"
+parser = argparse.ArgumentParser(description="Process ground truth and dataset paths.")
+parser.add_argument(
+    "dataset",
+    help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
+)
+parser.add_argument(
+    "timeout",
+    help="How long to wait in seconds before killing one of the running jobs",
+    default=20,
+)
+args = parser.parse_args()
+
+dataset = args.dataset
+timeout_s = args.timeout
+
 
 cluster_results_file = create_results_file()
 
@@ -55,7 +73,7 @@ for (
                     "graph_type": graph_type,
                 }
                 if graph_type in ["pyNNDescent", "HCNNG"]:
-                    if beam_search_construction < 8:
+                    if beam_search_construction < 16:
                         continue
                     for num_clusters in range(1, 6):
                         new_command_line = dict(command_line)
@@ -66,14 +84,15 @@ for (
 
 dataset_folder = make_results_folder(dataset)
 
-for method, command in tqdm(options):
-    query_file = f"data/{dataset_folder}/{dataset}.txt"
+data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
+
+def try_command(graph_type, command):
     prefix = f"results/{dataset_folder}/{dataset}_{method}"
 
-    times = dpc_ann.dpc(
+    times = dpc_ann.dpc_numpy(
         **command,
         **get_cutoff(dataset),
-        data_path=query_file,
+        data=data,
         decision_graph_path=f"{prefix}.dg ",
         output_path=f"{prefix}.cluster",
     )
@@ -91,7 +110,7 @@ for method, command in tqdm(options):
 
     # Eval cluster against brute force DPC
     eval_cluster_and_write_results(
-        gt_cluster_path=f"results/{dataset_folder}/{dataset}_bruteforce.cluster",
+        gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
         cluster_path=f"{prefix}.cluster",
         compare_to_ground_truth=False,
         results_file=cluster_results_file,
@@ -99,3 +118,17 @@ for method, command in tqdm(options):
         graph_type=graph_type,
         time_reports=times,
     )
+
+
+for graph_type, command in tqdm(options):
+    p = multiprocessing.Process(target=try_command, args=(graph_type, command))
+    p.start()
+
+    exitcode = p.join(timeout=timeout_s)
+
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        print(graph_type, "timed out!")
+    elif exitcode != 0:
+        print(graph_type, "had exit code", str(p.exitcode) + "!")

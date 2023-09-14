@@ -29,7 +29,7 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
         query_file = f"data/{dataset_folder}/{dataset}.txt"
         prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
-        time_reports = dpc_ann.dpc(
+        time_reports = dpc_ann.dpc_filenames(
             data_path=query_file,
             decision_graph_path=f"{prefix}.dg ",
             output_path=f"{prefix}.cluster",

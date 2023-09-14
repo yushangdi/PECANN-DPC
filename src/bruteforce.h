@@ -22,6 +22,7 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
+#include "ann_utils.h"
 #include "union_find.h"
 #include "utils.h"
 
@@ -108,33 +109,21 @@ void bruteforce_dependent_point_all(
   });
 }
 
-void dpc_bruteforce(const unsigned K, const std::string &data_path,
+void dpc_bruteforce(const unsigned K, ParsedDataset points,
                     float density_cutoff, float distance_cutoff,
                     float center_density_cutoff, const std::string &output_path,
                     const std::string &decision_graph_path) {
-  using T = float;
-  T *data = nullptr;
-  size_t data_num, data_dim, data_aligned_dim;
-  load_text_file(data_path, data, data_num, data_dim, data_aligned_dim);
-  std::cout << "data_num: " << data_num << std::endl;
 
-  auto points = parlay::sequence<Tvec_point<T>>(data_num);
-  parlay::parallel_for(0, data_num, [&](size_t i) {
-    T *start = data + (i * data_aligned_dim);
-    T *end = data + ((i + 1) * data_aligned_dim);
-    points[i].id = i;
-    points[i].coordinates = parlay::make_slice(start, end);
-  });
   Distance *D = new Euclidian_Distance();
 
   parlay::internal::timer t("DPC");
 
-  std::vector<float> densities(data_num);
-  parlay::parallel_for(0, data_num, [&](size_t i) {
-    std::vector<float> dists(data_num);
-    for (size_t j = 0; j < data_num; j++)
+  std::vector<float> densities(points.size);
+  parlay::parallel_for(0, points.size, [&](size_t i) {
+    std::vector<float> dists(points.size);
+    for (size_t j = 0; j < points.size; j++)
       dists[j] = D->distance(points[i].coordinates.begin(),
-                             points[j].coordinates.begin(), data_dim);
+                             points[j].coordinates.begin(), points.data_dim);
     std::nth_element(dists.begin(), dists.begin() + K, dists.end());
     densities[i] = 1 / sqrt(dists[K]);
   });
@@ -142,7 +131,7 @@ void dpc_bruteforce(const unsigned K, const std::string &data_path,
   double density_time = t.next_time();
   report(density_time, "Compute density");
 
-  std::vector<std::pair<uint32_t, double>> dep_ptrs(data_num);
+  std::vector<std::pair<uint32_t, double>> dep_ptrs(points.size);
   // auto sorted_points= parlay::sequence<unsigned>::from_function(data_num,
   // [](unsigned i){return i;});
   //  parlay::sort_inplace(sorted_points, [&densities](unsigned i, unsigned j){
@@ -151,15 +140,16 @@ void dpc_bruteforce(const unsigned K, const std::string &data_path,
   // });
   // bruteforce_dependent_point(data_num, data_num, sorted_points, points,
   // densities, dep_ptrs, density_cutoff, D, data_dim);
-  parlay::parallel_for(0, data_num, [&](size_t i) {
+  parlay::parallel_for(0, points.size, [&](size_t i) {
     float m_dist = std::numeric_limits<float>::max();
-    size_t id = data_num;
+    size_t id = points.size;
     if (densities[i] > density_cutoff) { // skip noise points
-      for (size_t j = 0; j < data_num; j++) {
+      for (size_t j = 0; j < points.size; j++) {
         if (densities[j] > densities[i] ||
             (densities[j] == densities[i] && j > i)) {
-          auto dist = D->distance(points[i].coordinates.begin(),
-                                  points[j].coordinates.begin(), data_dim);
+          auto dist =
+              D->distance(points[i].coordinates.begin(),
+                          points[j].coordinates.begin(), points.data_dim);
           if (dist <= m_dist) {
             m_dist = dist;
             id = j;
@@ -169,7 +159,7 @@ void dpc_bruteforce(const unsigned K, const std::string &data_path,
     }
     dep_ptrs[i] = {id, sqrt(m_dist)};
   });
-  aligned_free(data);
+
   double dependent_time = t.next_time();
   report(dependent_time, "Compute dependent points");
 
