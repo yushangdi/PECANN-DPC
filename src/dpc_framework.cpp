@@ -43,13 +43,13 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
 template <typename T>
 std::vector<double> KthDistanceDensityComputer<T>::operator()(
     parlay::sequence<Tvec_point<T> *> &graph) {
-    int data_num = this->data_num_;
-    int k = this->k_;
-    std::vector<double> densities(data_num);
-    parlay::parallel_for(0, data_num, [&](int i) {
-      densities[i] = 1.0 / (this->knn_[(i + 1) * k - 1].second);
-    });
-    return densities;
+  int data_num = this->data_num_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    densities[i] = 1.0 / (this->knn_[(i + 1) * k - 1].second);
+  });
+  return densities;
 }
 
 template <typename T>
@@ -81,8 +81,7 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
 
 template <typename T>
 std::vector<int> ClusterAssigner<T>::operator()(
-    std::vector<std::pair<int, double>> &knn, std::vector<T> &densities,
-    std::vector<T> &re_weighted_densities,
+    std::vector<T> &densities, std::vector<T> &re_weighted_densities,
     std::vector<std::pair<uint32_t, double>> &dep_ptrs) {
   return {};
 }

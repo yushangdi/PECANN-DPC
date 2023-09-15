@@ -209,8 +209,7 @@ public:
   ClusterAssigner(const DatasetKnn &data_knn) : DPCComputer(data_knn) {}
 
   virtual std::vector<int>
-  operator()(std::vector<std::pair<int, double>> &knn,
-             std::vector<T> &densities, std::vector<T> &re_weighted_densities,
+  operator()(std::vector<T> &densities, std::vector<T> &re_weighted_densities,
              std::vector<std::pair<uint32_t, double>> &dep_ptrs) = 0;
 };
 
