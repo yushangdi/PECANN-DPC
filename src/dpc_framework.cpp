@@ -20,7 +20,7 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
 
 template <class T>
 std::vector<std::pair<int, double>>
-compute_knn(const RawDataset &raw_data, const unsigned K, const Distance *D) {
+compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K, const Distance *D) {
   return {};
 }
 
@@ -55,42 +55,6 @@ std::vector<double> KthDistanceDensityComputer<T>::operator()(
 template <typename T>
 std::vector<double> KthDistanceDensityComputer<T>::reweight_density(
     const std::vector<double> &densities) {
-  return {};
-}
-
-template <typename T>
-std::set<int> CenterFinder<T>::operator()(
-    std::vector<T> &densities, std::vector<T> &re_weighted_densities,
-    std::vector<std::pair<uint32_t, double>> &dep_ptrs) {
-  return {};
-}
-
-template <typename T>
-std::set<int>
-NoiseFinder<T>::operator()(std::vector<T> &densities,
-                           std::vector<T> &re_weighted_densities) {
-  return {};
-}
-
-template <typename T>
-std::set<int> ThresholdCenterFinder<T>::operator()(
-    std::vector<T> &densities, std::vector<T> &re_weighted_densities,
-    std::vector<std::pair<uint32_t, double>> &dep_ptrs) {
-  return {};
-}
-
-template <typename T>
-std::vector<int> ClusterAssigner<T>::operator()(
-    std::vector<T> &densities, std::vector<T> &re_weighted_densities,
-    std::vector<std::pair<uint32_t, double>> &dep_ptrs) {
-  return {};
-}
-
-template <typename T>
-std::vector<int> ClusterMerger<T>::operator()(
-    std::vector<int> &current_cluster, std::vector<T> &densities,
-    std::vector<T> &re_weighted_densities,
-    std::vector<std::pair<uint32_t, double>> &dep_ptrs) {
   return {};
 }
 

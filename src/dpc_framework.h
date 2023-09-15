@@ -73,7 +73,7 @@ construct_graph(const RawDataset &raw_data, const unsigned L, const float alpha,
 //   L: the buffer size parameter
 template <class T>
 std::vector<std::pair<int, double>>
-compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
+compute_knn_bruteforce(parlay::sequence<Tvec_point<T> *> &graph,
             const RawDataset &raw_data, const unsigned K, const unsigned L,
             const Distance *D);
 
