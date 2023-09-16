@@ -38,6 +38,7 @@
 
 namespace DPC {
 
+// This struct does not own the passed in pointer
 struct DatasetKnn {
   size_t num_data_;
   size_t data_dim_;
@@ -73,7 +74,7 @@ construct_graph(const RawDataset &raw_data, const unsigned L, const float alpha,
 //   L: the buffer size parameter
 template <class T>
 std::vector<std::pair<int, double>>
-compute_knn_bruteforce(parlay::sequence<Tvec_point<T> *> &graph,
+compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
             const RawDataset &raw_data, const unsigned K, const unsigned L,
             const Distance *D);
 
@@ -84,7 +85,8 @@ compute_knn_bruteforce(parlay::sequence<Tvec_point<T> *> &graph,
 //   K: the k in knn
 template <class T>
 std::vector<std::pair<int, double>>
-compute_knn(const RawDataset &raw_data, const unsigned K, const Distance *D);
+compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
+                       const Distance *D);
 
 // Compute the dependet point of points in `graph` with densities above
 // `density_cutoff` using graph-based method. Parameters:
@@ -117,7 +119,7 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
 
 // Base class for other DPCComputers.
 class DPCComputer {
-public:
+protected:
   const std::pair<int, double> *knn_;
   const Distance *D_;
   size_t num_data_;
@@ -145,22 +147,6 @@ public:
 
   // Reweight the density of each point in $v$ based on knn.
   virtual std::vector<double> reweight_density(const std::vector<T> &densities);
-};
-
-template <typename T>
-class KthDistanceDensityComputer : public DensityComputer<T> {
-public:
-  // Here we're passing the necessary arguments to the base class constructor
-  KthDistanceDensityComputer(const DatasetKnn &data_knn)
-      : DPCComputer(data_knn) {}
-
-  // Return the density.
-  std::vector<double>
-  operator()(parlay::sequence<Tvec_point<T> *> &graph) override;
-
-  // Reweight the density of each point in $v$ based on knn.
-  std::vector<double>
-  reweight_density(const std::vector<double> &densities) override;
 };
 
 template <typename T> class CenterFinder : public DPCComputer {

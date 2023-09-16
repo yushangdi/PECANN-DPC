@@ -1,4 +1,4 @@
-#include "dpc_framework.h" // Replace with your header's filename
+#include "dpc_framework.h"
 
 namespace DPC {
 
@@ -20,7 +20,8 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
 
 template <class T>
 std::vector<std::pair<int, double>>
-compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K, const Distance *D) {
+compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
+                       const Distance *D) {
   return {};
 }
 
@@ -37,24 +38,6 @@ std::vector<std::pair<int, double>>
 compute_dep_ptr_bruteforce(const RawDataset &raw_data,
                            const std::vector<T> &densities,
                            const float density_cutoff, Distance *D) {
-  return {};
-}
-
-template <typename T>
-std::vector<double> KthDistanceDensityComputer<T>::operator()(
-    parlay::sequence<Tvec_point<T> *> &graph) {
-  int data_num = this->data_num_;
-  int k = this->k_;
-  std::vector<double> densities(data_num);
-  parlay::parallel_for(0, data_num, [&](int i) {
-    densities[i] = 1.0 / (this->knn_[(i + 1) * k - 1].second);
-  });
-  return densities;
-}
-
-template <typename T>
-std::vector<double> KthDistanceDensityComputer<T>::reweight_density(
-    const std::vector<double> &densities) {
   return {};
 }
 
