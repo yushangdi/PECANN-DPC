@@ -45,7 +45,7 @@ cluster_points(std::vector<T> &densities,
   std::unordered_set<size_t> centers;
   for (size_t i = 0; i < distance_ranks.size(); i++) {
     auto rank = distance_ranks.at(i);
-    if (rank < 1000 || (dep_ptrs[i].first == densities.size())) {
+    if (rank < 999 || (dep_ptrs[i].first == densities.size())) {
       std::cout << i << " " << dep_ptrs.at(i).second << " " << rank
                 << std::endl;
       centers.insert(i);
