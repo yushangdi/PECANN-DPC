@@ -7,41 +7,44 @@ import os
 import json
 import sys
 
-def eval_clusters(labels, preds, verbose=True):
+def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, completeness, homogeneity"]):
 
 	label_counter = Counter(labels)
 	pred_counter = Counter(preds)
 	if verbose:
 		print('groud truth', label_counter)
 		print('clustering', pred_counter)
-	TP_count = 0
-	for label, label_count in label_counter.items():
-		ids = np.argwhere(labels == label)[:,0]
-		pred, pred_count = stats.mode(preds[ids], axis=None, keepdims=False)
-		# print(label, pred)
-		if pred_count / (label_count + pred_counter[pred] - pred_count) > 0.5 :
-			# print('pass', label, pred)
-			TP_count += 1
-
-	recall50 = TP_count / len(label_counter)
-
-	precision50 = TP_count / len(pred_counter)
-
-	AMI = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
-
-	Arand = sklearn.metrics.adjusted_rand_score(labels, preds)
-
-	completeness = sklearn.metrics.completeness_score(labels, preds)
-
-	homogeneity = sklearn.metrics.homogeneity_score(labels, preds)
-
+	
 	result = {}
-	result['recall50'] = recall50
-	result['precision50'] = precision50
-	result['AMI'] = AMI
-	result['ARI'] = Arand
-	result['completeness'] = completeness
-	result['homogeneity'] = homogeneity
+
+	if "recall" in metrics:
+		TP_count = 0
+		for label, label_count in label_counter.items():
+			ids = np.argwhere(labels == label)[:,0]
+			pred, pred_count = stats.mode(preds[ids], axis=None, keepdims=False)
+			# print(label, pred)
+			if pred_count / (label_count + pred_counter[pred] - pred_count) > 0.5 :
+				# print('pass', label, pred)
+				TP_count += 1
+
+		recall50 = TP_count / len(label_counter)
+		precision50 = TP_count / len(pred_counter)
+
+		result['recall50'] = recall50
+		result['precision50'] = precision50
+
+
+	if "ami" in metrics:
+		result["AMI"] = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
+
+	if "ari" in metrics:
+		result["ARI"] = sklearn.metrics.adjusted_rand_score(labels, preds)
+
+	if "completeness" in metrics:
+		result['completeness'] = sklearn.metrics.completeness_score(labels, preds)
+
+	if "homogeneity" in metrics:
+		result['homogeneity'] = sklearn.metrics.homogeneity_score(labels, preds)
 
 	return result
 

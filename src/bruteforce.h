@@ -8,7 +8,6 @@
 #include <numeric>
 #include <set>
 #include <string.h>
-#include <unordered_set>
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -34,41 +33,20 @@ cluster_points(std::vector<T> &densities,
                std::vector<std::pair<uint32_t, double>> &dep_ptrs,
                float density_cutoff, float dist_cutoff,
                float center_density_cutoff) {
-  std::cout << "HERE1" << std::endl << std::flush;
-  std::vector<double> negative_products;
-  for (size_t i = 0; i < densities.size(); i++) {
-    negative_products.push_back(-1 * dep_ptrs.at(i).second * densities.at(i));
-  }
-
-  std::cout << "HERE2" << std::endl << std::flush;
-  auto distance_ranks = parlay::rank(negative_products);
-  std::unordered_set<size_t> centers;
-  for (size_t i = 0; i < distance_ranks.size(); i++) {
-    auto rank = distance_ranks.at(i);
-    if (rank < 999 || (dep_ptrs[i].first == densities.size())) {
-      std::cout << i << " " << dep_ptrs.at(i).second << " " << rank
-                << std::endl;
-      centers.insert(i);
-    }
-  }
-
-  std::cout << "HERE3" << std::endl << std::flush;
   // union_find<int> UF(densities.size());
   ParUF<int> UF(densities.size());
-  for (int i = 0; i < densities.size(); i++) {
-    if (centers.count(i) == 1) {
-      std::cout << "Choosing " << i << " as a center!" << std::endl;
-      continue;
+  parlay::parallel_for(0, densities.size(), [&](int i) {
+    if (dep_ptrs[i].first != densities.size()) { // the max density point
+      if (densities[i] > density_cutoff &&
+          (dep_ptrs[i].second <= dist_cutoff ||
+           densities[i] < center_density_cutoff)) {
+        UF.link(i, dep_ptrs[i].first);
+      }
     }
-    UF.link(i, dep_ptrs.at(i).first);
-  };
-
-  std::cout << "HERE4" << std::endl << std::flush;
+  });
   std::vector<int> cluster(densities.size());
   parlay::parallel_for(0, densities.size(),
                        [&](int i) { cluster[i] = UF.find(i); });
-
-  std::cout << "HERE5" << std::endl << std::flush;
   return cluster;
 }
 

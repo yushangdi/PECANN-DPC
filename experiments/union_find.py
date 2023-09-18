@@ -1,15 +1,11 @@
-
-
-
 class UnionFind:
-
     def __init__(self):
         self.parents = {}
 
     def add(self, a):
         if a not in self.parents:
             self.parents[a] = a
-        
+
     def unite(self, a, b):
         self.add(a)
         self.add(b)
@@ -18,7 +14,13 @@ class UnionFind:
         self.parents[a] = b
 
     def find(self, a):
-        if self.parents[a] != a:
-            self.parents[a] = self.find(self.parents[a])
-            return self.parents[a]
+        chain = []
+
+        while self.parents[a] != a:
+            chain.append(a)
+            a = self.parents[a]
+
+        for b in chain:
+            self.parents[b] = a
+
         return a
