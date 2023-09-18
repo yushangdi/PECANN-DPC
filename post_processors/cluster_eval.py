@@ -7,18 +7,7 @@ import os
 import json
 import sys
 
-def eval_cluster(gt_path, cluster_path, verbose=True):
-
-	if verbose:
-		print(f'reading gt from {gt_path}')
-		print(f'reading result from {cluster_path}')
-
-	with open(gt_path, 'r') as file:
-		labels = np.array([int(line.rstrip()) for line in file])
-
-	with open(cluster_path, 'r') as file:
-		preds = np.array([int(line.rstrip()) for line in file])
-
+def eval_clusters(labels, preds, verbose=True):
 
 	label_counter = Counter(labels)
 	pred_counter = Counter(preds)
@@ -56,9 +45,24 @@ def eval_cluster(gt_path, cluster_path, verbose=True):
 
 	return result
 
+
+def eval_cluster_files(gt_path, cluster_path, verbose=True):
+
+	if verbose:
+		print(f'reading gt from {gt_path}')
+		print(f'reading result from {cluster_path}')
+
+	with open(gt_path, 'r') as file:
+		labels = np.array([int(line.rstrip()) for line in file])
+
+	with open(cluster_path, 'r') as file:
+		preds = np.array([int(line.rstrip()) for line in file])
+
+	eval_clusters(labels, preds, verbose)
+
 if __name__ == "__main__":
 	assert(len(sys.argv) >= 3)
 	gt_path = sys.argv[1]
 	cluster_path = sys.argv[2]
-	print(json.dumps(eval_cluster(gt_path, cluster_path), indent=4))
+	print(json.dumps(eval_cluster_files(gt_path, cluster_path), indent=4))
 
