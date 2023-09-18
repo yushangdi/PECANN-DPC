@@ -30,6 +30,15 @@ add_library(dpc_ann_cc STATIC ${CC_SOURCES})
 target_compile_options(dpc_ann_cc PRIVATE ${COMPILE_OPTIONS})
 target_link_libraries(dpc_ann_cc Threads::Threads)
 
+set(CC_SOURCES_FRAMEWORK
+    src/dpc_framework.cpp
+    src/dpc_components.cpp
+    )
+
+add_library(dpc_ann_framework_cc STATIC ${CC_SOURCES_FRAMEWORK})
+target_compile_options(dpc_ann_framework_cc PRIVATE ${COMPILE_OPTIONS})
+target_link_libraries(dpc_ann_framework_cc Threads::Threads)
+
 # ----------------- Nanobind to create python bindings -------------------------
 
 
