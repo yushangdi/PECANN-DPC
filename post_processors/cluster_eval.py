@@ -7,7 +7,49 @@ import os
 import json
 import sys
 
-def eval_cluster(gt_path, cluster_path, verbose=True):
+def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, completeness, homogeneity"]):
+
+	label_counter = Counter(labels)
+	pred_counter = Counter(preds)
+	if verbose:
+		print('groud truth', label_counter)
+		print('clustering', pred_counter)
+	
+	result = {}
+
+	if "recall" in metrics:
+		TP_count = 0
+		for label, label_count in label_counter.items():
+			ids = np.argwhere(labels == label)[:,0]
+			pred, pred_count = stats.mode(preds[ids], axis=None, keepdims=False)
+			# print(label, pred)
+			if pred_count / (label_count + pred_counter[pred] - pred_count) > 0.5 :
+				# print('pass', label, pred)
+				TP_count += 1
+
+		recall50 = TP_count / len(label_counter)
+		precision50 = TP_count / len(pred_counter)
+
+		result['recall50'] = recall50
+		result['precision50'] = precision50
+
+
+	if "ami" in metrics:
+		result["AMI"] = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
+
+	if "ari" in metrics:
+		result["ARI"] = sklearn.metrics.adjusted_rand_score(labels, preds)
+
+	if "completeness" in metrics:
+		result['completeness'] = sklearn.metrics.completeness_score(labels, preds)
+
+	if "homogeneity" in metrics:
+		result['homogeneity'] = sklearn.metrics.homogeneity_score(labels, preds)
+
+	return result
+
+
+def eval_cluster_files(gt_path, cluster_path, verbose=True):
 
 	if verbose:
 		print(f'reading gt from {gt_path}')
@@ -19,46 +61,11 @@ def eval_cluster(gt_path, cluster_path, verbose=True):
 	with open(cluster_path, 'r') as file:
 		preds = np.array([int(line.rstrip()) for line in file])
 
-
-	label_counter = Counter(labels)
-	pred_counter = Counter(preds)
-	if verbose:
-		print('groud truth', label_counter)
-		print('clustering', pred_counter)
-	TP_count = 0
-	for label, label_count in label_counter.items():
-		ids = np.argwhere(labels == label)[:,0]
-		pred, pred_count = stats.mode(preds[ids], axis=None, keepdims=False)
-		# print(label, pred)
-		if pred_count / (label_count + pred_counter[pred] - pred_count) > 0.5 :
-			# print('pass', label, pred)
-			TP_count += 1
-
-	recall50 = TP_count / len(label_counter)
-
-	precision50 = TP_count / len(pred_counter)
-
-	AMI = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
-
-	Arand = sklearn.metrics.adjusted_rand_score(labels, preds)
-
-	completeness = sklearn.metrics.completeness_score(labels, preds)
-
-	homogeneity = sklearn.metrics.homogeneity_score(labels, preds)
-
-	result = {}
-	result['recall50'] = recall50
-	result['precision50'] = precision50
-	result['AMI'] = AMI
-	result['ARI'] = Arand
-	result['completeness'] = completeness
-	result['homogeneity'] = homogeneity
-
-	return result
+	eval_clusters(labels, preds, verbose)
 
 if __name__ == "__main__":
 	assert(len(sys.argv) >= 3)
 	gt_path = sys.argv[1]
 	cluster_path = sys.argv[2]
-	print(json.dumps(eval_cluster(gt_path, cluster_path), indent=4))
+	print(json.dumps(eval_cluster_files(gt_path, cluster_path), indent=4))
 

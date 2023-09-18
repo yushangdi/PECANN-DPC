@@ -1,7 +1,7 @@
 import time
 
 # Should already have parent folder on path for this to work
-from post_processors.cluster_eval import eval_cluster
+from post_processors.cluster_eval import eval_cluster_files
 import os
 
 quality_headers = [
@@ -45,7 +45,7 @@ def eval_cluster_and_write_results(
         (str(time_reports[key]) if key in time_reports else "")
         for key in time_check_headers
     ]
-    cluster_results = eval_cluster(
+    cluster_results = eval_cluster_files(
         gt_path=gt_cluster_path, cluster_path=cluster_path, verbose=False
     )
     with open(results_file, "a") as f:

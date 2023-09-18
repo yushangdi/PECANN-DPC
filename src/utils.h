@@ -128,7 +128,8 @@ output(const std::vector<T> &densities, const std::vector<int> &cluster,
     std::cout << "writing decision graph\n";
     std::ofstream fout(decision_graph_path);
     for (size_t i = 0; i < densities.size(); i++) {
-      fout << densities[i] << " " << dep_ptrs[i].second << '\n';
+      fout << densities[i] << " " << dep_ptrs[i].second << " "
+           << dep_ptrs[i].first << '\n';
     }
   }
 }

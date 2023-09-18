@@ -33,7 +33,7 @@ parser.add_argument(
     "timeout",
     help="How long to wait in seconds before killing one of the running jobs",
     default=20,
-    type=int
+    type=int,
 )
 args = parser.parse_args()
 
@@ -94,7 +94,7 @@ if not os.path.isfile(ground_truth_cluster_path):
         decision_graph_path=f"results/{dataset_folder}/{dataset}_BruteForce.dg",
         output_path=ground_truth_cluster_path,
         **get_cutoff(dataset),
-        data=data
+        data=data,
     )
 
 
