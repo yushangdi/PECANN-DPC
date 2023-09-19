@@ -11,7 +11,7 @@ import numpy as np
 quality_headers = [
     "recall50",
     "precision50",
-    "AMI",
+    # "AMI",
     "ARI",
     "completeness",
     "homogeneity",
@@ -92,7 +92,10 @@ def eval_cluster_and_write_results(
         for key in time_check_headers
     ]
     cluster_results = eval_cluster_files(
-        gt_path=gt_cluster_path, cluster_path=cluster_path, verbose=False
+        gt_path=gt_cluster_path,
+        cluster_path=cluster_path,
+        verbose=False,
+        metrics=quality_headers,
     )
     with open(results_file, "a") as f:
         fields = (
