@@ -7,7 +7,7 @@ import os
 import json
 import sys
 
-def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, completeness, homogeneity"]):
+def eval_clusters(labels, preds, verbose=True, metrics=["recall", "ami", "ari", "completeness", "homogeneity"]):
 
 	label_counter = Counter(labels)
 	pred_counter = Counter(preds)
@@ -32,7 +32,6 @@ def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, compl
 
 		result['recall50'] = recall50
 		result['precision50'] = precision50
-
 
 	if "ami" in metrics:
 		result["AMI"] = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
@@ -61,7 +60,7 @@ def eval_cluster_files(gt_path, cluster_path, verbose=True):
 	with open(cluster_path, 'r') as file:
 		preds = np.array([int(line.rstrip()) for line in file])
 
-	eval_clusters(labels, preds, verbose)
+	return eval_clusters(labels, preds, verbose)
 
 if __name__ == "__main__":
 	assert(len(sys.argv) >= 3)

@@ -1,6 +1,5 @@
 import faiss
 import numpy as np
-from post_processors.cluster_eval import eval_clusters
 import sys
 import os
 from pathlib import Path
@@ -10,23 +9,23 @@ abspath = Path(__file__).resolve().parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 
+from post_processors.cluster_eval import eval_clusters
 
 x = np.load("data/imagenet/imagenet.npy")
 ncentroids = 1000
 
+for niter in range(10, 101, 10):
+    verbose = True
+    d = x.shape[1]
+    kmeans = faiss.Kmeans(d, ncentroids, niter=niter, verbose=verbose)
+    kmeans.train(x)
 
-niter = 20
-verbose = True
-d = x.shape[1]
-kmeans = faiss.Kmeans(d, ncentroids, niter=niter, verbose=verbose)
-kmeans.train(x)
+    _, clusters = kmeans.index.search(x, 1)
+    clusters = clusters.flatten()
 
-_, clusters = kmeans.index.search(x, 1)
-clusters = clusters.flatten()
+    ground_truth = np.loadtxt("data/imagenet/imagenet.gt", dtype=int)
 
-ground_truth = np.loadtxt("data/imagenet/imagenet.gt", dtype=int)
-
-eval_clusters(ground_truth, clusters, verbose=False)
+    print(niter, eval_clusters(ground_truth, clusters, verbose=False))
 
 # Result for imagenet:
 # {'recall50': 0.692,

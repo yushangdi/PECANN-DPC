@@ -20,7 +20,7 @@ from utils import (
     create_results_file,
     eval_cluster_and_write_results,
     make_results_folder,
-    get_cutoff,
+    product_cluster_dg,
 )
 
 
@@ -30,7 +30,12 @@ parser.add_argument(
     help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
 )
 parser.add_argument(
-    "timeout",
+    "num_clusters",
+    help="How many clusters to use when generating the clusters from the decision graph files",
+    type=int,
+)
+parser.add_argument(
+    "--timeout",
     help="How long to wait in seconds before killing one of the running jobs",
     default=20,
     type=int,
@@ -39,6 +44,7 @@ args = parser.parse_args()
 
 dataset = args.dataset
 timeout_s = args.timeout
+num_clusters = args.num_clusters
 
 
 cluster_results_file = create_results_file()
@@ -87,14 +93,25 @@ dataset_folder = make_results_folder(dataset)
 
 data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
+
+def create_product_clustering(decision_graph_path, num_clusters, output_path):
+    clusters = product_cluster_dg(decision_graph_path, num_clusters)
+    clusters = clusters.reshape((len(clusters), 1))
+    np.savetxt(output_path, clusters, fmt="%i")
+
+
 ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
 if not os.path.isfile(ground_truth_cluster_path):
+    decision_graph_path = f"results/{dataset_folder}/{dataset}_BruteForce.dg"
     dpc_ann.dpc_numpy(
         graph_type="BruteForce",
-        decision_graph_path=f"results/{dataset_folder}/{dataset}_BruteForce.dg",
-        output_path=ground_truth_cluster_path,
-        **get_cutoff(dataset),
+        decision_graph_path=decision_graph_path,
+        # output_path=ground_truth_cluster_path,
+        # **get_cutoff(dataset),
         data=data,
+    )
+    create_product_clustering(
+        decision_graph_path, num_clusters, ground_truth_cluster_path
     )
 
 
@@ -103,9 +120,14 @@ def try_command(graph_type, command):
 
     times = dpc_ann.dpc_numpy(
         **command,
-        **get_cutoff(dataset),
+        # **get_cutoff(dataset),
         data=data,
         decision_graph_path=f"{prefix}.dg",
+        # output_path=f"{prefix}.cluster",
+    )
+    create_product_clustering(
+        decision_graph_path=f"{prefix}.dg",
+        num_clusters=num_clusters,
         output_path=f"{prefix}.cluster",
     )
 

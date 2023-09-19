@@ -3,6 +3,10 @@ import time
 # Should already have parent folder on path for this to work
 from post_processors.cluster_eval import eval_cluster_files
 import os
+import pandas as pd
+import sys
+from union_find import UnionFind
+import numpy as np
 
 quality_headers = [
     "recall50",
@@ -20,6 +24,48 @@ time_check_headers = [
     "Total",
 ]
 headers = [t + " time" for t in time_check_headers] + quality_headers
+
+
+def _cluster_by_densities_distance_product(
+    graph, num_clusters, density_product, distance_product
+):
+    parents = graph["Parent_ID"].to_numpy(copy=True)
+    new_column = (np.log(graph["Density"]) * density_product) + (
+        np.log(graph["Parent_Distance"]) * distance_product
+    )
+    top_k_densities = new_column.nlargest(num_clusters)
+    parents[top_k_densities.index] = -1
+
+    u = UnionFind()
+    for i, p in enumerate(parents):
+        if p != -1:
+            u.unite(i, p)
+        else:
+            u.add(i)
+
+    return np.array([u.find(i) for i in range(len(graph))])
+
+
+def product_cluster_dg(dg_path, num_clusters, density_product=1, distance_product=1):
+    graph = pd.read_csv(
+        dg_path, delimiter=" ", names=["Density", "Parent_Distance", "Parent_ID"]
+    )
+
+    # Force parentless nodes to be selected by any strategy
+    parentless = graph["Parent_Distance"] == -1
+    graph.loc[parentless, "Density"] = 1
+    graph.loc[parentless, "Parent_Distance"] = float("inf")
+
+    # Force duplicates to be never selected by any strategy
+    duplicates = graph["Parent_Distance"] == 0
+    graph.loc[duplicates, "Parent_Distance"] = sys.float_info.min
+
+    return _cluster_by_densities_distance_product(
+        graph,
+        num_clusters=num_clusters,
+        density_product=density_product,
+        distance_product=distance_product,
+    )
 
 
 def create_results_file():
