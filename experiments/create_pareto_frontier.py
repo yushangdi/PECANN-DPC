@@ -69,7 +69,8 @@ for (
     # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
     for alpha in [1.1]:
         for beam_search_density in [8, 16, 32, 64]:
-            for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
+            # for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
+            for graph_type in ["Vamana"]:
                 method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
                 command_line = {
                     "max_degree": max_degree,
@@ -116,7 +117,7 @@ if not os.path.isfile(ground_truth_cluster_path):
 
 
 def try_command(graph_type, command):
-    prefix = f"results/{dataset_folder}/{dataset}_{method}"
+    prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
     times = dpc_ann.dpc_numpy(
         **command,
