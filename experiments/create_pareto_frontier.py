@@ -111,9 +111,10 @@ if not os.path.isfile(ground_truth_cluster_path):
         # **get_cutoff(dataset),
         data=data,
     )
-    create_product_clustering(
-        decision_graph_path, num_clusters, ground_truth_cluster_path
-    )
+# Always recreate ground truth clustering
+create_product_clustering(
+    decision_graph_path, num_clusters, ground_truth_cluster_path
+)
 
 
 def try_command(graph_type, command):
