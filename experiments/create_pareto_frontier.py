@@ -102,18 +102,18 @@ def create_product_clustering(decision_graph_path, num_clusters, output_path):
 
 
 ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
+ground_truth_decision_graph_path = f"results/{dataset_folder}/{dataset}_BruteForce.dg"
 if not os.path.isfile(ground_truth_cluster_path):
-    decision_graph_path = f"results/{dataset_folder}/{dataset}_BruteForce.dg"
     dpc_ann.dpc_numpy(
         graph_type="BruteForce",
-        decision_graph_path=decision_graph_path,
+        decision_graph_path=ground_truth_decision_graph_path,
         # output_path=ground_truth_cluster_path,
         # **get_cutoff(dataset),
         data=data,
     )
 # Always recreate ground truth clustering
 create_product_clustering(
-    decision_graph_path, num_clusters, ground_truth_cluster_path
+    ground_truth_decision_graph_path, num_clusters, ground_truth_cluster_path
 )
 
 
