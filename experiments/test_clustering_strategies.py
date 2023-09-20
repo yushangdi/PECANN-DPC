@@ -59,7 +59,7 @@ for num_clusters in num_clusters_to_test:
         graph, num_clusters=num_clusters, density_product=1, distance_product=1
     )
 
-    eval_result = eval_clusters(ground_truth, clusters, verbose=False, metrics=["ARI"])
+    eval_result = eval_clusters(ground_truth, clusters, verbose=False, eval_metrics=["ARI"])
     cluster_counts = Counter(clusters)
 
     num_non_one_clusters = len(

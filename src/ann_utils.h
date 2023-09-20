@@ -25,4 +25,6 @@ struct ParsedDataset {
       points[i].coordinates = parlay::make_slice(start, end);
     });
   }
+
+  ParsedDataset();
 };
