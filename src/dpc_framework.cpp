@@ -34,7 +34,6 @@
 #include "bruteforce.h"
 #include "utils.h"
 
-
 namespace DPC {
 
 void dpc(const unsigned K, const unsigned L, const unsigned Lnn,

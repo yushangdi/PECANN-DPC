@@ -25,12 +25,9 @@
 
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 
-
 #include "IO.h"
 #include "ann_utils.h"
 #include "utils.h"
-
-
 
 namespace DPC {
 
@@ -110,7 +107,8 @@ public:
   operator()(parlay::sequence<Tvec_point<T> *> &graph) = 0;
 
   // Reweight the density of each point in $v$ based on knn.
-  virtual std::vector<double> reweight_density(const std::vector<double> &densities) = 0;
+  virtual std::vector<double>
+  reweight_density(const std::vector<double> &densities) = 0;
 };
 
 template <typename T> class CenterFinder : public DPCComputer {

@@ -6,7 +6,6 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
-
 #include "ParlayANN/algorithms/HCNNG/hcnng_index.h"
 #include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
@@ -22,7 +21,6 @@
 #include "bruteforce.h"
 #include "union_find.h"
 #include "utils.h"
-
 
 namespace DPC {
 

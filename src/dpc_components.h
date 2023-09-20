@@ -84,7 +84,8 @@ public:
   operator()(parlay::sequence<Tvec_point<T> *> &graph) override;
 
   // Reweight the density of each point in $v$ based on knn.
-  std::vector<double> reweight_density(const std::vector<double> &densities) override;
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
 };
 
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
