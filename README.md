@@ -16,6 +16,15 @@ Run directly from commandline:
 ./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg 
 ```
 
+Test pip3 installation
+```bash
+python3 tests/test_python_install.py
+```
+
+Test dpc frameworks
+```bash
+./build/dpc_tests
+```
 
 Change line 3 in Makefile to the location of boost library.
 ```bash
