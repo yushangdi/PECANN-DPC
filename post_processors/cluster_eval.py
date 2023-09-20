@@ -7,7 +7,7 @@ import os
 import json
 import sys
 
-def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, completeness, homogeneity"]):
+def eval_clusters(labels, preds, verbose=True, eval_metrics=["recall", "ami", "ari", "completeness", "homogeneity"]):
 
 	label_counter = Counter(labels)
 	pred_counter = Counter(preds)
@@ -17,7 +17,7 @@ def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, compl
 	
 	result = {}
 
-	if "recall" in metrics:
+	if "recall" in eval_metrics:
 		TP_count = 0
 		for label, label_count in label_counter.items():
 			ids = np.argwhere(labels == label)[:,0]
@@ -34,16 +34,16 @@ def eval_clusters(labels, preds, verbose=True, metrics=["recall, ami, ari, compl
 		result['precision50'] = precision50
 
 
-	if "ami" in metrics:
+	if "ami" in eval_metrics:
 		result["AMI"] = sklearn.metrics.adjusted_mutual_info_score(labels, preds)
 
-	if "ari" in metrics:
+	if "ari" in eval_metrics:
 		result["ARI"] = sklearn.metrics.adjusted_rand_score(labels, preds)
 
-	if "completeness" in metrics:
+	if "completeness" in eval_metrics:
 		result['completeness'] = sklearn.metrics.completeness_score(labels, preds)
 
-	if "homogeneity" in metrics:
+	if "homogeneity" in eval_metrics:
 		result['homogeneity'] = sklearn.metrics.homogeneity_score(labels, preds)
 
 	return result
@@ -61,7 +61,7 @@ def eval_cluster_files(gt_path, cluster_path, verbose=True):
 	with open(cluster_path, 'r') as file:
 		preds = np.array([int(line.rstrip()) for line in file])
 
-	eval_clusters(labels, preds, verbose)
+	return eval_clusters(labels, preds, verbose)
 
 if __name__ == "__main__":
 	assert(len(sys.argv) >= 3)
