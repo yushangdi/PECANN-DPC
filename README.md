@@ -16,6 +16,41 @@ Run directly from commandline:
 ./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg 
 ```
 
+Test pip3 installation
+```bash
+python3 tests/test_python_install.py
+```
+
+Test dpc frameworks
+```bash
+./build/dpc_tests
+```
+
+## PyNNDescent
+
+`max_degree` is the k used to build the graph. We look at the 2-hop neighbors of each node in each round, and retain the k-th closeset neighbors.
+
+`Lbuild` ->cluster_size,  the leaf size of the cluster trees.
+`num_clusters`: only used for pyNNDescent. the number of cluster trees to use when initializing the graph. roughly linear with the graph constructin time.
+
+
+`alpha`: prune parameter, similar to Vamana.
+
+-Lbuild 100 -num_clusters 10
+
+Only graph construction is different. All other parts are the same.
+
+<!-- (v, k, R, beamSize, beamSizeQ, alpha, delta, qpts, groundTruth, res_file, graph_built, D) -->
+
+```bash
+ ./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance.dg --output_file ./results/unbalance.cluster --dist_cutoff 30000 --graph_type p --Lbuild 200 --num_clusters 1
+ ```
+
+ ## NCHHG
+
+`max_degree` is the MST degree used.
+
+# Old Commands 
 
 Change line 3 in Makefile to the location of boost library.
 ```bash
@@ -169,26 +204,3 @@ python data_processors/plot.py data/mnist.txt results/mnist_bruteforce.cluster r
 
 ```
 
-## PyNNDescent
-
-`max_degree` is the k used to build the graph. We look at the 2-hop neighbors of each node in each round, and retain the k-th closeset neighbors.
-
-`Lbuild` ->cluster_size,  the leaf size of the cluster trees.
-`num_clusters`: only used for pyNNDescent. the number of cluster trees to use when initializing the graph. roughly linear with the graph constructin time.
-
-
-`alpha`: prune parameter, similar to Vamana.
-
--Lbuild 100 -num_clusters 10
-
-Only graph construction is different. All other parts are the same.
-
-<!-- (v, k, R, beamSize, beamSizeQ, alpha, delta, qpts, groundTruth, res_file, graph_built, D) -->
-
-```bash
- ./doubling_dpc --query_file ./data/unbalance.txt --decision_graph_path ./results/unbalance.dg --output_file ./results/unbalance.cluster --dist_cutoff 30000 --graph_type p --Lbuild 200 --num_clusters 1
- ```
-
- ## NCHHG
-
-`max_degree` is the MST degree used.

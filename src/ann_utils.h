@@ -26,5 +26,6 @@ struct ParsedDataset {
     });
   }
 
-  ParsedDataset();
+  ParsedDataset() = default;
+  ;
 };

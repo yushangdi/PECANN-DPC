@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dpc_framework.h"
+#include "computers.h"
 #include <set>
 #include <utility>
 #include <vector>
@@ -15,7 +15,7 @@ template <class T>
 parlay::sequence<Tvec_point<T> *>
 construct_graph(const RawDataset &raw_data, ParsedDataset &data,
                 const unsigned Lbuild, const float alpha, const int max_degree,
-                const int num_clusters, const Distance *D,
+                const int num_clusters, Distance *D,
                 const GraphType graph_type);
 
 // Compute the k-nearest neighbors of points in `graph` using graph-based
@@ -29,7 +29,7 @@ template <class T>
 std::vector<std::pair<int, double>>
 compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
             const RawDataset &raw_data, const unsigned K, const unsigned L,
-            const Distance *D);
+            Distance *D);
 
 // Compute the k-nearest neighbors of points in `raw_data` using bruteforce
 // method. Parameters:
@@ -54,9 +54,10 @@ compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
 template <class T>
 std::vector<std::pair<int, double>>
 compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
+                parlay::sequence<Tvec_point<T>> &points,
                 const DatasetKnn &data_knn, const RawDataset &raw_data,
                 const std::vector<double> &densities,
-                const std::set<int> &noise_pts, const Distance *D, unsigned L,
+                const std::set<int> &noise_pts, Distance *D, unsigned L,
                 int round_limit = -1);
 
 // Compute the dependet point of `raw_data` with densities above
@@ -83,7 +84,7 @@ public:
   operator()(parlay::sequence<Tvec_point<T> *> &graph) override;
 
   // Reweight the density of each point in $v$ based on knn.
-  std::vector<double> reweight_density(const std::vector<double> &densities);
+  std::vector<double> reweight_density(const std::vector<double> &densities) override;
 };
 
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
