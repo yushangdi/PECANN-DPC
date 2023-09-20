@@ -27,7 +27,7 @@ dg_path = f"results/{dataset}/{dataset}_BruteForce.dg"
 for num_clusters in num_clusters_to_test:
     clusters = product_cluster_dg(dg_path, num_clusters=num_clusters)
 
-    eval_result = eval_clusters(ground_truth, clusters, verbose=False, metrics=["ARI"])
+    eval_result = eval_clusters(ground_truth, clusters, verbose=False, eval_metrics=["ARI"])
     cluster_counts = Counter(clusters)
 
     num_non_one_clusters = len(

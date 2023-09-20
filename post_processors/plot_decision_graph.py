@@ -68,7 +68,7 @@ if i != -1:
 
 top_indices = np.argsort(data[:, 1])[::-1][:num_cluster]
 for idx in top_indices:
-		x, y = data[idx]
+		x, y, _ = data[idx]
 		plt.text(x, y, f'ID:{idx}', ha='right', va='bottom')
 
 

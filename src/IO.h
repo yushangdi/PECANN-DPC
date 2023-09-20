@@ -161,4 +161,7 @@ struct RawDataset {
   RawDataset(float *data, size_t num_data, size_t data_dim)
       : num_data(num_data), data_dim(data_dim), aligned_dim(data_dim),
         data(data) {}
+
+  // Return the start of the coordinates of ith data point.
+  float *operator[](size_t i) const { return data + i * aligned_dim; }
 };
