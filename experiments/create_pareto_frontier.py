@@ -56,39 +56,37 @@ options = []
 # can add others once we know reasonable parameters for num_clusters
 #  and reduce the search space with the vamana search
 
-# For now not including 128 at top of range
-
-exponential_range = [4, 8, 16, 32, 64]
+exponential_range = [8, 16, 32, 64, 128, 256]
 for (
     max_degree,
     beam_search_construction,
     beam_search_clustering,
+    beam_search_density
 ) in itertools.product(exponential_range, exponential_range, exponential_range):
     # We are assuming Vamana value of alpha = 1.1 (experimentally verified) works well for other graph methods
     # TODO(Josh): Validate this assumption? Can just leave running in background somewhere
     # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
     for alpha in [1.1]:
-        for beam_search_density in [8, 16, 32, 64]:
-            # for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
-            for graph_type in ["Vamana"]:
-                method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
-                command_line = {
-                    "max_degree": max_degree,
-                    "alpha": alpha,
-                    "Lbuild": beam_search_construction,
-                    "L": beam_search_density,
-                    "Lnn": beam_search_clustering,
-                    "graph_type": graph_type,
-                }
-                if graph_type in ["pyNNDescent", "HCNNG"]:
-                    if beam_search_construction < 16:
-                        continue
-                    for num_clusters in range(1, 6):
-                        new_command_line = dict(command_line)
-                        command_line["num_clusters"] = num_clusters
-                        options.append((method, new_command_line))
-                else:
-                    options.append((method, command_line))
+        # for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
+        for graph_type in ["Vamana"]:
+            method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
+            command_line = {
+                "max_degree": max_degree,
+                "alpha": alpha,
+                "Lbuild": beam_search_construction,
+                "L": beam_search_density,
+                "Lnn": beam_search_clustering,
+                "graph_type": graph_type,
+            }
+            if graph_type in ["pyNNDescent", "HCNNG"]:
+                if beam_search_construction < 16:
+                    continue
+                for num_clusters in range(1, 6):
+                    new_command_line = dict(command_line)
+                    command_line["num_clusters"] = num_clusters
+                    options.append((method, new_command_line))
+            else:
+                options.append((method, command_line))
 
 dataset_folder = make_results_folder(dataset)
 
