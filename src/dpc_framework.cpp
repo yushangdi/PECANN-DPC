@@ -78,8 +78,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
     dep_ptrs = compute_dep_ptr_bruteforce(raw_data, dataset_knn, densities,
                                           noise_points, D);
   } else {
-    dep_ptrs = compute_dep_ptr(graph, dataset_knn, raw_data, densities,
-                               noise_points, D, L,
+    dep_ptrs = compute_dep_ptr(graph, parsed_data.points, dataset_knn, raw_data,
+                               densities, noise_points, D, L,
                                /* round_limit = */ 4);
   }
 

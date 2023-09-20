@@ -11,7 +11,7 @@ template <class T>
 parlay::sequence<Tvec_point<T> *>
 construct_graph(const RawDataset &raw_data, ParsedDataset &data,
                 const unsigned Lbuild, const float alpha, const int max_degree,
-                const int num_clusters, const Distance *D,
+                const int num_clusters, Distance *D,
                 const GraphType graph_type) {
   parlay::internal::timer t("DPC");
   int data_num = raw_data.num_data;
@@ -61,7 +61,7 @@ template <class T>
 std::vector<std::pair<int, double>>
 compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
             const RawDataset &raw_data, const unsigned K, const unsigned L,
-            const Distance *D) {
+            Distance *D) {
   auto beamSizeQ = L;
   std::atomic<int> num_bruteforce = 0;
   int data_num = raw_data.num_data;
@@ -128,7 +128,7 @@ compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
 template <class T>
 std::pair<int, double>
 compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
-                const std::vector<T> &densities, const size_t data_dim,
+                const std::vector<double> &densities, const size_t data_dim,
                 unsigned &L, Distance *D, int round_limit = -1) {
   parlay::sequence<Tvec_point<T> *> start_points;
   start_points.push_back(data[query_id]);
@@ -171,11 +171,11 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
 }
 
 template <class T>
-std::vector<std::pair<int, double>>
-compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
-                const DatasetKnn &data_knn, const RawDataset &raw_data,
-                const std::vector<T> &densities, const std::set<int> &noise_pts,
-                const Distance *D, unsigned L, int round_limit) {
+std::vector<std::pair<int, double>> compute_dep_ptr(
+    parlay::sequence<Tvec_point<T> *> &graph,
+    parlay::sequence<Tvec_point<T>> &points, const DatasetKnn &data_knn,
+    const RawDataset &raw_data, const std::vector<double> &densities,
+    const std::set<int> &noise_pts, Distance *D, unsigned L, int round_limit) {
   int data_num = raw_data.num_data;
   int data_dim = raw_data.data_dim;
   int aligned_dim = raw_data.aligned_dim;
@@ -200,7 +200,7 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
       auto dep_pt = data_knn.get_dep_ptr(i, densities);
       if (dep_pt.has_value()) {
         finished[i] = true;
-        dep_ptrs =
+        dep_ptrs[i] =
             std::make_pair(dep_pt.value().first, sqrt(dep_pt.value().second));
       }
     } else { // skip noise points
@@ -234,8 +234,8 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
     std::cout << "number: " << unfinished_points.size() << std::endl;
   }
   std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
-  bruteforce_dependent_point_all(data_num, unfinished_points, graph.points,
-                                 densities, dep_ptrs, D, data_dim);
+  bruteforce_dependent_point_all(data_num, unfinished_points, points, densities,
+                                 dep_ptrs, D, data_dim);
   return dep_ptrs;
 }
 
@@ -279,7 +279,7 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
 template <typename T>
 std::vector<double> KthDistanceDensityComputer<T>::operator()(
     parlay::sequence<Tvec_point<T> *> &graph) {
-  int data_num = this->data_num_;
+  int data_num = this->num_data_;
   int k = this->k_;
   std::vector<double> densities(data_num);
   parlay::parallel_for(0, data_num, [&](int i) {
@@ -338,3 +338,34 @@ std::vector<int> UFClusterAssigner<T>::operator()(
 }
 
 } // namespace DPC
+
+template parlay::sequence<Tvec_point<float> *>
+DPC::construct_graph<float>(const RawDataset &, ParsedDataset &, const unsigned,
+                            const float, const int, const int, Distance *,
+                            const GraphType);
+
+// For compute_knn
+template std::vector<std::pair<int, double>>
+DPC::compute_knn<float>(parlay::sequence<Tvec_point<float> *> &,
+                        const RawDataset &, const unsigned, const unsigned,
+                        Distance *);
+
+// For compute_dep_ptr
+template std::vector<std::pair<int, double>>
+DPC::compute_dep_ptr<float>(parlay::sequence<Tvec_point<float> *> &,
+                            parlay::sequence<Tvec_point<float>> &,
+                            const DatasetKnn &, const RawDataset &,
+                            const std::vector<double> &, const std::set<int> &,
+                            Distance *, unsigned, int);
+
+// For KthDistanceDensityComputer
+template class DPC::KthDistanceDensityComputer<float>;
+template class DPC::KthDistanceDensityComputer<double>;
+
+// For ThresholdCenterFinder
+template class DPC::ThresholdCenterFinder<float>;
+template class DPC::ThresholdCenterFinder<double>;
+
+// For UFClusterAssigner
+template class DPC::UFClusterAssigner<float>;
+template class DPC::UFClusterAssigner<double>;

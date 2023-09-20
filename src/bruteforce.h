@@ -82,13 +82,13 @@ void bruteforce_dependent_point(
 
 // Compute the dependent points for unfinished_points. `data_num` is the default
 // value is dependent point does not exist. search through all points in points
-template <class T>
+template <class T, class Td, class P>
 void bruteforce_dependent_point_all(
     const std::size_t data_num,
     const parlay::sequence<unsigned> &unfinished_points,
     const parlay::sequence<Tvec_point<T>> &points,
-    const std::vector<T> &densities,
-    std::vector<std::pair<uint32_t, double>> &dep_ptrs, Distance *D,
+    const std::vector<Td> &densities,
+    std::vector<std::pair<P, double>> &dep_ptrs, Distance *D,
     const size_t data_dim) {
   parlay::parallel_for(0, unfinished_points.size(), [&](size_t ii) {
     float m_dist = std::numeric_limits<float>::max();
