@@ -6,7 +6,7 @@ from post_processors import cluster_eval
 
 query_file = "./data/gaussian_example/gaussian_4_1000.data"
 decision_graph_path = "./results/gaussian_4_1000.dg"
-output_path = "./results/gaussian_4_1000.cluster"
+output_path = "./results/gaussian_4_1000_numpy.cluster"
 gt_path = "./data/gaussian_example/gaussian_4_1000.gt"
 graph_type = "Vamana"
 
@@ -22,6 +22,7 @@ times = dpc_ann.dpc_numpy(
 print(times)
 metrics1 = cluster_eval.eval_cluster_files(gt_path, output_path, verbose=True)
 
+output_path = "./results/gaussian_4_1000_file.cluster"
 time_reports = dpc_ann.dpc_filenames(
             data_path=query_file,
             decision_graph_path=decision_graph_path,
