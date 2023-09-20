@@ -111,10 +111,10 @@ inline void validate(boost::any &v, const std::vector<std::string> &values,
   }
 }
 
-template <class T>
+template <class T, class P>
 inline void
 output(const std::vector<T> &densities, const std::vector<int> &cluster,
-       const std::vector<std::pair<uint32_t, double>> &dep_ptrs,
+       const std::vector<std::pair<P, double>> &dep_ptrs,
        const std::string &output_path, const std::string &decision_graph_path) {
   if (output_path != "") {
     std::ofstream fout(output_path);

@@ -36,7 +36,6 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
 //   raw_data: raw input data points corresponding to data.
 //   D: distance computation method
 //   K: the k in knn
-template <class T>
 std::vector<std::pair<int, double>>
 compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
                        const Distance *D);
@@ -56,8 +55,9 @@ template <class T>
 std::vector<std::pair<int, double>>
 compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
                 const DatasetKnn &data_knn, const RawDataset &raw_data,
-                const std::vector<T> &densities, const std::set<int> &noise_pts,
-                const Distance *D, unsigned L, int round_limit = -1);
+                const std::vector<double> &densities,
+                const std::set<int> &noise_pts, const Distance *D, unsigned L,
+                int round_limit = -1);
 
 // Compute the dependet point of `raw_data` with densities above
 // `density_cutoff` using bruteforce method. Parameters:
@@ -66,26 +66,24 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
 //   density_cutoff: points with densities below this threshold are considered
 //   noise points, and their dependent points are not computed.
 //   D: distance computation method
-template <class T>
 std::vector<std::pair<int, double>>
 compute_dep_ptr_bruteforce(const RawDataset &raw_data,
                            const DatasetKnn &data_knn,
-                           const std::vector<T> &densities,
+                           const std::vector<double> &densities,
                            const std::set<int> &noise_pts, Distance *D);
 
 template <typename T>
 class KthDistanceDensityComputer : public DensityComputer<T> {
 public:
   // Here we're passing the necessary arguments to the base class constructor
-  KthDistanceDensityComputer() : DPCComputer() {}
+  KthDistanceDensityComputer() : DensityComputer<T>() {}
 
   // Return the density.
   std::vector<double>
   operator()(parlay::sequence<Tvec_point<T> *> &graph) override;
 
   // Reweight the density of each point in $v$ based on knn.
-  std::vector<double>
-  reweight_density(const std::vector<double> &densities) override;
+  std::vector<double> reweight_density(const std::vector<double> &densities);
 };
 
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
@@ -95,21 +93,22 @@ private:
 
 public:
   ThresholdCenterFinder(double delta_threshold, double density_threshold)
-      : DPCComputer(), delta_threshold_(delta_threshold),
+      : CenterFinder<T>(), delta_threshold_(delta_threshold),
         density_threshold_(density_threshold) {}
 
   ~ThresholdCenterFinder() {}
 
-  std::set<int> operator()(const std::vector<T> &densities,
-                           const std::vector<T> &re_weighted_densities,
-                           const std::set<int> &noise_pts,
-                           const std::vector<std::pair<int, double>> &dep_ptrs);
+  std::set<int>
+  operator()(const std::vector<T> &densities,
+             const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
+             const std::vector<std::pair<int, double>> &dep_ptrs) override;
 };
 
 template <typename T> class UFClusterAssigner : public ClusterAssigner<T> {
 
 public:
-  UFClusterAssigner() : ClusterAssigner() {}
+  UFClusterAssigner() : ClusterAssigner<T>() {}
 
   ~UFClusterAssigner() {}
 
@@ -117,7 +116,7 @@ public:
   operator()(const std::vector<T> &densities,
              const std::vector<T> &re_weighted_densities,
              const std::vector<std::pair<int, double>> &dep_ptrs,
-             const std::set<int> &centers);
+             const std::set<int> &centers) override;
 };
 
 } // namespace DPC

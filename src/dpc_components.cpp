@@ -14,6 +14,8 @@ construct_graph(const RawDataset &raw_data, ParsedDataset &data,
                 const int num_clusters, const Distance *D,
                 const GraphType graph_type) {
   parlay::internal::timer t("DPC");
+  int data_num = raw_data.num_data;
+  int data_dim = raw_data.data_dim;
   data = ParsedDataset(raw_data);
   add_null_graph(data.points, max_degree);
   auto v = parlay::tabulate(
@@ -67,9 +69,9 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
   std::vector<std::pair<int, double>> knn(K * data_num);
   parlay::parallel_for(0, data_num, [&](size_t i) {
     parlay::sequence<Tvec_point<T> *> start_points;
-    start_points.push_back(v[i]);
+    start_points.push_back(graph[i]);
     auto [pairElts, dist_cmps] =
-        beam_search(v[i], v, start_points, beamSizeQ, data_dim, D, K);
+        beam_search(graph[i], graph, start_points, beamSizeQ, data_dim, D, K);
     auto [beamElts, visitedElts] = pairElts;
     auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first);
@@ -77,9 +79,9 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
     if (beamElts.size() <= K) { // found less than K neighbors during the search
       std::vector<std::pair<int, double>> dists(data_num);
       parlay::parallel_for(0, data_num, [&](size_t j) {
-        dists[j] =
-            std::make_pair(j, D->distance(v[i]->coordinates.begin(),
-                                          v[j]->coordinates.begin(), data_dim));
+        dists[j] = std::make_pair(j, D->distance(graph[i]->coordinates.begin(),
+                                                 graph[j]->coordinates.begin(),
+                                                 data_dim));
       });
       std::nth_element(dists.begin(), dists.begin() + K, dists.end(), less);
       std::atomic_fetch_add(&num_bruteforce, 1);
@@ -98,14 +100,12 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
   return knn;
 }
 
-template <class T>
 std::vector<std::pair<int, double>>
 compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
                        const Distance *D) {
   int data_num = raw_data.num_data;
   int data_dim = raw_data.data_dim;
   int aligned_dim = raw_data.aligned_dim;
-  float *data = raw_data.data;
   auto less = [&](id_dist a, id_dist b) {
     return a.second < b.second || (a.second == b.second && a.first < b.first);
   };
@@ -113,7 +113,8 @@ compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
   parlay::parallel_for(0, data_num, [&](size_t i) {
     std::vector<std::pair<int, double>> dists(data_num);
     parlay::parallel_for(0, data_num, [&](size_t j) {
-      dists[j] = std::make_pair(j, D->distance(data[i], data[j], data_dim));
+      dists[j] =
+          std::make_pair(j, D->distance(raw_data[i], raw_data[j], data_dim));
     });
     std::nth_element(dists.begin(), dists.begin() + K, dists.end(), less);
     std::sort(dists.begin(), dists.begin() + K, less);
@@ -179,8 +180,8 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
   int data_dim = raw_data.data_dim;
   int aligned_dim = raw_data.aligned_dim;
   std::vector<bool> finished(data_num, false);
-  Tvec_point<T> **max_density_point =
-      parlay::max_element(v, [&densities](Tvec_point<T> *a, Tvec_point<T> *b) {
+  Tvec_point<T> **max_density_point = parlay::max_element(
+      graph, [&densities](Tvec_point<T> *a, Tvec_point<T> *b) {
         if (densities[a->id] == densities[b->id]) {
           return a->id < b->id;
         }
@@ -194,7 +195,7 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
   parlay::parallel_for(0, data_num, [&](size_t i) {
     float m_dist = std::numeric_limits<float>::max();
     size_t id = data_num;
-    if (noise_pts.contains(i)) { // skip noise points
+    if (noise_pts.find(i) == noise_pts.end()) {
       // search within knn
       auto dep_pt = data_knn.get_dep_ptr(i, densities);
       if (dep_pt.has_value()) {
@@ -202,76 +203,66 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
         dep_ptrs =
             std::make_pair(dep_pt.value().first, sqrt(dep_pt.value().second));
       }
-    } else {
+    } else { // skip noise points
       dep_ptrs[i] = {data_num, -1};
     }
   });
   auto unfinished_points = parlay::sequence<unsigned>::from_function(
       data_num, [](unsigned i) { return i; });
   unfinished_points = parlay::filter(unfinished_points, [&](size_t i) {
-    return i != max_point_id && (!noise_pts.contains(i)) &&
+    return i != max_point_id && (noise_pts.find(i) == noise_pts.end()) &&
            (!finished[i]); // skip noise points and finished points
   });
 
   std::vector<unsigned> num_rounds(
-      data_num, Lnn); // the L used when dependent point is found.
-  if (method == Method::Doubling) {
-    int round_limit = 4;
-    int prev_number = std::numeric_limits<int>::max();
-    while (
-        unfinished_points.size() > 300 &&
-        prev_number >
-            unfinished_points
-                .size()) { // stop if unfinished_points number does not decrease
-      prev_number = unfinished_points.size();
-      parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
-        auto i = unfinished_points[j];
-        dep_ptrs[i] = compute_dep_ptr(graph, i, densities, data_dim,
-                                      num_rounds[i], D, round_limit);
-        // }
-      });
-      unfinished_points =
-          parlay::filter(unfinished_points, [&dep_ptrs, &data](size_t i) {
-            return dep_ptrs[i].first == data_num;
-          });
-      std::cout << "number: " << unfinished_points.size() << std::endl;
-    }
-    std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
-    bruteforce_dependent_point_all(data_num, unfinished_points, graph.points,
-                                   densities, dep_ptrs, D, data_dim);
-  } else {
-    std::cout << "Error: method not implemented " << std::endl;
-    exit(1);
+      data_num, L); // the L used when dependent point is found.
+  int prev_number = std::numeric_limits<int>::max();
+  while (unfinished_points.size() > 300 &&
+         prev_number > unfinished_points.size()) { // stop if unfinished_points
+                                                   // number does not decrease
+    prev_number = unfinished_points.size();
+    parlay::parallel_for(0, unfinished_points.size(), [&](size_t j) {
+      auto i = unfinished_points[j];
+      dep_ptrs[i] = compute_dep_ptr(graph, i, densities, data_dim,
+                                    num_rounds[i], D, round_limit);
+      // }
+    });
+    unfinished_points =
+        parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i) {
+          return dep_ptrs[i].first == data_num;
+        });
+    std::cout << "number: " << unfinished_points.size() << std::endl;
   }
+  std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
+  bruteforce_dependent_point_all(data_num, unfinished_points, graph.points,
+                                 densities, dep_ptrs, D, data_dim);
   return dep_ptrs;
 }
 
-template <class T>
 std::vector<std::pair<int, double>>
 compute_dep_ptr_bruteforce(const RawDataset &raw_data,
                            const DatasetKnn &data_knn,
-                           const std::vector<T> &densities,
+                           const std::vector<double> &densities,
                            const std::set<int> &noise_pts, Distance *D) {
   int data_num = raw_data.num_data;
   int data_dim = raw_data.data_dim;
   int aligned_dim = raw_data.aligned_dim;
-  float *data = raw_data.data;
   std::vector<std::pair<int, double>> dep_ptrs(data_num);
   parlay::parallel_for(0, data_num, [&](size_t i) {
     float m_dist = std::numeric_limits<float>::max();
     size_t id = data_num;
-    if (noise_pts.contains(i)) { // skip noise points
+    if (noise_pts.find(i) == noise_pts.end()) { // skip noise points
       // search within knn
       auto dep_pt = data_knn.get_dep_ptr(i, densities);
       if (dep_pt.has_value()) {
-        dep_ptrs =
+        dep_ptrs[i] =
             std::make_pair(dep_pt.value().first, sqrt(dep_pt.value().second));
       } else {
         // bruteforce
         for (size_t j = 0; j < data_num; j++) {
           if (densities[j] > densities[i] ||
               (densities[j] == densities[i] && j > i)) {
-            auto dist = D->distance(data[i], data[j], data_dim);
+            auto dist = D->distance(raw_data[i], raw_data[j], data_dim);
             if (dist <= m_dist) {
               m_dist = dist;
               id = j;
@@ -314,7 +305,7 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
     if (dep_ptrs[i].first != data_num) { // the max density point
       return false;
     }
-    if (noise_pts.contains(i))
+    if (noise_pts.find(i) != noise_pts.end())
       return false;
     if (dep_ptrs[i].second >= delta_threshold_ &&
         densities[i] >= density_threshold_) {
@@ -335,7 +326,7 @@ std::vector<int> UFClusterAssigner<T>::operator()(
   ParUF<int> UF(densities.size());
   parlay::parallel_for(0, densities.size(), [&](int i) {
     if (dep_ptrs[i].first != densities.size()) { // the max density point
-      if (!centers.contains(i)) {
+      if (centers.find(i) == centers.end()) {
         UF.link(i, dep_ptrs[i].first);
       }
     }

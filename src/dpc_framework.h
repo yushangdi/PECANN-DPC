@@ -59,14 +59,14 @@ struct DatasetKnn {
 
   // return the dependent point of i if it's in i'th knn, return nullopt
   // otherwise.
-  std::optional<std::pair<int, float>>
-  get_dep_ptr(int i, std::vector<double> &densities) {
+  std::optional<std::pair<int, double>>
+  get_dep_ptr(int i, const std::vector<double> &densities) const {
     double d_i = densities[i];
     for (size_t j = 0; j < k_; ++j) {
       int id = knn_[i * k_ + j].first;
-      float d_j = densities[id];
+      double d_j = densities[id];
       if (d_j > d_i || (d_i == d_i && id > i)) {
-        return knn_[i * k_ + j].second;
+        return knn_[i * k_ + j];
       }
     }
     return std::nullopt;
@@ -75,22 +75,7 @@ struct DatasetKnn {
 
 // Base class for other DPCComputers.
 class DPCComputer {
-protected:
-  const std::pair<int, double> *knn_;
-  const Distance *D_;
-  size_t num_data_;
-  size_t data_dim_;
-  size_t aligned_dim_;
-  const float *data_;
-  const int k_;
-
-  DPCComputer(const DatasetKnn &data_knn)
-      : knn_(data_knn.knn_), D_(data_knn.D_), num_data_(data_knn.num_data_),
-        data_dim_(data_knn.data_dim_), aligned_dim_(data_knn.aligned_dim_),
-        data_(data_knn.data_), k_(data_knn.k_) {}
-
-  DPCComputer() {}
-
+public:
   void initialize(const DatasetKnn &data_knn) {
     knn_ = data_knn.knn_;
     D_ = data_knn.D_;
@@ -101,13 +86,29 @@ protected:
     k_ = data_knn.k_;
   }
 
+protected:
+  const std::pair<int, double> *knn_;
+  const Distance *D_;
+  size_t num_data_;
+  size_t data_dim_;
+  size_t aligned_dim_;
+  const float *data_;
+  int k_;
+
+  DPCComputer(const DatasetKnn &data_knn)
+      : knn_(data_knn.knn_), D_(data_knn.D_), num_data_(data_knn.num_data_),
+        data_dim_(data_knn.data_dim_), aligned_dim_(data_knn.aligned_dim_),
+        data_(data_knn.data_), k_(data_knn.k_) {}
+
+  DPCComputer() {}
+
   virtual ~DPCComputer() {} // Virtual destructor
 };
 
 template <typename T> class DensityComputer : public DPCComputer {
 public:
   // Here we're passing the necessary arguments to the base class constructor
-  DensityComputer(const DatasetKnn &data_knn) : DPCComputer(data_knn) {}
+  DensityComputer() : DPCComputer() {}
 
   // Return the density.
   virtual std::vector<double>
@@ -121,11 +122,13 @@ template <typename T> class CenterFinder : public DPCComputer {
 public:
   CenterFinder() : DPCComputer() {}
 
-  virtual ~CenterFinder() {}
+  ~CenterFinder() {}
 
   virtual std::set<int>
-  operator()(std::vector<T> &densities, std::vector<T> &re_weighted_densities,
-             std::vector<std::pair<uint32_t, double>> &dep_ptrs) = 0;
+  operator()(const std::vector<T> &densities,
+             const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
+             const std::vector<std::pair<int, double>> &dep_ptrs) = 0;
 };
 
 // Now, apply the same constructor pattern for the other classes:
@@ -134,7 +137,7 @@ template <typename T> class NoiseFinder : public DPCComputer {
 public:
   NoiseFinder() : DPCComputer() {}
 
-  virtual ~NoiseFinder() {}
+  ~NoiseFinder() {}
 
   virtual std::set<int> operator()(std::vector<T> &densities,
                                    std::vector<T> &re_weighted_densities) = 0;
@@ -145,9 +148,10 @@ public:
   ClusterAssigner() : DPCComputer() {}
 
   virtual std::vector<int>
-  operator()(std::vector<T> &densities, std::vector<T> &re_weighted_densities,
-             std::vector<std::pair<uint32_t, double>> &dep_ptrs,
-             std::set<int> &centers) = 0;
+  operator()(const std::vector<T> &densities,
+             const std::vector<T> &re_weighted_densities,
+             const std::vector<std::pair<int, double>> &dep_ptrs,
+             const std::set<int> &centers) = 0;
 };
 
 template <typename T> class ClusterMerger : public DPCComputer {
@@ -157,7 +161,7 @@ public:
   virtual std::vector<int>
   operator()(std::vector<int> &current_cluster, std::vector<T> &densities,
              std::vector<T> &re_weighted_densities,
-             std::vector<std::pair<uint32_t, double>> &dep_ptrs) = 0;
+             std::vector<std::pair<int, double>> &dep_ptrs) = 0;
 };
 
 void dpc(const unsigned K, const unsigned L, const unsigned Lnn,

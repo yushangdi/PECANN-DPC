@@ -52,8 +52,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   ParsedDataset parsed_data;
   parlay::sequence<Tvec_point<T> *> graph;
   if (graph_type != GraphType::BruteForce) {
-    graph = construct_graph(raw_data, parsed_data, Lbuild, alpha, max_degree,
-                            num_clusters, D, graph_type);
+    graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha, max_degree,
+                               num_clusters, D, graph_type);
   }
 
   // Compute knn
@@ -68,29 +68,32 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   // Compute density
   auto density_computer = KthDistanceDensityComputer<T>();
   density_computer.initialize(dataset_knn);
-  auto densities = density_computer();
+  auto densities = density_computer(graph);
   auto reweighted_densities = density_computer.reweight_density(densities);
   std::set<int> noise_points;
 
   // Compute denpendent points
   std::vector<std::pair<int, double>> dep_ptrs;
   if (graph_type == GraphType::BruteForce) {
-    dep_ptrs = compute_dep_ptr_bruteforce(raw_data, densities, noise_points, D);
+    dep_ptrs = compute_dep_ptr_bruteforce(raw_data, dataset_knn, densities,
+                                          noise_points, D);
   } else {
-    dep_ptrs = compute_dep_ptr(graph, raw_data, densities, noise_points, D, L,
-                              /* round_limit = */ 4);
+    dep_ptrs = compute_dep_ptr(graph, dataset_knn, raw_data, densities,
+                               noise_points, D, L,
+                               /* round_limit = */ 4);
   }
 
   // Compute centers
   auto center_finder =
-      ThresholdCenterFinder<T>(distance_cutoff, center_density_cutoff);
+      ThresholdCenterFinder<double>(distance_cutoff, center_density_cutoff);
   center_finder.initialize(dataset_knn);
-  auto centers = center_finder(densities, reweighted_densities, dep_ptrs);
+  auto centers =
+      center_finder(densities, reweighted_densities, noise_points, dep_ptrs);
 
   // Compute noises, skipping this step for now.
 
   // Assign clusters
-  auto cluster_assigner = UFClusterAssigner();
+  auto cluster_assigner = UFClusterAssigner<double>();
   cluster_assigner.initialize(dataset_knn);
   auto cluster =
       cluster_assigner(densities, reweighted_densities, dep_ptrs, centers);
