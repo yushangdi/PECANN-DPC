@@ -55,11 +55,10 @@ target_link_libraries(dpc_ann_framework_cc Threads::Threads)
 # Assuming your test file is named dpc_framework_test.cpp
 set(TEST_SOURCES 
     tests/dpc_components_test.cpp 
-    src/dpc_components.cpp
 )
 
 add_executable(dpc_tests ${TEST_SOURCES})
-target_link_libraries(dpc_tests gtest_main)
+target_link_libraries(dpc_tests gtest_main dpc_ann_framework_cc)
 target_compile_options(dpc_tests PRIVATE ${COMPILE_OPTIONS})
 
 enable_testing()

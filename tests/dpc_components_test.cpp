@@ -1,3 +1,5 @@
+bool report_stats = true;
+
 #include "src/dpc_components.h"
 #include <gtest/gtest.h>
 

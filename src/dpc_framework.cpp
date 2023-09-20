@@ -32,10 +32,8 @@
 
 #include "ann_utils.h"
 #include "bruteforce.h"
-#include "union_find.h"
 #include "utils.h"
 
-bool report_stats = true;
 
 namespace DPC {
 
