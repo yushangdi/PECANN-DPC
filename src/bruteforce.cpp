@@ -172,3 +172,19 @@ void dpc_bruteforce(const unsigned K, ParsedDataset points,
   output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
 }
 } // namespace DPC
+
+template void DPC::bruteforce_dependent_point_all<float, double, int>(
+    const std::size_t data_num,
+    const parlay::sequence<unsigned> &unfinished_points,
+    const parlay::sequence<Tvec_point<float>> &points,
+    const std::vector<double> &densities,
+    std::vector<std::pair<int, double>> &dep_ptrs, Distance *D,
+    const size_t data_dim);
+
+template void DPC::bruteforce_dependent_point_all<float, float, uint32_t>(
+    const std::size_t data_num,
+    const parlay::sequence<unsigned> &unfinished_points,
+    const parlay::sequence<Tvec_point<float>> &points,
+    const std::vector<float> &densities,
+    std::vector<std::pair<uint32_t, double>> &dep_ptrs, Distance *D,
+    const size_t data_dim);
