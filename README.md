@@ -1,5 +1,6 @@
 # DPC-ANN
 
+![example workflow](https://github.com/yushangdi/DPC-ANN/blob/main/.github/workflows/cmake-single-platform.yml/badge.svg)
 
 ```bash
 pip3 install nanobind
