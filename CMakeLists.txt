@@ -58,7 +58,7 @@ set(TEST_SOURCES
 )
 
 add_executable(dpc_tests ${TEST_SOURCES})
-target_link_libraries(dpc_tests gtest_main dpc_ann_framework_cc)
+target_link_libraries(dpc_tests gtest_main gmock_main dpc_ann_framework_cc)
 target_compile_options(dpc_tests PRIVATE ${COMPILE_OPTIONS})
 
 enable_testing()

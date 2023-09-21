@@ -1,9 +1,22 @@
-bool report_stats = true;
+bool report_stats = false;
 
 #include "src/dpc_components.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+using ::testing::ElementsAre;
+using ::testing::Pair;
+
 namespace DPC {
+
+template <class T> void print_vec(T &vec) {
+  for (size_t i = 0; i < vec.size(); ++i) {
+    std::cout << vec[i];
+    if (i != vec.size() - 1) {
+      std::cout << ", ";
+    }
+  }
+}
 
 float *get_aligned_data(std::vector<float> &data_vec, int data_dim,
                         int &rounded_dim) {
@@ -28,6 +41,12 @@ protected:
   size_t num_data = 10;
   size_t data_dim = 2;
   size_t aligned_dim;
+  std::vector<std::pair<int, double>> knn_expected{
+      {0, 0.0}, {1, 5.0}, {2, 20.0}, {1, 0.0}, {0, 5.0}, {2, 5.0},
+      {2, 0.0}, {1, 5.0}, {3, 5.0},  {3, 0.0}, {2, 5.0}, {4, 5.0},
+      {4, 0.0}, {3, 5.0}, {5, 5.0},  {5, 0.0}, {4, 5.0}, {6, 5.0},
+      {6, 0.0}, {5, 5.0}, {7, 5.0},  {7, 0.0}, {6, 5.0}, {8, 5.0},
+      {8, 0.0}, {7, 5.0}, {9, 5.0},  {9, 0.0}, {8, 5.0}, {7, 20.0}};
 
   void SetUp() override {
     D = new Euclidian_Distance();
@@ -76,16 +95,16 @@ TEST_F(SmallDPCFrameworkTest, ConstructGraphTest) {
 }
 
 void check_knn(std::vector<std::pair<int, double>> &knn,
-               const std::vector<std::vector<std::pair<int, double>>> expected,
-               int K, int num_data) {
+               const std::vector<std::pair<int, double>> &expected, int K,
+               int num_data) {
   for (int i = 0; i < num_data; ++i) {
     for (int j = 0; j < K; ++j) {
       auto id = i * K + j;
-      EXPECT_EQ(knn[id].first, expected[i][j].first)
+      EXPECT_EQ(knn[id].first, expected[id].first)
           << "Mismatch at point " << i << ", k-NN index " << j
           << " for first element.";
 
-      EXPECT_EQ(knn[id].second, expected[i][j].second)
+      EXPECT_EQ(knn[id].second, expected[id].second)
           << "Mismatch at point " << i << ", k-NN index " << j
           << " for second element.";
     }
@@ -107,26 +126,58 @@ TEST_F(SmallDPCFrameworkTest, KNNTest) {
   int K = 3;
   auto knn = compute_knn(graph, raw_data, K, Lnn, D);
   EXPECT_EQ(knn.size(), K * num_data);
+  check_knn(knn, knn_expected, K, num_data);
 
-  const std::vector<std::vector<std::pair<int, double>>> expected = {
-      {{0, 0.0}, {1, 5.0}, {2, 20.0}}, {{1, 0.0}, {0, 5.0}, {2, 5.0}},
-      {{2, 0.0}, {1, 5.0}, {3, 5.0}},  {{3, 0.0}, {2, 5.0}, {4, 5.0}},
-      {{4, 0.0}, {3, 5.0}, {5, 5.0}},  {{5, 0.0}, {4, 5.0}, {6, 5.0}},
-      {{6, 0.0}, {5, 5.0}, {7, 5.0}},  {{7, 0.0}, {6, 5.0}, {8, 5.0}},
-      {{8, 0.0}, {7, 5.0}, {9, 5.0}},  {{9, 0.0}, {8, 5.0}, {7, 20.0}}};
-  check_knn(knn, expected, K, num_data);
-
-  compute_knn_bruteforce(raw_data, K, D);
+  knn = compute_knn_bruteforce(raw_data, K, D);
   EXPECT_EQ(knn.size(), K * num_data);
-  check_knn(knn, expected, K, num_data);
+  check_knn(knn, knn_expected, K, num_data);
+}
+
+TEST_F(SmallDPCFrameworkTest, DepPtrTest) {
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn data_knn(raw_data, D, K, knn_expected);
+  std::set<int> noise_pts{1};
+  std::vector<double> densities{5, 1, 2, 3, 2, 3, 2, 3, 2, 3};
+  auto dep_ptrs =
+      compute_dep_ptr_bruteforce(raw_data, data_knn, densities, noise_pts, D);
+  EXPECT_EQ(dep_ptrs.size(), num_data);
+  const double max_dist = sqrt(std::numeric_limits<double>::max());
+  EXPECT_THAT(dep_ptrs[0], Pair(num_data, max_dist)); // max density
+  EXPECT_THAT(dep_ptrs[1], Pair(num_data, max_dist)); // noise data
+  EXPECT_THAT(dep_ptrs[2], Pair(3, sqrt(5))); // within knn
+  EXPECT_THAT(dep_ptrs[3], Pair(5, sqrt(20))); // not within knn 
+  EXPECT_THAT(dep_ptrs[9], Pair(0, sqrt(81 + 18 * 18))); // not within knn 
+
+  // using T = float;
+  // ParsedDataset parsed_data;
+  // int Lbuild = 10;
+  // int alpha = 1.2;
+  // int max_degree = 10;
+  // int num_clusters = 1;
+  // GraphType graph_type = GraphType::Vamana;
+  // auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
+  //                                 max_degree, num_clusters, D, graph_type);
 }
 
 TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
-  // Test KthDistanceDensityComputer here. This is just a placeholder.
-  KthDistanceDensityComputer<double> computer;
-  // You'll need to set up necessary inputs and expected outputs.
-  // Then invoke methods on `computer` and check results against expected
-  // outputs.
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  KthDistanceDensityComputer density_computer;
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  std::vector<double> expected(num_data);
+  expected[0] = 1 / sqrt(20);
+  expected[num_data - 1] = 1 / sqrt(20);
+  for (int i = 1; i < num_data - 1; ++i) {
+    expected[i] = 1 / sqrt(5);
+  }
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
 }
 
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {

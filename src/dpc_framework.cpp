@@ -63,9 +63,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   DatasetKnn dataset_knn(raw_data, D, K, knn);
 
   // Compute density
-  auto density_computer = KthDistanceDensityComputer<T>();
+  auto density_computer = KthDistanceDensityComputer();
   density_computer.initialize(dataset_knn);
-  auto densities = density_computer(graph);
+  auto densities = density_computer();
   auto reweighted_densities = density_computer.reweight_density(densities);
   std::set<int> noise_points;
 
