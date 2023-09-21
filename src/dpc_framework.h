@@ -2,8 +2,8 @@
 
 #include <cstring>
 
-#include "utils.h"
 #include "IO.h"
+#include "utils.h"
 namespace DPC {
 
 void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
