@@ -209,6 +209,7 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
   unsigned threshold = 0;
 
   std::vector<std::pair<int, double>> dep_ptrs(data_num);
+  dep_ptrs[max_point_id] = {data_num, sqrt(std::numeric_limits<double>::max())};
   parlay::parallel_for(0, data_num, [&](size_t i) {
     double m_dist = std::numeric_limits<double>::max();
     size_t id = data_num;
@@ -316,8 +317,8 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
   auto data_num = densities.size();
   auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
   auto centers_seq = parlay::filter(ids, [&](size_t i) {
-    if (dep_ptrs[i].first != data_num) { // the max density point
-      return false;
+    if (dep_ptrs[i].first == data_num) { // the max density point
+      return true;
     }
     if (noise_pts.find(i) != noise_pts.end())
       return false;

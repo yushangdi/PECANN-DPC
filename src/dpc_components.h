@@ -85,6 +85,8 @@ public:
   reweight_density(const std::vector<double> &densities) override;
 };
 
+// Centers are points with density >=  density_threshold_ and distance >=
+// delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
 private:
   double delta_threshold_;

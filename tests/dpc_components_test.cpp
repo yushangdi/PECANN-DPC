@@ -4,8 +4,11 @@ bool report_stats = false;
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+using ::testing::DoubleEq;
+using ::testing::DoubleNear;
 using ::testing::ElementsAre;
 using ::testing::Pair;
+using ::testing::UnorderedElementsAre;
 
 namespace DPC {
 
@@ -143,21 +146,33 @@ TEST_F(SmallDPCFrameworkTest, DepPtrTest) {
       compute_dep_ptr_bruteforce(raw_data, data_knn, densities, noise_pts, D);
   EXPECT_EQ(dep_ptrs.size(), num_data);
   const double max_dist = sqrt(std::numeric_limits<double>::max());
+  EXPECT_THAT(dep_ptrs[0], Pair(num_data, max_dist));    // max density
+  EXPECT_THAT(dep_ptrs[1], Pair(num_data, max_dist));    // noise data
+  EXPECT_THAT(dep_ptrs[2], Pair(3, sqrt(5)));            // within knn
+  EXPECT_THAT(dep_ptrs[3], Pair(5, sqrt(20)));           // not within knn
+  EXPECT_THAT(dep_ptrs[9], Pair(0, sqrt(81 + 18 * 18))); // not within knn
+
+  using T = float;
+  ParsedDataset parsed_data;
+  int Lbuild = 10;
+  int L = 5;
+  int alpha = 1.2;
+  int max_degree = 10;
+  int num_clusters = 1;
+  GraphType graph_type = GraphType::Vamana;
+  auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
+                                  max_degree, num_clusters, D, graph_type);
+  int round_limit = 4;
+  dep_ptrs = compute_dep_ptr(graph, parsed_data.points, data_knn, raw_data,
+                             densities, noise_pts, D, L, round_limit);
+  EXPECT_EQ(dep_ptrs.size(), num_data);
   EXPECT_THAT(dep_ptrs[0], Pair(num_data, max_dist)); // max density
   EXPECT_THAT(dep_ptrs[1], Pair(num_data, max_dist)); // noise data
-  EXPECT_THAT(dep_ptrs[2], Pair(3, sqrt(5))); // within knn
-  EXPECT_THAT(dep_ptrs[3], Pair(5, sqrt(20))); // not within knn 
-  EXPECT_THAT(dep_ptrs[9], Pair(0, sqrt(81 + 18 * 18))); // not within knn 
-
-  // using T = float;
-  // ParsedDataset parsed_data;
-  // int Lbuild = 10;
-  // int alpha = 1.2;
-  // int max_degree = 10;
-  // int num_clusters = 1;
-  // GraphType graph_type = GraphType::Vamana;
-  // auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
-  //                                 max_degree, num_clusters, D, graph_type);
+  EXPECT_THAT(dep_ptrs[2], Pair(3, sqrt(5)));         // within knn
+  double tolerance =
+      1e-5; // Adjust this value based on your precision requirements
+  EXPECT_THAT(dep_ptrs[3], Pair(5, DoubleNear(sqrt(20), tolerance)));
+  EXPECT_THAT(dep_ptrs[9], Pair(0, DoubleNear(sqrt(81 + 18 * 18), tolerance)));
 }
 
 TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
@@ -181,10 +196,28 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
 }
 
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
-  // Test ThresholdCenterFinder here. This is just a placeholder.
-  ThresholdCenterFinder<double> finder(0.5, 0.5); // sample threshold values
-  // You'll need to set up necessary inputs and expected outputs.
-  // Then invoke methods on `finder` and check results against expected outputs.
+  double distance_cutoff = 10;
+  double center_density_cutoff = 2;
+  ThresholdCenterFinder<double> center_finder(
+      distance_cutoff, center_density_cutoff); // sample threshold values
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  std::vector<double> densities{5, 1, 2, 3, 2, 3, 2, 3, 2, 3};
+  std::vector<double> reweighted_densities;
+  std::set<int> noise_pts{2};
+  std::vector<std::pair<int, double>> dep_ptrs(num_data);
+  const double max_dist = sqrt(std::numeric_limits<double>::max());
+  dep_ptrs[0] = {num_data, max_dist};
+  for (int i=1; i < 6; ++ i){
+    dep_ptrs[i] = {i-1, 9+i};
+  }
+  for (int i=6; i < num_data; ++ i){
+    dep_ptrs[i] = {i-1, 8};
+  }
+  auto centers =
+      center_finder(densities, reweighted_densities, noise_pts, dep_ptrs);
+  EXPECT_THAT(centers, UnorderedElementsAre(0, 3, 4, 5));
 }
 
 TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
