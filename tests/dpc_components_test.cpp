@@ -5,37 +5,48 @@ bool report_stats = true;
 
 namespace DPC {
 
+float *get_aligned_data(std::vector<float> &data_vec, int data_dim,
+                        int &rounded_dim) {
+  float *data;
+  rounded_dim = ROUND_UP(data_dim, 8);
+  size_t allocSize = data_vec.size() * rounded_dim * sizeof(float);
+  alloc_aligned(((void **)&data), allocSize, 8 * sizeof(float));
+  for (size_t i = 0; i < data_vec.size(); i++) {
+    for (size_t d = 0; d < data_dim; d++) {
+      *(data + i * rounded_dim + d) = data_vec[i * data_dim + d];
+    }
+    memset(data + i * rounded_dim + data_dim, 0,
+           (rounded_dim - data_dim) * sizeof(float));
+  }
+  return data;
+}
+
 class SmallDPCFrameworkTest : public ::testing::Test {
 protected:
   Distance *D;
-  std::vector<float> data;
+  float *data;
   size_t num_data = 10;
   size_t data_dim = 2;
-  size_t aligned_dim = 3;
+  size_t aligned_dim;
 
   void SetUp() override {
     D = new Euclidian_Distance();
     // y = 2x for x in 1 -- 10.
-    data = {1, 2,  0, 2, 4,  0, 3, 6,  0, 4, 8,  0, 5,  10, 0,
-            6, 12, 0, 7, 14, 0, 8, 16, 0, 9, 18, 0, 10, 20};
+    std::vector<float> data_vec = {1, 2,  2, 4,  3, 6,  4, 8,  5,  10,
+                                   6, 12, 7, 14, 8, 16, 9, 18, 10, 20};
+    int rounded_dim;
+    data = get_aligned_data(data_vec, data_dim, rounded_dim);
+    aligned_dim = rounded_dim;
   }
 
-  void TearDown() override { delete D; }
+  void TearDown() override {
+    delete D;
+    free(data);
+  }
 };
 
 TEST_F(SmallDPCFrameworkTest, DistTest) {
-  data_dim = 2;
-  D = new Euclidian_Distance();
-  // std::vector<float> aa{1., 2.};
-  // std::vector<float> bb{2., 4.};
-  float *data;
-  auto rounded_dim = ROUND_UP(data_dim, 8);
-  size_t allocSize = 2 * rounded_dim * sizeof(float);
-  alloc_aligned(((void **)&data), allocSize, 8 * sizeof(float));
-  data[0] = 1; data[1]=2;
-  data[rounded_dim] = 2;
-  data[rounded_dim + 1] = 4;
-  auto d = D->distance(data, data + rounded_dim, data_dim);
+  auto d = D->distance(data, data + aligned_dim, data_dim);
   EXPECT_EQ(d, 5);
 
   std::vector<uint8_t> a{1, 2};
@@ -52,8 +63,7 @@ TEST_F(SmallDPCFrameworkTest, ConstructGraphTest) {
   int max_degree = 2;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
-  RawDataset raw_data =
-      RawDataset(data.data(), num_data, data_dim, aligned_dim);
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
   auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
                                   max_degree, num_clusters, D, graph_type);
   auto d = D->distance(graph[0]->coordinates.begin(),
@@ -65,30 +75,9 @@ TEST_F(SmallDPCFrameworkTest, ConstructGraphTest) {
   EXPECT_EQ(parsed_data.points[1].id, 1);
 }
 
-TEST_F(SmallDPCFrameworkTest, KNNTest) {
-  using T = float;
-  ParsedDataset parsed_data;
-  int Lbuild = 10;
-  int alpha = 1.2;
-  int max_degree = 10;
-  int num_clusters = 1;
-  GraphType graph_type = GraphType::Vamana;
-  RawDataset raw_data =
-      RawDataset(data.data(), num_data, data_dim, aligned_dim);
-  auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
-                                  max_degree, num_clusters, D, graph_type);
-  int Lnn = 8;
-  int K = 3;
-  auto knn = compute_knn(graph, raw_data, K, Lnn, D);
-  // EXPECT_THAT(knn, ElementsAre());
-  EXPECT_EQ(knn.size(), K * num_data);
-
-  const std::vector<std::vector<std::pair<int, double>>> expected = {
-      {{0, 0.0}, {1, 5.0}, {2, 20.0}}, {{1, 0.0}, {0, 5.0}, {2, 5.0}},
-      {{2, 0.0}, {1, 5.0}, {3, 5.0}},  {{3, 0.0}, {2, 5.0}, {4, 5.0}},
-      {{4, 0.0}, {3, 5.0}, {5, 5.0}},  {{5, 0.0}, {4, 5.0}, {6, 5.0}},
-      {{6, 0.0}, {5, 5.0}, {7, 5.0}},  {{7, 0.0}, {6, 5.0}, {8, 5.0}},
-      {{8, 0.0}, {7, 5.0}, {9, 5.0}},  {{9, 0.0}, {8, 5.0}, {7, 20.0}}};
+void check_knn(std::vector<std::pair<int, double>> &knn,
+               const std::vector<std::vector<std::pair<int, double>>> expected,
+               int K, int num_data) {
   for (int i = 0; i < num_data; ++i) {
     for (int j = 0; j < K; ++j) {
       auto id = i * K + j;
@@ -101,6 +90,35 @@ TEST_F(SmallDPCFrameworkTest, KNNTest) {
           << " for second element.";
     }
   }
+}
+
+TEST_F(SmallDPCFrameworkTest, KNNTest) {
+  using T = float;
+  ParsedDataset parsed_data;
+  int Lbuild = 10;
+  int alpha = 1.2;
+  int max_degree = 10;
+  int num_clusters = 1;
+  GraphType graph_type = GraphType::Vamana;
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  auto graph = construct_graph<T>(raw_data, parsed_data, Lbuild, alpha,
+                                  max_degree, num_clusters, D, graph_type);
+  int Lnn = 8;
+  int K = 3;
+  auto knn = compute_knn(graph, raw_data, K, Lnn, D);
+  EXPECT_EQ(knn.size(), K * num_data);
+
+  const std::vector<std::vector<std::pair<int, double>>> expected = {
+      {{0, 0.0}, {1, 5.0}, {2, 20.0}}, {{1, 0.0}, {0, 5.0}, {2, 5.0}},
+      {{2, 0.0}, {1, 5.0}, {3, 5.0}},  {{3, 0.0}, {2, 5.0}, {4, 5.0}},
+      {{4, 0.0}, {3, 5.0}, {5, 5.0}},  {{5, 0.0}, {4, 5.0}, {6, 5.0}},
+      {{6, 0.0}, {5, 5.0}, {7, 5.0}},  {{7, 0.0}, {6, 5.0}, {8, 5.0}},
+      {{8, 0.0}, {7, 5.0}, {9, 5.0}},  {{9, 0.0}, {8, 5.0}, {7, 20.0}}};
+  check_knn(knn, expected, K, num_data);
+
+  compute_knn_bruteforce(raw_data, K, D);
+  EXPECT_EQ(knn.size(), K * num_data);
+  check_knn(knn, expected, K, num_data);
 }
 
 TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
