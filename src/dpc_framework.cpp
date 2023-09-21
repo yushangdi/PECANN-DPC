@@ -23,12 +23,7 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
-#include "ParlayANN/algorithms/HCNNG/hcnng_index.h"
-#include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
-#include "ParlayANN/algorithms/utils/beamSearch.h"
-#include "ParlayANN/algorithms/utils/parse_files.h"
-#include "ParlayANN/algorithms/vamana/neighbors.h"
 
 #include "ann_utils.h"
 #include "bruteforce.h"
