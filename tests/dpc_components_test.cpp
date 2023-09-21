@@ -221,11 +221,30 @@ TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
 }
 
 TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
-  // Test UFClusterAssigner here. This is just a placeholder.
-  UFClusterAssigner<double> assigner;
-  // You'll need to set up necessary inputs and expected outputs.
-  // Then invoke methods on `assigner` and check results against expected
-  // outputs.
+  auto cluster_assigner = UFClusterAssigner<double>();
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  cluster_assigner.initialize(dataset_knn);
+
+  std::vector<double> densities{5, 1, 2, 3, 2, 3, 2, 3, 2, 3};
+  std::vector<double> reweighted_densities;
+  std::set<int> noise_pts{2};
+  std::vector<std::pair<int, double>> dep_ptrs(num_data);
+  std::set<int> centers({0, 3, 4, 5});
+  const double max_dist = sqrt(std::numeric_limits<double>::max());
+  dep_ptrs[0] = {num_data, max_dist};
+  for (int i=1; i < 6; ++ i){
+    dep_ptrs[i] = {i-1, 9+i};
+  }
+  for (int i=6; i < num_data; ++ i){
+    dep_ptrs[i] = {i-1, 8};
+  }
+  auto cluster =
+      cluster_assigner(densities, reweighted_densities, dep_ptrs, centers);
+  // TODO (shangdi): change to test groups instead of actual id
+  EXPECT_THAT(cluster, ElementsAre(2, 2, 2, 3, 4, 9, 9, 9, 9, 9));
+  
 }
 
 // Add more TEST_F blocks for other classes and methods as needed.
