@@ -21,6 +21,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Get submodule
+      run: |
+        git submodule init
+        git submodule update
     
     - name: Set up Python
       uses: actions/setup-python@v2
