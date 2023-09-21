@@ -216,21 +216,21 @@ TEST_F(SmallDPCFrameworkTest, NormalizedDensityComputerTest) {
 
   std::vector<double> test_densities{5, 1, 2, 3, 2, 3, 2, 3, 2, 13};
   auto new_densities = density_computer.reweight_density(test_densities);
-  expected[0] = 5/(8.0/3);
-  expected[1] = 1/(8.0/3);
-  expected[2] = 2/(2);
-  expected[3] = 3/(7.0/3);
-  expected[4] = 2/(8.0/3);
-  expected[5] = 3/(7.0/3);
-  expected[6] = 2/(8.0/3);
-  expected[7] = 3/(7.0/3);
-  expected[8] = 2/(18.0/3);
-  expected[9] = 13/(18.0/3);
+  expected[0] = 5 / (8.0 / 3);
+  expected[1] = 1 / (8.0 / 3);
+  expected[2] = 2 / (2);
+  expected[3] = 3 / (7.0 / 3);
+  expected[4] = 2 / (8.0 / 3);
+  expected[5] = 3 / (7.0 / 3);
+  expected[6] = 2 / (8.0 / 3);
+  expected[7] = 3 / (7.0 / 3);
+  expected[8] = 2 / (18.0 / 3);
+  expected[9] = 13 / (18.0 / 3);
 
   for (int i = 0; i < num_data; ++i) {
-    EXPECT_DOUBLE_EQ(new_densities[i], expected[i]) << "Mismatch at point " << i;
+    EXPECT_DOUBLE_EQ(new_densities[i], expected[i])
+        << "Mismatch at point " << i;
   }
-
 }
 
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {

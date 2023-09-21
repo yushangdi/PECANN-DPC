@@ -38,7 +38,8 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
                    const std::string &decision_graph_path,
                    const unsigned Lbuild, const unsigned max_degree,
                    const float alpha, const unsigned num_clusters,
-                   Method method, GraphType graph_type) {
+                   Method method, GraphType graph_type,
+                   std::unique_ptr<DPC::DensityComputer>& density_computer) {
   using T = float;
   Distance *D = new Euclidian_Distance();
 
@@ -60,10 +61,9 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
   DatasetKnn dataset_knn(raw_data, D, K, knn);
 
   // Compute density
-  auto density_computer = KthDistanceDensityComputer();
-  density_computer.initialize(dataset_knn);
-  auto densities = density_computer();
-  auto reweighted_densities = density_computer.reweight_density(densities);
+  density_computer->initialize(dataset_knn);
+  auto densities = density_computer->operator()();
+  auto reweighted_densities = density_computer->reweight_density(densities);
   std::set<int> noise_points;
 
   // Compute denpendent points

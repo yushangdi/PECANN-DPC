@@ -1,4 +1,5 @@
 #include "dpc_framework.h"
+#include "dpc_components.h"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -19,6 +20,7 @@ int main(int argc, char **argv) {
   float alpha = 1.2;
   Method method = Method::Doubling;
   GraphType graph_type = GraphType::Vamana;
+  std::string density_method;
 
   po::options_description desc("DPC");
   desc.add_options()("help", "produce help message")(
@@ -56,7 +58,9 @@ int main(int argc, char **argv) {
       "Method (Doubling or BlindProbe). Only works when bruteforce=false.")(
       "graph_type",
       po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana),
-      "Graph type (Vamana or pyNNDescent or HCNNG or BruteForce).");
+      "Graph type (Vamana or pyNNDescent or HCNNG or BruteForce).")("density_method",
+                       po::value<std::string>(&density_method)->default_value("KthDistance"),
+                       "density computation method");
 
   po::variables_map vm;
   try {
@@ -74,9 +78,21 @@ int main(int argc, char **argv) {
     }
     return 1;
   }
+  std::unique_ptr<DPC::DensityComputer> density_computer;
+
+  if (density_method == "KthDistance") {
+      std::cout << "KthDistanceDensityComputer\n";
+      density_computer = std::make_unique<DPC::KthDistanceDensityComputer>();
+  } else if (density_method == "Normalized") {
+      std::cout << "NormalizedDensityComputer\n";
+      density_computer = std::make_unique<DPC::NormalizedDensityComputer>();
+  } else {
+    std::cerr << "Invalid density method\n";
+    exit(1);
+  }
 
   DPC::dpc_framework(K, L, Lnn, query_file, density_cutoff, dist_cutoff,
                      center_density_cutoff, output_file, decision_graph_path,
                      Lbuild, max_degree, alpha, num_clusters, method,
-                     graph_type);
+                     graph_type, density_computer);
 }
