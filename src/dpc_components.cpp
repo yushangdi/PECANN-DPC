@@ -6,7 +6,6 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
-
 #include "ParlayANN/algorithms/HCNNG/hcnng_index.h"
 #include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
@@ -22,7 +21,6 @@
 #include "bruteforce.h"
 #include "union_find.h"
 #include "utils.h"
-
 
 namespace DPC {
 
@@ -153,7 +151,7 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
   start_points.push_back(data[query_id]);
 
   int dep_ptr;
-  float minimum_dist;
+  double minimum_dist;
 
   if (round_limit == -1) {
     round_limit = densities.size(); // effectively no limit on round.
@@ -166,7 +164,7 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
 
     double query_density = densities[query_id];
     T *query_ptr = data[query_id]->coordinates.begin();
-    minimum_dist = std::numeric_limits<float>::max();
+    minimum_dist = std::numeric_limits<double>::max();
     dep_ptr = densities.size();
     for (unsigned i = 0; i < beamElts.size(); i++) {
       const auto [id, dist] = beamElts[i];
@@ -211,8 +209,9 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
   unsigned threshold = 0;
 
   std::vector<std::pair<int, double>> dep_ptrs(data_num);
+  dep_ptrs[max_point_id] = {data_num, sqrt(std::numeric_limits<double>::max())};
   parlay::parallel_for(0, data_num, [&](size_t i) {
-    float m_dist = std::numeric_limits<float>::max();
+    double m_dist = std::numeric_limits<double>::max();
     size_t id = data_num;
     if (noise_pts.find(i) == noise_pts.end()) {
       // search within knn
@@ -223,7 +222,7 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
             std::make_pair(dep_pt.value().first, sqrt(dep_pt.value().second));
       }
     } else { // skip noise points
-      dep_ptrs[i] = {data_num, -1};
+      dep_ptrs[i] = {data_num, sqrt(std::numeric_limits<double>::max())};
     }
   });
   auto unfinished_points = parlay::sequence<unsigned>::from_function(
@@ -268,14 +267,14 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
   int aligned_dim = raw_data.aligned_dim;
   std::vector<std::pair<int, double>> dep_ptrs(data_num);
   parlay::parallel_for(0, data_num, [&](size_t i) {
-    float m_dist = std::numeric_limits<float>::max();
+    double m_dist = std::numeric_limits<double>::max(); // squared distance
     size_t id = data_num;
     if (noise_pts.find(i) == noise_pts.end()) { // skip noise points
       // search within knn
       auto dep_pt = data_knn.get_dep_ptr(i, densities);
       if (dep_pt.has_value()) {
-        dep_ptrs[i] =
-            std::make_pair(dep_pt.value().first, sqrt(dep_pt.value().second));
+        id = dep_pt.value().first;
+        m_dist = dep_pt.value().second;
       } else {
         // bruteforce
         for (size_t j = 0; j < data_num; j++) {
@@ -288,16 +287,14 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
             }
           }
         }
-        dep_ptrs[i] = {id, sqrt(m_dist)};
       } // end else
     }
+    dep_ptrs[i] = {id, sqrt(m_dist)};
   });
   return dep_ptrs;
 }
 
-template <typename T>
-std::vector<double> KthDistanceDensityComputer<T>::operator()(
-    parlay::sequence<Tvec_point<T> *> &graph) {
+std::vector<double> KthDistanceDensityComputer::operator()() {
   int data_num = this->num_data_;
   int k = this->k_;
   std::vector<double> densities(data_num);
@@ -307,8 +304,7 @@ std::vector<double> KthDistanceDensityComputer<T>::operator()(
   return densities;
 }
 
-template <typename T>
-std::vector<double> KthDistanceDensityComputer<T>::reweight_density(
+std::vector<double> KthDistanceDensityComputer::reweight_density(
     const std::vector<double> &densities) {
   return {};
 }
@@ -321,8 +317,8 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
   auto data_num = densities.size();
   auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
   auto centers_seq = parlay::filter(ids, [&](size_t i) {
-    if (dep_ptrs[i].first != data_num) { // the max density point
-      return false;
+    if (dep_ptrs[i].first == data_num) { // the max density point
+      return true;
     }
     if (noise_pts.find(i) != noise_pts.end())
       return false;
@@ -339,15 +335,14 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
 template <typename T>
 std::vector<int> UFClusterAssigner<T>::operator()(
     const std::vector<T> &densities,
-    const std::vector<T> &re_weighted_densities,
+    const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
     const std::vector<std::pair<int, double>> &dep_ptrs,
     const std::set<int> &centers) {
   ParUF<int> UF(densities.size());
   parlay::parallel_for(0, densities.size(), [&](int i) {
-    if (dep_ptrs[i].first != densities.size()) { // the max density point
-      if (centers.find(i) == centers.end()) {
-        UF.link(i, dep_ptrs[i].first);
-      }
+    if (centers.find(i) == centers.end() &&
+        noise_pts.find(i) == noise_pts.end()) {
+      UF.link(i, dep_ptrs[i].first);
     }
   });
   std::vector<int> cluster(densities.size());
@@ -378,8 +373,8 @@ DPC::compute_dep_ptr<float>(parlay::sequence<Tvec_point<float> *> &,
                             Distance *, unsigned, int);
 
 // For KthDistanceDensityComputer
-template class DPC::KthDistanceDensityComputer<float>;
-template class DPC::KthDistanceDensityComputer<double>;
+// template class DPC::KthDistanceDensityComputer<float>;
+// template class DPC::KthDistanceDensityComputer<double>;
 
 // For ThresholdCenterFinder
 template class DPC::ThresholdCenterFinder<float>;

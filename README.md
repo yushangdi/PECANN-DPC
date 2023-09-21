@@ -14,6 +14,8 @@ pip3 install .
 Run directly from commandline:
 ```bash
 ./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg 
+
+./build/dpc_framework_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg --output_file ./results/gaussian_4_1000.cluster --dist_cutoff 8.36 
 ```
 
 Test pip3 installation
@@ -93,7 +95,7 @@ Write cluster result
 
 Evaluate clustering
 ```bash
-python post_processors/cluster_eval.py data/gaussian_4_1000.gt results/gaussian_4_1000.cluster 
+python post_processors/cluster_eval.py data/gaussian_example/gaussian_4_1000.gt results/gaussian_4_1000.cluster 
 python post_processors/cluster_eval.py data/gaussian_4_10000.gt results/gaussian_4_10000.cluster 
 python post_processors/cluster_eval.py data/gaussian_4_10000.gt results/gaussian_4_10000_priority.cluster 
 python post_processors/cluster_eval.py data/gaussian_4_1000_128.gt results/gaussian_4_1000_128.cluster 

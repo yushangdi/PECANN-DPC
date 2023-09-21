@@ -23,26 +23,22 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
-#include "ParlayANN/algorithms/HCNNG/hcnng_index.h"
-#include "ParlayANN/algorithms/pyNNDescent/pynn_index.h"
 #include "ParlayANN/algorithms/utils/NSGDist.h"
-#include "ParlayANN/algorithms/utils/beamSearch.h"
-#include "ParlayANN/algorithms/utils/parse_files.h"
-#include "ParlayANN/algorithms/vamana/neighbors.h"
 
 #include "ann_utils.h"
 #include "bruteforce.h"
 #include "utils.h"
 
-
 namespace DPC {
 
-void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
-         RawDataset raw_data, float density_cutoff, float distance_cutoff,
-         float center_density_cutoff, const std::string &output_path,
-         const std::string &decision_graph_path, const unsigned Lbuild,
-         const unsigned max_degree, const float alpha,
-         const unsigned num_clusters, Method method, GraphType graph_type) {
+void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
+                   RawDataset raw_data, float density_cutoff,
+                   float distance_cutoff, float center_density_cutoff,
+                   const std::string &output_path,
+                   const std::string &decision_graph_path,
+                   const unsigned Lbuild, const unsigned max_degree,
+                   const float alpha, const unsigned num_clusters,
+                   Method method, GraphType graph_type) {
   using T = float;
   Distance *D = new Euclidian_Distance();
 
@@ -64,9 +60,9 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   DatasetKnn dataset_knn(raw_data, D, K, knn);
 
   // Compute density
-  auto density_computer = KthDistanceDensityComputer<T>();
+  auto density_computer = KthDistanceDensityComputer();
   density_computer.initialize(dataset_knn);
-  auto densities = density_computer(graph);
+  auto densities = density_computer();
   auto reweighted_densities = density_computer.reweight_density(densities);
   std::set<int> noise_points;
 
@@ -93,8 +89,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   // Assign clusters
   auto cluster_assigner = UFClusterAssigner<double>();
   cluster_assigner.initialize(dataset_knn);
-  auto cluster =
-      cluster_assigner(densities, reweighted_densities, dep_ptrs, centers);
+  auto cluster = cluster_assigner(densities, reweighted_densities, noise_points,
+                                  dep_ptrs, centers);
 
   // Merge Clusters, skipping this step for now.
 

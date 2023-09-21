@@ -40,14 +40,13 @@ std::vector<std::pair<int, double>>
 compute_knn_bruteforce(const RawDataset &raw_data, const unsigned K,
                        const Distance *D);
 
-// Compute the dependet point of points in `graph` with densities above
-// `density_cutoff` using graph-based method. The maximum density point has
-// dep_ptr data_num. Parameters:
+// Compute the dependet point of points in `graph` not in
+// `noise_pts` using graph-based method. Points without dependent point have
+// dep_ptr data_num and distance std::numeric_limits<double>::max(). Parameters:
 //   graph: input data points. They should have neighbors computed already.
 //   raw_data: raw input data points corresponding to data.
 //   densities: densities of data pints.
-//   density_cutoff: points with densities below this threshold are considered
-//   noise points, and their dependent points are not computed.
+//   noise_pts: noisy points
 //   D: distance computation method
 //   L: the buffer size parameter
 //   round_limit: the round limit parameter
@@ -60,12 +59,12 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &graph,
                 const std::set<int> &noise_pts, Distance *D, unsigned L,
                 int round_limit = -1);
 
-// Compute the dependet point of `raw_data` with densities above
-// `density_cutoff` using bruteforce method. Parameters:
+// Compute the dependet point of `raw_data` not in
+// `noise_pts` using bruteforce method.Points without dependent point have
+// dep_ptr data_num and distance std::numeric_limits<double>::max(). Parameters:
 //   raw_data: input data points.
 //   densities: densities of data pints.
-//   density_cutoff: points with densities below this threshold are considered
-//   noise points, and their dependent points are not computed.
+//   noise_pts: noisy points
 //   D: distance computation method
 std::vector<std::pair<int, double>>
 compute_dep_ptr_bruteforce(const RawDataset &raw_data,
@@ -73,20 +72,21 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
                            const std::vector<double> &densities,
                            const std::set<int> &noise_pts, Distance *D);
 
-template <typename T>
-class KthDistanceDensityComputer : public DensityComputer<T> {
+class KthDistanceDensityComputer : public DensityComputer {
 public:
   // Here we're passing the necessary arguments to the base class constructor
-  KthDistanceDensityComputer() : DensityComputer<T>() {}
+  KthDistanceDensityComputer() : DensityComputer() {}
 
   // Return the density.
-  std::vector<double>
-  operator()(parlay::sequence<Tvec_point<T> *> &graph) override;
+  std::vector<double> operator()() override;
 
   // Reweight the density of each point in $v$ based on knn.
-  std::vector<double> reweight_density(const std::vector<double> &densities) override;
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
 };
 
+// Centers are points with density >=  density_threshold_ and distance >=
+// delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
 private:
   double delta_threshold_;
@@ -106,6 +106,7 @@ public:
              const std::vector<std::pair<int, double>> &dep_ptrs) override;
 };
 
+// Non-center points merge with their dependent points using union-find.
 template <typename T> class UFClusterAssigner : public ClusterAssigner<T> {
 
 public:
@@ -116,6 +117,7 @@ public:
   std::vector<int>
   operator()(const std::vector<T> &densities,
              const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
              const std::vector<std::pair<int, double>> &dep_ptrs,
              const std::set<int> &centers) override;
 };

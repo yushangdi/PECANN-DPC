@@ -25,12 +25,9 @@
 
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 
-
 #include "IO.h"
 #include "ann_utils.h"
 #include "utils.h"
-
-
 
 namespace DPC {
 
@@ -57,10 +54,10 @@ struct DatasetKnn {
   std::optional<std::pair<int, double>>
   get_dep_ptr(int i, const std::vector<double> &densities) const {
     double d_i = densities[i];
-    for (size_t j = 0; j < k_; ++j) {
+    for (size_t j = 1; j < k_; ++j) {
       int id = knn_[i * k_ + j].first;
       double d_j = densities[id];
-      if (d_j > d_i || (d_i == d_i && id > i)) {
+      if (d_j > d_i || (d_i == d_j && id > i)) {
         return knn_[i * k_ + j];
       }
     }
@@ -100,17 +97,17 @@ protected:
   virtual ~DPCComputer() {} // Virtual destructor
 };
 
-template <typename T> class DensityComputer : public DPCComputer {
+class DensityComputer : public DPCComputer {
 public:
   // Here we're passing the necessary arguments to the base class constructor
   DensityComputer() : DPCComputer() {}
 
   // Return the density.
-  virtual std::vector<double>
-  operator()(parlay::sequence<Tvec_point<T> *> &graph) = 0;
+  virtual std::vector<double> operator()() = 0;
 
   // Reweight the density of each point in $v$ based on knn.
-  virtual std::vector<double> reweight_density(const std::vector<double> &densities) = 0;
+  virtual std::vector<double>
+  reweight_density(const std::vector<double> &densities) = 0;
 };
 
 template <typename T> class CenterFinder : public DPCComputer {
@@ -145,6 +142,7 @@ public:
   virtual std::vector<int>
   operator()(const std::vector<T> &densities,
              const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
              const std::vector<std::pair<int, double>> &dep_ptrs,
              const std::set<int> &centers) = 0;
 };

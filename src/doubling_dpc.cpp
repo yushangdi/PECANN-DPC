@@ -356,8 +356,6 @@ dpc(const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
   std::cout << "dist_cutoff=" << distance_cutoff << "\n";
   std::cout << "num_thread: " << parlay::num_workers() << std::endl;
 
-  // TODO: Add brute force to framework instead of handling seperately, then we
-  // can get rid of this helper method
   if (graph_type == GraphType::BruteForce) {
     std::cout << "method= brute force\n";
     DPC::dpc_bruteforce(K, parsed_data, density_cutoff, distance_cutoff,
