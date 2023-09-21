@@ -47,6 +47,6 @@ jobs:
     - name: Build with Make
       run: |
         cd build
-        cmake --build --config ${{env.BUILD_TYPE}}
+        cmake --build . --config ${{env.BUILD_TYPE}}
         
 
