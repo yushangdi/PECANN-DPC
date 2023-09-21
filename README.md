@@ -14,6 +14,8 @@ pip3 install .
 Run directly from commandline:
 ```bash
 ./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg 
+
+./build/dpc_ann_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data --decision_graph_path ./results/gaussian_4_1000.dg --dist_cutoff 8.36 --framework
 ```
 
 Test pip3 installation

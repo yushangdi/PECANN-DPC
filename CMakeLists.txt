@@ -34,6 +34,7 @@ include_directories(".")
 
 set(CC_SOURCES
     src/doubling_dpc.cpp
+    src/bruteforce.cpp
     )
 
 
@@ -44,6 +45,7 @@ target_link_libraries(dpc_ann_cc Threads::Threads)
 set(CC_SOURCES_FRAMEWORK
     src/dpc_framework.cpp
     src/dpc_components.cpp
+    src/bruteforce.cpp
     )
 
 add_library(dpc_ann_framework_cc STATIC ${CC_SOURCES_FRAMEWORK})
@@ -114,6 +116,11 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 add_executable(dpc_ann_exe src/dpc_commandline.cpp)
 target_link_libraries(dpc_ann_exe PUBLIC dpc_ann_cc Boost::program_options)
 target_compile_options(dpc_ann_exe PRIVATE ${COMPILE_OPTIONS})
+
+# Create executable
+add_executable(dpc_framework_exe src/dpc_framework_commandline.cpp)
+target_link_libraries(dpc_framework_exe PUBLIC Boost::program_options dpc_ann_framework_cc)
+target_compile_options(dpc_framework_exe PRIVATE ${COMPILE_OPTIONS})
 
 else()
 

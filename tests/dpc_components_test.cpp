@@ -240,8 +240,8 @@ TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   for (int i = 6; i < num_data; ++i) {
     dep_ptrs[i] = {i - 1, 8};
   }
-  auto cluster =
-      cluster_assigner(densities, reweighted_densities, noise_pts, dep_ptrs, centers);
+  auto cluster = cluster_assigner(densities, reweighted_densities, noise_pts,
+                                  dep_ptrs, centers);
   // TODO (shangdi): change to test groups instead of actual id
   EXPECT_THAT(cluster, ElementsAre(1, 1, 2, 3, 4, 9, 9, 9, 9, 9));
 }
