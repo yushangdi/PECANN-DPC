@@ -142,6 +142,7 @@ public:
   virtual std::vector<int>
   operator()(const std::vector<T> &densities,
              const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
              const std::vector<std::pair<int, double>> &dep_ptrs,
              const std::set<int> &centers) = 0;
 };

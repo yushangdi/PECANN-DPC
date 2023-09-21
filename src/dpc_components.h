@@ -107,7 +107,6 @@ public:
 };
 
 // Non-center points merge with their dependent points using union-find.
-// TODO (shangdi): add noise points
 template <typename T> class UFClusterAssigner : public ClusterAssigner<T> {
 
 public:
@@ -118,6 +117,7 @@ public:
   std::vector<int>
   operator()(const std::vector<T> &densities,
              const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
              const std::vector<std::pair<int, double>> &dep_ptrs,
              const std::set<int> &centers) override;
 };

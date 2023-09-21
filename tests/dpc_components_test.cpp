@@ -209,11 +209,11 @@ TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
   std::vector<std::pair<int, double>> dep_ptrs(num_data);
   const double max_dist = sqrt(std::numeric_limits<double>::max());
   dep_ptrs[0] = {num_data, max_dist};
-  for (int i=1; i < 6; ++ i){
-    dep_ptrs[i] = {i-1, 9+i};
+  for (int i = 1; i < 6; ++i) {
+    dep_ptrs[i] = {i - 1, 9 + i};
   }
-  for (int i=6; i < num_data; ++ i){
-    dep_ptrs[i] = {i-1, 8};
+  for (int i = 6; i < num_data; ++i) {
+    dep_ptrs[i] = {i - 1, 8};
   }
   auto centers =
       center_finder(densities, reweighted_densities, noise_pts, dep_ptrs);
@@ -234,20 +234,17 @@ TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   std::set<int> centers({0, 3, 4, 5});
   const double max_dist = sqrt(std::numeric_limits<double>::max());
   dep_ptrs[0] = {num_data, max_dist};
-  for (int i=1; i < 6; ++ i){
-    dep_ptrs[i] = {i-1, 9+i};
+  for (int i = 1; i < 6; ++i) {
+    dep_ptrs[i] = {i - 1, 9 + i};
   }
-  for (int i=6; i < num_data; ++ i){
-    dep_ptrs[i] = {i-1, 8};
+  for (int i = 6; i < num_data; ++i) {
+    dep_ptrs[i] = {i - 1, 8};
   }
   auto cluster =
-      cluster_assigner(densities, reweighted_densities, dep_ptrs, centers);
+      cluster_assigner(densities, reweighted_densities, noise_pts, dep_ptrs, centers);
   // TODO (shangdi): change to test groups instead of actual id
-  EXPECT_THAT(cluster, ElementsAre(2, 2, 2, 3, 4, 9, 9, 9, 9, 9));
-  
+  EXPECT_THAT(cluster, ElementsAre(1, 1, 2, 3, 4, 9, 9, 9, 9, 9));
 }
-
-// Add more TEST_F blocks for other classes and methods as needed.
 
 } // namespace DPC
 

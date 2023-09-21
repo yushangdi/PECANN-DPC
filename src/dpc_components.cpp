@@ -335,15 +335,14 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
 template <typename T>
 std::vector<int> UFClusterAssigner<T>::operator()(
     const std::vector<T> &densities,
-    const std::vector<T> &re_weighted_densities,
+    const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
     const std::vector<std::pair<int, double>> &dep_ptrs,
     const std::set<int> &centers) {
   ParUF<int> UF(densities.size());
   parlay::parallel_for(0, densities.size(), [&](int i) {
-    if (dep_ptrs[i].first != densities.size()) { // the max density point
-      if (centers.find(i) == centers.end()) {
-        UF.link(i, dep_ptrs[i].first);
-      }
+    if (centers.find(i) == centers.end() &&
+        noise_pts.find(i) == noise_pts.end()) {
+      UF.link(i, dep_ptrs[i].first);
     }
   });
   std::vector<int> cluster(densities.size());

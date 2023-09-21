@@ -92,8 +92,8 @@ void dpc(const unsigned K, const unsigned L, const unsigned Lnn,
   // Assign clusters
   auto cluster_assigner = UFClusterAssigner<double>();
   cluster_assigner.initialize(dataset_knn);
-  auto cluster =
-      cluster_assigner(densities, reweighted_densities, dep_ptrs, centers);
+  auto cluster = cluster_assigner(densities, reweighted_densities, noise_points,
+                                  dep_ptrs, centers);
 
   // Merge Clusters, skipping this step for now.
 
