@@ -72,13 +72,16 @@ def main():
         plt.title(title)
         plt.grid(True)
 
-    new_plot(title=f'{df.iloc[0]["dataset"]} ARI vs. clustering time pareto frontiers')
     for comparison in ["ground truth", "brute force"]:
+        new_plot(title=f"{args.dataset} ARI vs. clustering time")
         for method in methods:
             plot_pareto(comparison, method)
 
-    plt.legend(loc="lower right")
-    plt.savefig("results/graphs/pareto_frontier_plot.png", bbox_inches="tight")
+        plt.legend(loc="lower right")
+        plt.savefig(
+            f"results/graphs/pareto_frontier_plot_{args.dataset}_{comparison}.png",
+            bbox_inches="tight",
+        )
 
     for method in methods:
         new_plot(title=f'{method} grid search on {df.iloc[0]["dataset"]}')

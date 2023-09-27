@@ -24,7 +24,9 @@ from utils import (
 )
 
 
-parser = argparse.ArgumentParser(description="Process ground truth and dataset paths.")
+parser = argparse.ArgumentParser(
+    description="Run approximate DPC methods on the passed in files."
+)
 parser.add_argument(
     "dataset",
     help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
