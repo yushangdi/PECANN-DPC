@@ -3,6 +3,9 @@ import numpy as np
 import sys
 import os
 from pathlib import Path
+import torch
+import time
+import argparse
 
 # Change to DPC-ANN folder and add to path
 abspath = Path(__file__).resolve().parent.parent
@@ -10,29 +13,71 @@ os.chdir(abspath)
 sys.path.append(str(abspath))
 
 from post_processors.cluster_eval import eval_clusters
+from utils import create_results_file, eval_cluster_and_write_results
 
-x = np.load("data/imagenet/imagenet.npy")
-ncentroids = 1000
 
-for niter in range(10, 101, 10):
-    verbose = True
-    d = x.shape[1]
-    kmeans = faiss.Kmeans(d, ncentroids, niter=niter, verbose=verbose)
-    kmeans.train(x)
+parser = argparse.ArgumentParser(description="Run kmeans on passed in dataset.")
+parser.add_argument(
+    "dataset",
+    help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
+)
+parser.add_argument(
+    "num_clusters",
+    help="How many clusters to use for kmeans",
+    type=int,
+)
+parser.add_argument(
+    "--max_iterations",
+    help="The maximum number of iterations (across nredo and niter) to use for kmeans",
+    default=100,
+    type=int,
+)
+args = parser.parse_args()
 
-    _, clusters = kmeans.index.search(x, 1)
-    clusters = clusters.flatten()
+x = np.load(f"data/{args.dataset}/{args.dataset}.npy")
+cluster_result_path = f"results/{args.dataset}/kmeans.cluster"
+results_file = create_results_file("kmeans")
 
-    ground_truth = np.loadtxt("data/imagenet/imagenet.gt", dtype=int)
+for nredo in range(1, 5):
+    for niter in list(range(1, 10)) + list(range(10, 50, 5)):
+        if nredo * niter > args.max_iterations:
+            continue
+        built_start_time = time.time()
+        verbose = False
+        d = x.shape[1]
+        kmeans = faiss.Kmeans(d, args.num_clusters, niter=niter, verbose=verbose)
+        kmeans.train(x)
+        built_time = time.time() - built_start_time
 
-    print(niter, eval_clusters(ground_truth, clusters, verbose=False))
+        find_clusters_start = time.time()
+        batch_size = 100000
+        clusters = []
+        for start in range(0, len(x), batch_size):
+            batch_x = x[start : start + batch_size]
+            distances = torch.cdist(
+                torch.tensor(batch_x), torch.tensor(kmeans.centroids)
+            )
+            clusters += torch.argmin(distances, dim=1).tolist()
+        find_clusters_time = time.time() - find_clusters_start
 
-# Result for imagenet:
-# {'recall50': 0.692,
-#  'precision50': 0.692,
-#  'AMI': 0.8810204445757013,
-#  'ARI': 0.6431451638897032,
-#  'completeness': 0.895803375866884,
-#  'homogeneity': 0.8815404215715357}
+        total_time = time.time() - built_start_time
+        with open(cluster_result_path, "w") as f:
+            for i in clusters:
+                f.write(str(i) + "\n")
 
-# Result for mnist, 0.4 recall and precision and ARI
+        method_name = f"kmeans_{niter}_{nredo}"
+        times = {
+            "Total": total_time,
+            "Find clusters": find_clusters_time,
+            "Built index": built_time,
+        }
+
+        eval_cluster_and_write_results(
+            gt_cluster_path=f"data/{args.dataset}/{args.dataset}.gt",
+            cluster_path=cluster_result_path,
+            compare_to_ground_truth=True,
+            results_file=results_file,
+            dataset=args.dataset,
+            method=method_name,
+            time_reports=times,
+        )

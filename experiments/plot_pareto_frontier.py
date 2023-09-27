@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import glob
 
 Path("results/graphs").mkdir(parents=True, exist_ok=True)
 
@@ -12,22 +13,31 @@ def main():
     parser = argparse.ArgumentParser(
         description="Plot a pareto frontier of total time vs. AMI"
     )
-    parser.add_argument("file_path", type=str, help="Path to the CSV results file")
+    parser.add_argument("folder", type=str, help="Folder to read csv files from.")
+    parser.add_argument("dataset", type=str, help="Dataset to plot from the csv files.")
     args = parser.parse_args()
 
-    df = pd.read_csv(args.file_path)
+    # Use glob to find files matching the pattern
+    csv_files = glob.glob(args.folder + "/*.csv")
+    df = pd.concat([pd.read_csv(path) for path in csv_files])
+    df = df[df["dataset"] == args.dataset]
 
-    colors = {"Vamana": "tab:blue", "pyNNDescent": "tab:green", "HCNNG": "tab:orange"}
+    colors = {
+        "Vamana": "tab:blue",
+        "pyNNDescent": "tab:green",
+        "HCNNG": "tab:orange",
+        "kmeans": "tab:red",
+    }
+    methods = ["Vamana", "pyNNDescent", "HCNNG", "kmeans"]
 
     dfs = {}
 
     for comparison in ["ground truth", "brute force"]:
-        for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
+        for method in methods:
             filtered_df = df[df["comparison"] == comparison]
-            filtered_df = filtered_df[filtered_df["method"].str.contains(graph_type)]
+            filtered_df = filtered_df[filtered_df["method"].str.contains(method)]
 
             filtered_df = filtered_df.sort_values(by=["Total time"])
-
             pareto_frontier = []
             max_ari = float("-inf")
 
@@ -39,19 +49,19 @@ def main():
 
             pareto_df = pd.DataFrame(pareto_frontier)
 
-            dfs[(comparison, graph_type)] = (filtered_df, pareto_df)
+            dfs[(comparison, method)] = (filtered_df, pareto_df)
 
-    def plot_pareto(comparison, graph_type):
-        _, pareto_df = dfs[((comparison, graph_type))]
+    def plot_pareto(comparison, method):
+        _, pareto_df = dfs[((comparison, method))]
         if len(pareto_df) == 0:
             return
         plt.plot(
             pareto_df["Total time"],
             pareto_df["ARI"],
             marker="o" if comparison == "ground truth" else "s",
-            color=colors[graph_type],
+            color=colors[method],
             linestyle="--" if comparison == "ground truth" else "-",
-            label=f"{graph_type} vs. {comparison}",
+            label=f"{method} vs. {comparison}",
         )
 
     def new_plot(title):
@@ -62,28 +72,33 @@ def main():
         plt.title(title)
         plt.grid(True)
 
-    new_plot(title=f'{df.iloc[0]["dataset"]} ARI vs. clustering time pareto frontiers')
     for comparison in ["ground truth", "brute force"]:
-        for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
-            plot_pareto(comparison, graph_type)
+        new_plot(title=f"{args.dataset} ARI vs. clustering time")
+        for method in methods:
+            plot_pareto(comparison, method)
 
-    plt.legend(loc="lower right")
-    plt.savefig("results/graphs/pareto_frontier_plot.png", bbox_inches="tight")
+        plt.legend(loc="lower right")
+        plt.savefig(
+            f"results/graphs/pareto_frontier_plot_{args.dataset}_{comparison}.png",
+            bbox_inches="tight",
+        )
 
-    for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
-        new_plot(title=f'{graph_type} grid search on {df.iloc[0]["dataset"]}')
+    for method in methods:
+        new_plot(title=f'{method} grid search on {df.iloc[0]["dataset"]}')
         comparison = "ground truth"
-        plot_pareto(comparison, graph_type)
-        filtered_df, pareto_df = dfs[((comparison, graph_type))]
+        plot_pareto(comparison, method)
+        filtered_df, pareto_df = dfs[((comparison, method))]
         plt.scatter(
             filtered_df["Total time"],
             filtered_df["ARI"],
-            color=colors[graph_type],
+            color=colors[method],
             alpha=0.5,
         )
 
         plt.legend(loc="lower right")
-        plt.savefig(f"results/graphs/{graph_type}_vs_gt.png", bbox_inches="tight")
+        plt.savefig(
+            f"results/graphs/{method}_{args.dataset}_vs_gt.png", bbox_inches="tight"
+        )
 
 
 if __name__ == "__main__":
