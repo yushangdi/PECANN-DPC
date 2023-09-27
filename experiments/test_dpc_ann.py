@@ -58,7 +58,11 @@ options = []
 # can add others once we know reasonable parameters for num_clusters
 #  and reduce the search space with the vamana search
 
-exponential_range = [8, 16, 32, 64, 128, 256]
+exponential_range = [8, 16, 32, 64]
+
+if args.dataset == "imagenet":
+    exponential_range += [128, 256]
+
 for (
     max_degree,
     beam_search_construction,
@@ -71,8 +75,7 @@ for (
     # TODO(Josh): Validate this assumption? Can just leave running in background somewhere
     # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
     for alpha in [1.1]:
-        # for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
-        for graph_type in ["Vamana"]:
+        for graph_type in ["Vamana", "pyNNDescent", "HCNNG"]:
             method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
             command_line = {
                 "max_degree": max_degree,
