@@ -23,7 +23,6 @@ for nredo in range(1, 5):
     for niter in list(range(1, 10)) + list(range(10, 50, 5)):
         if nredo * niter > 100:
             continue
-        
         built_start_time = time.time()
         verbose = False
         d = x.shape[1]
@@ -36,7 +35,9 @@ for nredo in range(1, 5):
         clusters = []
         for start in range(0, len(x), batch_size):
             batch_x = x[start : start + batch_size]
-            distances = torch.cdist(torch.tensor(batch_x), torch.tensor(kmeans.centroids))
+            distances = torch.cdist(
+                torch.tensor(batch_x), torch.tensor(kmeans.centroids)
+            )
             clusters += torch.argmin(distances, dim=1).tolist()
         find_clusters_time = time.time() - find_clusters_start
 
