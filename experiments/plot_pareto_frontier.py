@@ -96,7 +96,9 @@ def main():
         )
 
         plt.legend(loc="lower right")
-        plt.savefig(f"results/graphs/{method}_vs_gt.png", bbox_inches="tight")
+        plt.savefig(
+            f"results/graphs/{method}_{args.dataset}_vs_gt.png", bbox_inches="tight"
+        )
 
 
 if __name__ == "__main__":
