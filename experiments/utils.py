@@ -68,9 +68,9 @@ def product_cluster_dg(dg_path, num_clusters, density_product=1, distance_produc
     )
 
 
-def create_results_file():
+def create_results_file(prefix=""):
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    cluster_results_file = f"results/cluster_analysis_{timestr}.csv"
+    cluster_results_file = f"results/cluster_analysis_{prefix}_{timestr}.csv"
 
     with open(cluster_results_file, "w") as f:
         f.write("dataset,method,comparison," + ",".join(headers) + "\n")
@@ -84,7 +84,7 @@ def eval_cluster_and_write_results(
     compare_to_ground_truth,
     results_file,
     dataset,
-    graph_type,
+    method,
     time_reports,
 ):
     times = [
@@ -95,13 +95,13 @@ def eval_cluster_and_write_results(
         gt_path=gt_cluster_path,
         cluster_path=cluster_path,
         verbose=False,
-        metrics=quality_headers,
+        eval_metrics=quality_headers,
     )
     with open(results_file, "a") as f:
         fields = (
             [
                 dataset,
-                graph_type,
+                method,
                 "ground truth" if compare_to_ground_truth else "brute force",
             ]
             + times

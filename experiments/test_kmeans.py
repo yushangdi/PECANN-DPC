@@ -3,6 +3,8 @@ import numpy as np
 import sys
 import os
 from pathlib import Path
+import torch
+import time
 
 # Change to DPC-ANN folder and add to path
 abspath = Path(__file__).resolve().parent.parent
@@ -10,29 +12,49 @@ os.chdir(abspath)
 sys.path.append(str(abspath))
 
 from post_processors.cluster_eval import eval_clusters
+from utils import create_results_file, eval_cluster_and_write_results
 
 x = np.load("data/imagenet/imagenet.npy")
 ncentroids = 1000
 
-for niter in range(10, 101, 10):
-    verbose = True
+results_file = create_results_file("kmeans")
+
+
+for niter in list(range(1, 10)) + list(range(10, 50, 5)):
+    built_start_time = time.time()
+    verbose = False
     d = x.shape[1]
     kmeans = faiss.Kmeans(d, ncentroids, niter=niter, verbose=verbose)
     kmeans.train(x)
+    built_time = time.time() - built_start_time
 
-    _, clusters = kmeans.index.search(x, 1)
-    clusters = clusters.flatten()
+    find_clusters_start = time.time()
+    batch_size = 100000
+    clusters = []
+    for start in range(0, len(x), batch_size):
+        batch_x = x[start : start + batch_size]
+        distances = torch.cdist(torch.tensor(batch_x), torch.tensor(kmeans.centroids))
+        clusters += torch.argmin(distances, dim=1).tolist()
+    find_clusters_time = time.time() - find_clusters_start
 
-    ground_truth = np.loadtxt("data/imagenet/imagenet.gt", dtype=int)
+    total_time = time.time() - built_start_time
+    with open("results/kmeans.cluster", "w") as f:
+        for i in clusters:
+            f.write(str(i) + "\n")
 
-    print(niter, eval_clusters(ground_truth, clusters, verbose=False))
+    method_name = f"kmeans_{niter}"
+    times = {
+        "Total": total_time,
+        "Find clusters": find_clusters_time,
+        "Built index": built_time,
+    }
 
-# Result for imagenet:
-# {'recall50': 0.692,
-#  'precision50': 0.692,
-#  'AMI': 0.8810204445757013,
-#  'ARI': 0.6431451638897032,
-#  'completeness': 0.895803375866884,
-#  'homogeneity': 0.8815404215715357}
-
-# Result for mnist, 0.4 recall and precision and ARI
+    eval_cluster_and_write_results(
+        gt_cluster_path=f"data/imagenet/imagenet.gt",
+        cluster_path=f"results/kmeans.cluster",
+        compare_to_ground_truth=True,
+        results_file=results_file,
+        dataset="imagenet",
+        method=method_name,
+        time_reports=times,
+    )

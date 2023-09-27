@@ -61,8 +61,10 @@ for (
     max_degree,
     beam_search_construction,
     beam_search_clustering,
-    beam_search_density
-) in itertools.product(exponential_range, exponential_range, exponential_range, exponential_range):
+    beam_search_density,
+) in itertools.product(
+    exponential_range, exponential_range, exponential_range, exponential_range
+):
     # We are assuming Vamana value of alpha = 1.1 (experimentally verified) works well for other graph methods
     # TODO(Josh): Validate this assumption? Can just leave running in background somewhere
     # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
@@ -138,7 +140,7 @@ def try_command(graph_type, command):
         compare_to_ground_truth=True,
         results_file=cluster_results_file,
         dataset=dataset,
-        graph_type=graph_type,
+        method=graph_type,
         time_reports=times,
     )
 
@@ -149,7 +151,7 @@ def try_command(graph_type, command):
         compare_to_ground_truth=False,
         results_file=cluster_results_file,
         dataset=dataset,
-        graph_type=graph_type,
+        method=graph_type,
         time_reports=times,
     )
 
