@@ -1,7 +1,14 @@
 import dpc_ann
 import numpy as np
 import sys
-sys.path.append('/home/ubuntu/DPC-ANN')
+from pathlib import Path
+import os
+
+# Change to DPC-ANN folder and add to path
+abspath = Path(__file__).resolve().parent.parent
+os.chdir(abspath)
+sys.path.append(str(abspath))
+
 from post_processors import cluster_eval
 
 query_file = "./data/gaussian_example/gaussian_4_1000.data"
