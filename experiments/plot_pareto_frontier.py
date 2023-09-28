@@ -22,6 +22,10 @@ def main():
     df = pd.concat([pd.read_csv(path) for path in csv_files])
     df = df[df["dataset"] == args.dataset]
 
+    # Because some floats are too long for pandas to do this normally?
+    df["ARI"] = pd.to_numeric(df["ARI"])
+    df["Total time"] = pd.to_numeric(df["Total time"])
+
     colors = {
         "Vamana": "tab:blue",
         "pyNNDescent": "tab:green",

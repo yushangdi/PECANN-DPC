@@ -91,7 +91,8 @@ for (
                 for num_clusters in range(1, 6):
                     new_command_line = dict(command_line)
                     command_line["num_clusters"] = num_clusters
-                    options.append((method, new_command_line))
+                    new_method = method + "_" + str(num_clusters)
+                    options.append((new_method, new_command_line))
             else:
                 options.append((method, command_line))
 
