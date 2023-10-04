@@ -61,8 +61,7 @@ jobs:
       run: bin/download_datasets.sh
 
     - name: Build python package
-      run: |
-        pip3 install .
+      run: pip3 install .
 
     - name: Run python tests
       run: bin/python-tests.sh
