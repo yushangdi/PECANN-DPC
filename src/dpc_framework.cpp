@@ -25,7 +25,6 @@
 
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 
-#include "ann_utils.h"
 #include "bruteforce.h"
 #include "utils.h"
 
@@ -64,7 +63,6 @@ ClusteringResult dpc_framework(
   DatasetKnn dataset_knn(raw_data, D, K, knn);
 
   output_metadata["Find knn time"] = t.next_time();
-
 
   // Compute density
   auto density_computer = KthDistanceDensityComputer();

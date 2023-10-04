@@ -22,7 +22,6 @@
 #include "parlay/sequence.h"
 #include "parlay/slice.h"
 
-#include "ann_utils.h"
 #include "union_find.h"
 #include "utils.h"
 

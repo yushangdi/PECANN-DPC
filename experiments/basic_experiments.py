@@ -23,13 +23,13 @@ import dpc_ann
 
 cluster_results_file = create_results_file()
 
-for dataset in ["s2", "s3", "unbalance", "mnist"]:
+for dataset in ["s2", "s3", "unbalance"]:
     dataset_folder = make_results_folder(dataset)
     for graph_type in ["BruteForce", "HCNNG", "pyNNDescent", "Vamana"]:
         query_file = f"data/{dataset_folder}/{dataset}.txt"
         prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
-        time_reports = dpc_ann.dpc_filenames(
+        clustering_result = dpc_ann.dpc_filenames(
             data_path=query_file,
             decision_graph_path=f"{prefix}.dg ",
             output_path=f"{prefix}.cluster",
@@ -37,7 +37,7 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
             **get_cutoff(dataset),
         )
 
-        print(time_reports)
+        time_reports = clustering_result.metadata
 
         # Eval cluster against ground truth and write results
         eval_cluster_and_write_results(
@@ -46,7 +46,7 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
             compare_to_ground_truth=True,
             results_file=cluster_results_file,
             dataset=dataset,
-            graph_type=graph_type,
+            method=graph_type,
             time_reports=time_reports,
         )
 
@@ -57,7 +57,7 @@ for dataset in ["s2", "s3", "unbalance", "mnist"]:
             compare_to_ground_truth=False,
             results_file=cluster_results_file,
             dataset=dataset,
-            graph_type=graph_type,
+            method=graph_type,
             time_reports=time_reports,
         )
 

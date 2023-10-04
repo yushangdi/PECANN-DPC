@@ -18,7 +18,7 @@ gt_path = "./data/gaussian_example/gaussian_4_1000.gt"
 graph_type = "Vamana"
 
 data = np.load("./data/gaussian_example/gaussian_4_1000.npy").astype("float32")
-print(data)
+data = np.pad(data, [(0, 0), (0, 6)])
 times = dpc_ann.dpc_numpy(
         distance_cutoff=8.36,
         data=data,

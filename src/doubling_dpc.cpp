@@ -12,8 +12,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "IO.h"
-
 #include "parlay/internal/get_time.h"
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
@@ -27,7 +25,7 @@
 #include "ParlayANN/algorithms/utils/parse_files.h"
 #include "ParlayANN/algorithms/vamana/neighbors.h"
 
-#include "ann_utils.h"
+#include "IO.h"
 #include "bruteforce.h"
 #include "union_find.h"
 #include "utils.h"

@@ -2,14 +2,14 @@
 
 #include <cstring>
 
-#include "utils.h"
 #include "IO.h"
+#include "utils.h"
 namespace DPC {
 
 struct ClusteringResult {
   std::unordered_map<std::string, double> output_metadata;
   std::vector<int> clusters;
-}; 
+};
 
 ClusteringResult
 dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
