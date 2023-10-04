@@ -97,6 +97,8 @@ def run_dpc_ann_tests(
 
     def try_command(graph_type, command, use_new_framework):
         prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
+        if use_new_framework:
+            prefix += "_new"
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
@@ -115,6 +117,9 @@ def run_dpc_ann_tests(
             num_clusters=num_clusters,
             output_path=f"{prefix}.cluster",
         )
+
+        if use_new_framework:
+            graph_type += "_new"
 
         # Eval cluster against ground truth and write results
         if compare_against_gt:
