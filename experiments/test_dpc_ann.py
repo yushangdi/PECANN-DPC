@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# TODO(Josh): Before merging, add a nice test for this
+# TODO(Josh): Before merging, add a nice test for this, 
+# and also make it optional to run both new and old framework
+# (right now it always runs both)
 
 import itertools
 import os

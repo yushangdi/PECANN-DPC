@@ -36,9 +36,8 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install nanobind
-      run: |
-        pip3 install nanobind
+    - name: Install python dependencies
+      run: pip3 install -r requirements.txt
     
     - name: Install Boost
       run: sudo apt-get install libboost-program-options-dev
@@ -63,7 +62,6 @@ jobs:
 
     - name: Build python package
       run: |
-        pip3 install -r requirements.txt
         pip3 install .
 
     - name: Run python tests

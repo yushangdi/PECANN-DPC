@@ -2,3 +2,5 @@ numpy
 pandas
 tqdm
 pytest
+nanobind
+torchvision
