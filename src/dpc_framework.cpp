@@ -54,13 +54,14 @@ ClusteringResult dpc_framework(
   output_metadata["Built index time"] = t.next_time();
 
   // Compute knn
+  // Use K + 1 since we want to find the point itself + its k nearest neighbors
   std::vector<std::pair<int, double>> knn;
   if (graph_type == GraphType::BruteForce) {
-    knn = compute_knn_bruteforce(raw_data, K, D);
+    knn = compute_knn_bruteforce(raw_data, K + 1, D);
   } else {
-    knn = compute_knn(graph, raw_data, K, Lnn, D);
+    knn = compute_knn(graph, raw_data, K + 1, Lnn, D);
   }
-  DatasetKnn dataset_knn(raw_data, D, K, knn);
+  DatasetKnn dataset_knn(raw_data, D, K + 1, knn);
 
   output_metadata["Find knn time"] = t.next_time();
 
