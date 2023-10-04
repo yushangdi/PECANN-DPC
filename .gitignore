@@ -36,10 +36,14 @@ doubling_dpc
 results/*
 .vscode/
 data/*
-!data/gaussian_example
 build
 compile_commands.json
 
 *.png
 
 __pycache__
+
+# Include these simple datasets so we don't need to redownload during github actions
+!data/gaussian_example
+!data/s_datasets
+!data/unbalance

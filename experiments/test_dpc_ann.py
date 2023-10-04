@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# TODO(Josh): Before merging, add a nice test for this, 
-# and also make it optional to run both new and old framework
-# (right now it always runs both)
-
 import itertools
 import os
 from pathlib import Path
@@ -28,9 +24,21 @@ from utils import (
 )
 
 
-def run_dpc_ann_tests(
-    dataset, timeout_s, num_clusters, search_range=None, compare_against_gt=True
+def run_dpc_ann_configurations(
+    dataset,
+    timeout_s,
+    num_clusters,
+    graph_types=None,
+    search_range=None,
+    compare_against_gt=True,
+    run_new_dpc_framework=True,
+    run_old_dpc_framework=False,
 ):
+    if not run_new_dpc_framework and not run_old_dpc_framework:
+        raise ValueError(
+            "At least one of run_new_dpc_framework or run_old_dpc_framework must be true"
+        )
+
     cluster_results_file = create_results_file()
 
     options = []
@@ -39,6 +47,9 @@ def run_dpc_ann_tests(
         search_range = [8, 16, 32, 64]
         if dataset == "imagenet":
             search_range += [128, 256]
+
+    if graph_types == None:
+        graph_types = ["Vamana", "HCNNG", "pyNNDescent"]
 
     for (
         max_degree,
@@ -50,7 +61,7 @@ def run_dpc_ann_tests(
         # TODO(Josh): Validate this assumption? Can just leave running in background somewhere
         # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
         for alpha in [1.1]:
-            for graph_type in ["Vamana"]:
+            for graph_type in graph_types:
                 method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
                 command_line = {
                     "max_degree": max_degree,
@@ -147,7 +158,12 @@ def run_dpc_ann_tests(
         )
 
     for graph_type, command in tqdm(options):
-        for use_new_framework in [False, True]:
+        new_framework_settings = []
+        if run_new_dpc_framework:
+            new_framework_settings.append(True)
+        if run_old_dpc_framework:
+            new_framework_settings.append(False)
+        for use_new_framework in new_framework_settings:
             p = multiprocessing.Process(
                 target=try_command, args=(graph_type, command, use_new_framework)
             )
@@ -161,6 +177,8 @@ def run_dpc_ann_tests(
                 print(graph_type, "timed out!")
             elif exitcode != 0:
                 print(graph_type, "had exit code", str(p.exitcode) + "!")
+
+    return cluster_results_file
 
 
 if __name__ == "__main__":
@@ -184,12 +202,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--dont_compare_against_gt", default=False, action="store_true")
     parser.add_argument("-search_range", nargs="+", type=int)
+    parser.add_argument("-graph_types", nargs="+", type=str)
     args = parser.parse_args()
 
-    run_dpc_ann_tests(
+    run_dpc_ann_configurations(
         dataset=args.dataset,
         timeout_s=args.timeout,
         num_clusters=args.num_clusters,
         compare_against_gt=not args.dont_compare_against_gt,
         search_range=args.search_range,
+        graph_types=args.graph_types,
     )

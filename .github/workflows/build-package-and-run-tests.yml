@@ -57,8 +57,8 @@ jobs:
         cd build
         cmake --build . --config ${{env.BUILD_TYPE}}
         
-    - name: Download datasets
-      run: bin/download_datasets.sh
+    - name: Download mnist
+      run: bin/download_mnist.sh
 
     - name: Build python package
       run: pip3 install .
