@@ -27,5 +27,4 @@ struct ParsedDataset {
   }
 
   ParsedDataset() = default;
-  ;
 };

@@ -31,14 +31,16 @@
 
 namespace DPC {
 
-void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
-                   RawDataset raw_data, float density_cutoff,
-                   float distance_cutoff, float center_density_cutoff,
-                   const std::string &output_path,
-                   const std::string &decision_graph_path,
-                   const unsigned Lbuild, const unsigned max_degree,
-                   const float alpha, const unsigned num_clusters,
-                   Method method, GraphType graph_type) {
+ClusteringResult dpc_framework(
+    const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
+    float density_cutoff, float distance_cutoff, float center_density_cutoff,
+    const std::string &output_path, const std::string &decision_graph_path,
+    const unsigned Lbuild, const unsigned max_degree, const float alpha,
+    const unsigned num_clusters, Method method, GraphType graph_type) {
+
+  parlay::internal::timer t("DPC");
+  std::unordered_map<std::string, double> output_metadata;
+
   using T = float;
   Distance *D = new Euclidian_Distance();
 
@@ -50,6 +52,8 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
                                num_clusters, D, graph_type);
   }
 
+  output_metadata["Built index time"] = t.next_time();
+
   // Compute knn
   std::vector<std::pair<int, double>> knn;
   if (graph_type == GraphType::BruteForce) {
@@ -59,12 +63,17 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
   }
   DatasetKnn dataset_knn(raw_data, D, K, knn);
 
+  output_metadata["Find knn time"] = t.next_time();
+
+
   // Compute density
   auto density_computer = KthDistanceDensityComputer();
   density_computer.initialize(dataset_knn);
   auto densities = density_computer();
   auto reweighted_densities = density_computer.reweight_density(densities);
   std::set<int> noise_points;
+
+  output_metadata["Compute density time"] = t.next_time();
 
   // Compute denpendent points
   std::vector<std::pair<int, double>> dep_ptrs;
@@ -76,6 +85,8 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
                                densities, noise_points, D, L,
                                /* round_limit = */ 4);
   }
+
+  output_metadata["Compute dependent points time"] = t.next_time();
 
   // Compute centers
   auto center_finder =
@@ -92,12 +103,19 @@ void dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
   auto cluster = cluster_assigner(densities, reweighted_densities, noise_points,
                                   dep_ptrs, centers);
 
+  output_metadata["Find clusters time"] = t.next_time();
+
   // Merge Clusters, skipping this step for now.
 
   // Output results
   output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
+
   std::set<int> unique_cluster_ids(cluster.begin(), cluster.end());
   std::cout << "Num. cluster = " << unique_cluster_ids.size() << std::endl;
+
+  output_metadata["Total time"] = t.total_time();
+
+  return {output_metadata, cluster};
 }
 
 } // namespace DPC

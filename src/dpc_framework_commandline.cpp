@@ -75,9 +75,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-    DPC::dpc_framework(K, L, Lnn, query_file, density_cutoff, dist_cutoff,
-                       center_density_cutoff, output_file, decision_graph_path,
-                       Lbuild, max_degree, alpha, num_clusters, method,
-                       graph_type);
-
+  DPC::dpc_framework(K, L, Lnn, query_file, density_cutoff, dist_cutoff,
+                     center_density_cutoff, output_file, decision_graph_path,
+                     Lbuild, max_degree, alpha, num_clusters, method,
+                     graph_type);
 }
