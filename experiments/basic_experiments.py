@@ -21,49 +21,55 @@ from utils import (
 import dpc_ann
 
 
-cluster_results_file = create_results_file()
+def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True):
+    cluster_results_file = create_results_file()
 
-for dataset in ["s2", "s3", "unbalance"]:
-    dataset_folder = make_results_folder(dataset)
-    for graph_type in ["BruteForce", "HCNNG", "pyNNDescent", "Vamana"]:
-        query_file = f"data/{dataset_folder}/{dataset}.txt"
-        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
+    for dataset in datasets:
+        dataset_folder = make_results_folder(dataset)
+        for graph_type in ["BruteForce", "HCNNG", "pyNNDescent", "Vamana"]:
+            query_file = f"data/{dataset_folder}/{dataset}.txt"
+            prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
-        clustering_result = dpc_ann.dpc_filenames(
-            data_path=query_file,
-            decision_graph_path=f"{prefix}.dg ",
-            output_path=f"{prefix}.cluster",
-            graph_type=graph_type,
-            **get_cutoff(dataset),
-        )
+            clustering_result = dpc_ann.dpc_filenames(
+                data_path=query_file,
+                decision_graph_path=f"{prefix}.dg ",
+                output_path=f"{prefix}.cluster",
+                graph_type=graph_type,
+                **get_cutoff(dataset),
+                use_new_framework=new_framework,
+            )
 
-        time_reports = clustering_result.metadata
+            time_reports = clustering_result.metadata
 
-        # Eval cluster against ground truth and write results
-        eval_cluster_and_write_results(
-            gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
-            cluster_path=f"{prefix}.cluster",
-            compare_to_ground_truth=True,
-            results_file=cluster_results_file,
-            dataset=dataset,
-            method=graph_type,
-            time_reports=time_reports,
-        )
+            # Eval cluster against ground truth and write results
+            eval_cluster_and_write_results(
+                gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
+                cluster_path=f"{prefix}.cluster",
+                compare_to_ground_truth=True,
+                results_file=cluster_results_file,
+                dataset=dataset,
+                method=graph_type,
+                time_reports=time_reports,
+            )
 
-        # Eval cluster against brute force DPC
-        eval_cluster_and_write_results(
-            gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
-            cluster_path=f"{prefix}.cluster",
-            compare_to_ground_truth=False,
-            results_file=cluster_results_file,
-            dataset=dataset,
-            method=graph_type,
-            time_reports=time_reports,
-        )
+            # Eval cluster against brute force DPC
+            eval_cluster_and_write_results(
+                gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
+                cluster_path=f"{prefix}.cluster",
+                compare_to_ground_truth=False,
+                results_file=cluster_results_file,
+                dataset=dataset,
+                method=graph_type,
+                time_reports=time_reports,
+            )
 
-        # Plot clusters
-        plot_dims(
-            filename=query_file,
-            cluster_path=f"{prefix}.cluster",
-            image_path=f"{prefix}.png",
-        )
+            # Plot clusters
+            plot_dims(
+                filename=query_file,
+                cluster_path=f"{prefix}.cluster",
+                image_path=f"{prefix}.png",
+            )
+
+
+if __name__ == "__main__":
+    run_basic_experiments()

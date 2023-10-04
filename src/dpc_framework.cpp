@@ -108,6 +108,8 @@ ClusteringResult dpc_framework(
   // Output results
   output(densities, cluster, dep_ptrs, output_path, decision_graph_path);
 
+  output_metadata["Output time"] = t.next_time();
+
   std::set<int> unique_cluster_ids(cluster.begin(), cluster.end());
   std::cout << "Num. cluster = " << unique_cluster_ids.size() << std::endl;
 
