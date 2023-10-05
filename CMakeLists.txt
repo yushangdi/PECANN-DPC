@@ -92,7 +92,7 @@ nanobind_add_module(
   src/python_bindings.cpp
 )
 
-target_link_libraries(dpc_ann_ext PUBLIC dpc_ann_cc)
+target_link_libraries(dpc_ann_ext PUBLIC dpc_ann_cc dpc_ann_framework_cc)
 
 # Ignore nanobind warnings (temporary)
 get_property(

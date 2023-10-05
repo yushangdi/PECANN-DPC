@@ -17,13 +17,14 @@ quality_headers = [
     "homogeneity",
 ]
 time_check_headers = [
-    "Built index",
-    "Compute dependent points",
-    "Compute density",
-    "Find clusters",
-    "Total",
+    "Built index time",
+    "Compute dependent points time",
+    "Find knn time",
+    "Compute density time",
+    "Find clusters time",
+    "Total time",
 ]
-headers = [t + " time" for t in time_check_headers] + quality_headers
+headers = [t for t in time_check_headers] + quality_headers
 
 
 def _cluster_by_densities_distance_product(
@@ -87,8 +88,13 @@ def eval_cluster_and_write_results(
     method,
     time_reports,
 ):
+    # TODO(Josh): Can clean this up a bit when deleting the old DPC code
+    adjusted_time_reports = {
+        a + (" time" if not a.endswith(" time") else ""): b
+        for a, b in time_reports.items()
+    }
     times = [
-        (str(time_reports[key]) if key in time_reports else "")
+        (str(adjusted_time_reports[key]) if key in adjusted_time_reports else "")
         for key in time_check_headers
     ]
     cluster_results = eval_cluster_files(

@@ -24,7 +24,6 @@
 
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 
-#include "ann_utils.h"
 #include "union_find.h"
 #include "utils.h"
 

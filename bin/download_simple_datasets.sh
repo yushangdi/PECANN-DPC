@@ -30,17 +30,14 @@ unzip unbalance-gt-pa.zip
 mv unbalance-gt.pa unbalance.gt
 sed -i 1,4d unbalance.gt
 
-cd ..
-mkdir -p kdd
-cd kdd
-wget http://cs.joensuu.fi/sipu/datasets/KDDCUP04Bio.txt
-mv KDDCUP04Bio.txt kdd.txt
+# cd ..
+# mkdir -p kdd
+# cd kdd
+# wget http://cs.joensuu.fi/sipu/datasets/KDDCUP04Bio.txt
+# mv KDDCUP04Bio.txt kdd.txt
 
-cd ..
-mkdir -p facial
-cd facial
-wget https://archive.ics.uci.edu/static/public/317/grammatical+facial+expressions.zip
-unzip grammatical+facial+expressions.zip -d facial
-
-cd ../..
-python3 data_processors/mnist.py
+# cd ..
+# mkdir -p facial
+# cd facial
+# wget https://archive.ics.uci.edu/static/public/317/grammatical+facial+expressions.zip
+# unzip grammatical+facial+expressions.zip -d facial

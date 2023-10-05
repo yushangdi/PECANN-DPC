@@ -26,7 +26,6 @@
 #include "ParlayANN/algorithms/utils/NSGDist.h"
 
 #include "IO.h"
-#include "ann_utils.h"
 #include "utils.h"
 
 namespace DPC {
