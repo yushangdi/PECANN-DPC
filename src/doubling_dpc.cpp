@@ -12,8 +12,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "IO.h"
-
 #include "parlay/internal/get_time.h"
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
@@ -27,7 +25,7 @@
 #include "ParlayANN/algorithms/utils/parse_files.h"
 #include "ParlayANN/algorithms/vamana/neighbors.h"
 
-#include "ann_utils.h"
+#include "IO.h"
 #include "bruteforce.h"
 #include "union_find.h"
 #include "utils.h"
@@ -154,10 +152,11 @@ void compute_densities(parlay::sequence<Tvec_point<T> *> &v,
     parlay::sequence<Tvec_point<T> *> start_points;
     start_points.push_back(v[i]);
     auto [pairElts, dist_cmps] =
-        beam_search(v[i], v, start_points, beamSizeQ, data_dim, D, K);
+        beam_search(v[i], v, start_points, beamSizeQ, data_dim, D, K + 1);
     auto [beamElts, visitedElts] = pairElts;
     T distance;
-    if (beamElts.size() <= K) { // found less than K neighbors during the search
+    if (beamElts.size() <
+        K + 1) { // found less than K + 1 neighbors during the search
       std::vector<float> dists(data_num);
       parlay::parallel_for(0, data_num, [&](size_t j) {
         dists[j] = D->distance(v[i]->coordinates.begin(),

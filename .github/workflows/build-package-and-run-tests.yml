@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
+name: Build package and run tests
 
 on:
   push:
@@ -36,9 +36,8 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install nanobind
-      run: |
-        pip3 install nanobind
+    - name: Install python dependencies
+      run: pip3 install -r requirements.txt
     
     - name: Install Boost
       run: sudo apt-get install libboost-program-options-dev
@@ -58,4 +57,11 @@ jobs:
         cd build
         cmake --build . --config ${{env.BUILD_TYPE}}
         
+    - name: Download mnist
+      run: bin/download_mnist.sh
 
+    - name: Build python package
+      run: pip3 install .
+
+    - name: Run python tests
+      run: bin/python-tests.sh
