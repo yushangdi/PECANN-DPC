@@ -337,10 +337,17 @@ std::set<int> ProductCenterFinder<T>::operator()(
     const std::vector<T> &densities,
     const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
     const std::vector<std::pair<int, double>> &dep_ptrs) {
-
-  parlay::sequence<double> negative_products(dep_ptrs.size());
+  auto data_num = densities.size();
+  if (use_reweighted_density_) {
+    assert(re_weighted_densities.size() >= data_num);
+  }
+  parlay::sequence<double> negative_products(data_num);
   parlay::parallel_for(0, negative_products.size(), [&](int i) {
-    negative_products[i] = -densities[i] * dep_ptrs[i].second;
+    if (use_reweighted_density_) {
+      negative_products[i] = -re_weighted_densities[i] * dep_ptrs[i].second;
+    } else {
+      negative_products[i] = -densities[i] * dep_ptrs[i].second;
+    }
     if (dep_ptrs[i].first == densities.size()) {
       negative_products[i] = -std::numeric_limits<double>::infinity();
     }
@@ -348,7 +355,6 @@ std::set<int> ProductCenterFinder<T>::operator()(
   double centroid_threshold =
       -1 * parlay::kth_smallest_copy(negative_products, num_clusters_);
 
-  auto data_num = densities.size();
   auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
   auto centers_seq = parlay::filter(ids, [&](size_t i) {
     return -negative_products[i] > centroid_threshold;

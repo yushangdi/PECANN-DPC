@@ -112,14 +112,19 @@ public:
              const std::vector<std::pair<int, double>> &dep_ptrs) override;
 };
 
-// Centers are top k points by product of density times dependent distance
+// Centers are top k points by product of density times dependent distance.
+// If use_reweighted_density_ is true, use reweighted_densities for profducts.
 template <typename T> class ProductCenterFinder : public CenterFinder<T> {
 private:
   size_t num_clusters_;
+  bool use_reweighted_density_ = false;
 
 public:
   ProductCenterFinder(size_t num_clusters)
       : CenterFinder<T>(), num_clusters_(num_clusters) {}
+  ProductCenterFinder(int num_cluster, bool use_reweighted_density)
+      : CenterFinder<T>(), num_clusters_(num_cluster),
+        use_reweighted_density_(use_reweighted_density) {}
 
   ~ProductCenterFinder() {}
 
