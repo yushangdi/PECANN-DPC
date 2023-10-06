@@ -12,7 +12,6 @@ abspath = Path(__file__).resolve().parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 
-from post_processors.cluster_eval import eval_clusters
 from utils import create_results_file, eval_cluster_and_write_results
 
 
@@ -74,7 +73,7 @@ for nredo in range(1, 5):
 
         eval_cluster_and_write_results(
             gt_cluster_path=f"data/{args.dataset}/{args.dataset}.gt",
-            cluster_path=cluster_result_path,
+            found_clusters=cluster_result_path,
             compare_to_ground_truth=True,
             results_file=results_file,
             dataset=args.dataset,

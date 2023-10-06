@@ -348,11 +348,43 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
     }
     if (noise_pts.find(i) != noise_pts.end())
       return false;
-    if (dep_ptrs[i].second >= delta_threshold_ &&
+    if (dep_ptrs[i].second >= dependant_dist_threshold &&
         densities[i] >= density_threshold_) {
       return true;
     }
     return false;
+  });
+  std::set<int> centers(centers_seq.begin(), centers_seq.end());
+  return centers;
+}
+
+template <typename T>
+std::set<int> ProductCenterFinder<T>::operator()(
+    const std::vector<T> &densities,
+    const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
+    const std::vector<std::pair<int, double>> &dep_ptrs) {
+  auto data_num = densities.size();
+  assert(dep_ptrs.size() >= data_num);
+  if (use_reweighted_density_) {
+    assert(re_weighted_densities.size() >= data_num);
+  }
+  parlay::sequence<double> negative_products(data_num);
+  parlay::parallel_for(0, negative_products.size(), [&](int i) {
+    if (use_reweighted_density_) {
+      negative_products[i] = -re_weighted_densities[i] * dep_ptrs[i].second;
+    } else {
+      negative_products[i] = -densities[i] * dep_ptrs[i].second;
+    }
+    if (dep_ptrs[i].first == densities.size()) {
+      negative_products[i] = -std::numeric_limits<double>::infinity();
+    }
+  });
+  double centroid_threshold =
+      -1 * parlay::kth_smallest_copy(negative_products, num_clusters_);
+
+  auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
+  auto centers_seq = parlay::filter(ids, [&](size_t i) {
+    return -negative_products[i] > centroid_threshold;
   });
   std::set<int> centers(centers_seq.begin(), centers_seq.end());
   return centers;
@@ -405,6 +437,10 @@ DPC::compute_dep_ptr<float>(parlay::sequence<Tvec_point<float> *> &,
 // For ThresholdCenterFinder
 template class DPC::ThresholdCenterFinder<float>;
 template class DPC::ThresholdCenterFinder<double>;
+
+// For ProductCenterFinder
+template class DPC::ProductCenterFinder<float>;
+template class DPC::ProductCenterFinder<double>;
 
 // For UFClusterAssigner
 template class DPC::UFClusterAssigner<float>;

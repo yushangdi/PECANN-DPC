@@ -2,9 +2,9 @@
 #include "dpc_framework.h"
 #include <boost/program_options.hpp>
 
-namespace po = boost::program_options;
-
 bool report_stats = true;
+
+namespace po = boost::program_options;
 
 int main(int argc, char **argv) {
   using Method = DPC::Method;
@@ -92,8 +92,12 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  DPC::dpc_framework(K, L, Lnn, query_file, density_cutoff, dist_cutoff,
-                     center_density_cutoff, output_file, decision_graph_path,
-                     Lbuild, max_degree, alpha, num_clusters, method,
-                     graph_type, density_computer);
+  // TODO: If we want to keep mainintaing this command line, add options for
+  // other center finders
+  DPC::dpc_framework(K, L, Lnn, query_file,
+                     std::make_shared<DPC::ThresholdCenterFinder<double>>(
+                         dist_cutoff, center_density_cutoff),
+                         density_computer,
+                     output_file, decision_graph_path, Lbuild, max_degree,
+                     alpha, num_clusters, method, graph_type);
 }

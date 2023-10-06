@@ -28,16 +28,17 @@
 #include "bruteforce.h"
 #include "utils.h"
 
+// #include <boost/json.hpp>
+
 namespace DPC {
 
-ClusteringResult
-dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
-              RawDataset raw_data, float density_cutoff, float distance_cutoff,
-              float center_density_cutoff, const std::string &output_path,
-              const std::string &decision_graph_path, const unsigned Lbuild,
-              const unsigned max_degree, const float alpha,
-              const unsigned num_clusters, Method method, GraphType graph_type,
-              std::unique_ptr<DPC::DensityComputer> &density_computer) {
+ClusteringResult dpc_framework(
+    const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
+    const std::shared_ptr<CenterFinder<double>> &center_finder,
+    std::unique_ptr<DPC::DensityComputer> &density_computer,
+    const std::string &output_path, const std::string &decision_graph_path,
+    const unsigned Lbuild, const unsigned max_degree, const float alpha,
+    const unsigned num_clusters, Method method, GraphType graph_type) {
 
   parlay::internal::timer t("DPC");
   std::unordered_map<std::string, double> output_metadata;
@@ -89,11 +90,9 @@ dpc_framework(const unsigned K, const unsigned L, const unsigned Lnn,
   output_metadata["Compute dependent points time"] = t.next_time();
 
   // Compute centers
-  auto center_finder =
-      ThresholdCenterFinder<double>(distance_cutoff, center_density_cutoff);
-  center_finder.initialize(dataset_knn);
+  center_finder->initialize(dataset_knn);
   auto centers =
-      center_finder(densities, reweighted_densities, noise_points, dep_ptrs);
+      (*center_finder)(densities, reweighted_densities, noise_points, dep_ptrs);
 
   // Compute noises, skipping this step for now.
 

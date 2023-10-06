@@ -62,9 +62,9 @@ def eval_clusters(
     return result
 
 
-def eval_cluster_files(
+def eval_clusters_wrapper(
     gt_path,
-    cluster_path,
+    found_clusters,
     verbose=True,
     eval_metrics=[
         "recall50",
@@ -75,21 +75,19 @@ def eval_cluster_files(
         "homogeneity",
     ],
 ):
-    if verbose:
-        print(f"reading gt from {gt_path}")
-        print(f"reading result from {cluster_path}")
-
+    
     with open(gt_path, "r") as file:
         labels = np.array([int(line.rstrip()) for line in file])
 
-    with open(cluster_path, "r") as file:
-        preds = np.array([int(line.rstrip()) for line in file])
+    if isinstance(found_clusters, str):
+        with open(found_clusters, "r") as file:
+            found_clusters = np.array([int(line.rstrip()) for line in file])
 
-    return eval_clusters(labels, preds, verbose, eval_metrics)
+    return eval_clusters(labels, found_clusters, verbose, eval_metrics)
 
 
 if __name__ == "__main__":
     assert len(sys.argv) >= 3
     gt_path = sys.argv[1]
     cluster_path = sys.argv[2]
-    print(json.dumps(eval_cluster_files(gt_path, cluster_path), indent=4))
+    print(json.dumps(eval_clusters_wrapper(gt_path, cluster_path), indent=4))
