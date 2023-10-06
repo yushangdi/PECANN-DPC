@@ -30,9 +30,10 @@ def test_mnist_ari():
             num_clusters=10,
             graph_types=["Vamana"],
             search_range=[32],
-            compare_against_gt=True
+            compare_against_gt=True,
         )
     )
+    assert len(results) == 2
     assert (results["ARI"][results["comparison"] == "ground truth"] > 0.3).all()
     assert (results["ARI"][results["comparison"] == "brute force"] > 0.95).all()
 

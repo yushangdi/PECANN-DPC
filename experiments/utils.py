@@ -1,7 +1,7 @@
 import time
 
 # Should already have parent folder on path for this to work
-from post_processors.cluster_eval import eval_cluster_files
+from post_processors.cluster_eval import eval_clusters_wrapper
 import os
 import pandas as pd
 import sys
@@ -82,7 +82,7 @@ def create_results_file(prefix=""):
 
 def eval_cluster_and_write_results(
     gt_cluster_path,
-    cluster_path,
+    found_clusters,
     compare_to_ground_truth,
     results_file,
     dataset,
@@ -98,9 +98,9 @@ def eval_cluster_and_write_results(
         (str(adjusted_time_reports[key]) if key in adjusted_time_reports else "")
         for key in time_check_headers
     ]
-    cluster_results = eval_cluster_files(
+    cluster_results = eval_clusters_wrapper(
         gt_path=gt_cluster_path,
-        cluster_path=cluster_path,
+        found_clusters=found_clusters,
         verbose=False,
         eval_metrics=quality_headers,
     )

@@ -43,7 +43,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
             # Eval cluster against ground truth and write results
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
-                cluster_path=f"{prefix}.cluster",
+                found_clusters=f"{prefix}.cluster",
                 compare_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
@@ -54,7 +54,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
             # Eval cluster against brute force DPC
             eval_cluster_and_write_results(
                 gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
-                cluster_path=f"{prefix}.cluster",
+                found_clusters=f"{prefix}.cluster",
                 compare_to_ground_truth=False,
                 results_file=cluster_results_file,
                 dataset=dataset,
