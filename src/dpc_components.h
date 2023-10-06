@@ -105,6 +105,7 @@ public:
 // Du, Mingjing, Shifei Ding, and Hongjie Jia. "Study on density peaks
 // clustering based on k-nearest neighbors and principal component analysis."
 // Knowledge-Based Systems 99 (2016): 135-145.
+// density[i] = exp(-1/k * sum_k(squared dist to kth nn))
 class ExpSquaredDensityComputer : public DensityComputer {
 public:
   ExpSquaredDensityComputer() : DensityComputer() {}
