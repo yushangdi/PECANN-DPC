@@ -338,6 +338,7 @@ std::set<int> ProductCenterFinder<T>::operator()(
     const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
     const std::vector<std::pair<int, double>> &dep_ptrs) {
   auto data_num = densities.size();
+  assert(dep_ptrs.size() >= data_num);
   if (use_reweighted_density_) {
     assert(re_weighted_densities.size() >= data_num);
   }

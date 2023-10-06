@@ -114,6 +114,7 @@ public:
 
 // Centers are top k points by product of density times dependent distance.
 // If use_reweighted_density_ is true, use reweighted_densities for profducts.
+// noise points can also be cluster centers.
 template <typename T> class ProductCenterFinder : public CenterFinder<T> {
 private:
   size_t num_clusters_;
