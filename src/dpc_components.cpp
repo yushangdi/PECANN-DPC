@@ -356,7 +356,7 @@ std::vector<double> ExpSquaredDensityComputer::reweight_density(
   return std::vector<double>();
 }
 
-std::vector<double> MutalKNNDensityComputer::operator()() {
+std::vector<double> MutualKNNDensityComputer::operator()() {
   int data_num = this->num_data_;
   int k = this->k_;
   std::vector<double> densities(data_num);
@@ -391,7 +391,7 @@ std::vector<double> MutalKNNDensityComputer::operator()() {
   return densities;
 }
 
-std::vector<double> MutalKNNDensityComputer::reweight_density(
+std::vector<double> MutualKNNDensityComputer::reweight_density(
     const std::vector<double> &densities) {
   return std::vector<double>();
 }

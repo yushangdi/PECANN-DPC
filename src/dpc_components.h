@@ -122,9 +122,9 @@ public:
 // self-recommendation." International Journal of Machine Learning and
 // Cybernetics 12 (2021): 1913-1938.
 // density depends on mutual k-nn (definition 4-6) in paper
-class MutalKNNDensityComputer : public DensityComputer {
+class MutualKNNDensityComputer : public DensityComputer {
 public:
-  MutalKNNDensityComputer() : DensityComputer() {}
+  MutualKNNDensityComputer() : DensityComputer() {}
 
   // Return the density. 1/ the distance to kth nearest neighbor.
   std::vector<double> operator()() override;
