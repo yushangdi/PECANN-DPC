@@ -123,7 +123,6 @@ public:
              const std::vector<std::pair<int, double>> &dep_ptrs) override;
 };
 
-// TODO (shangdi): add center finder by product of rho*delta and rho' * delta
 
 // Non-center points merge with their dependent points using union-find.
 template <typename T> class UFClusterAssigner : public ClusterAssigner<T> {
