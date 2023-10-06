@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   float density_cutoff, dist_cutoff, center_density_cutoff;
   unsigned int K = 6;
   unsigned int L = 12;
-  unsigned int Lnn = 4;
+  unsigned int Lnn = 8; // need to >= K, otherwise all knn searches are bruteforce.
   unsigned int Lbuild = 12;
   unsigned int max_degree = 16;
   unsigned int num_clusters = 4; // only used for pyNNDescent.
@@ -81,6 +81,11 @@ int main(int argc, char **argv) {
   }
   std::shared_ptr<DPC::DensityComputer> density_computer;
   std::shared_ptr<DPC::CenterFinder<double>> center_finder;
+
+  if(graph_type != GraphType::BruteForce && L <= K){
+    std::cout << "warning: if L <= K, all nearest neighbor searches are bruteforce \n";
+    std::cout << "L=" << L << " K=" << K << std::endl;
+  }
 
   if (density_method == "KthDistance") {
     std::cout << "KthDistanceDensityComputer\n";

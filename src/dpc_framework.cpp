@@ -62,7 +62,7 @@ ClusteringResult dpc_framework(
   if (graph_type == GraphType::BruteForce) {
     knn = compute_knn_bruteforce(raw_data, K + 1, D);
   } else {
-    knn = compute_knn(graph, raw_data, K + 1, Lnn, D);
+    knn = compute_knn(graph, raw_data, K + 1, L, D);
   }
   DatasetKnn dataset_knn(raw_data, D, K + 1, knn);
 
@@ -83,7 +83,7 @@ ClusteringResult dpc_framework(
                                           noise_points, D);
   } else {
     dep_ptrs = compute_dep_ptr(graph, parsed_data.points, dataset_knn, raw_data,
-                               densities, noise_points, D, L,
+                               densities, noise_points, D, Lnn,
                                /* round_limit = */ 4);
   }
 

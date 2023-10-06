@@ -93,7 +93,7 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
     auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first);
     };
-    if (beamElts.size() <= K) { // found less than K neighbors during the search
+    if (beamElts.size() < K) { // found less than K neighbors during the search
       std::vector<std::pair<int, double>> dists(data_num);
       parlay::parallel_for(0, data_num, [&](size_t j) {
         dists[j] = std::make_pair(j, D->distance(graph[i]->coordinates.begin(),
