@@ -35,6 +35,9 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
   if (!center_finder) {
     center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>();
   }
+  if (!density_computer) {
+    density_computer = std::make_shared<DPC::KthDistanceDensityComputer>();
+  }
 
   float *data_ptr = data.data();
   size_t num_data = data.shape(0);
