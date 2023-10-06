@@ -79,25 +79,26 @@ int main(int argc, char **argv) {
     }
     return 1;
   }
-  std::unique_ptr<DPC::DensityComputer> density_computer;
+  std::shared_ptr<DPC::DensityComputer> density_computer;
+  std::shared_ptr<DPC::CenterFinder<double>> center_finder;
 
   if (density_method == "KthDistance") {
     std::cout << "KthDistanceDensityComputer\n";
-    density_computer = std::make_unique<DPC::KthDistanceDensityComputer>();
+    density_computer = std::make_shared<DPC::KthDistanceDensityComputer>();
   } else if (density_method == "Normalized") {
     std::cout << "NormalizedDensityComputer\n";
-    density_computer = std::make_unique<DPC::NormalizedDensityComputer>();
+    density_computer = std::make_shared<DPC::NormalizedDensityComputer>();
   } else {
     std::cerr << "Invalid density method\n";
     exit(1);
   }
 
+  center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>(
+      dist_cutoff, center_density_cutoff);
+
   // TODO: If we want to keep mainintaing this command line, add options for
   // other center finders
-  DPC::dpc_framework(K, L, Lnn, query_file,
-                     std::make_shared<DPC::ThresholdCenterFinder<double>>(
-                         dist_cutoff, center_density_cutoff),
-                         density_computer,
+  DPC::dpc_framework(K, L, Lnn, query_file, center_finder, density_computer,
                      output_file, decision_graph_path, Lbuild, max_degree,
                      alpha, num_clusters, method, graph_type);
 }

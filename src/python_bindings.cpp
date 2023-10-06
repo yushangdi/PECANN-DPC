@@ -23,6 +23,7 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
               data,
           const unsigned K, const unsigned L, const unsigned Lnn,
           std::shared_ptr<DPC::CenterFinder<double>> center_finder,
+          std::shared_ptr<DPC::DensityComputer> density_computer,
           const std::string &output_path,
           const std::string &decision_graph_path, const unsigned Lbuild,
           const unsigned max_degree, const float alpha,
@@ -51,15 +52,17 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
   DPC::GraphType graph_type;
   std::istringstream(graph_type_str) >> graph_type;
 
-  return DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, output_path,
-                            decision_graph_path, Lbuild, max_degree, alpha,
-                            num_clusters, method, graph_type);
+  return DPC::dpc_framework(K, L, Lnn, raw_data, center_finder,
+                            density_computer, output_path, decision_graph_path,
+                            Lbuild, max_degree, alpha, num_clusters, method,
+                            graph_type);
 }
 
 DPC::ClusteringResult
 dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
               const unsigned Lnn,
               std::shared_ptr<DPC::CenterFinder<double>> center_finder,
+              std::shared_ptr<DPC::DensityComputer> density_computer,
               const std::string &output_path,
               const std::string &decision_graph_path, const unsigned Lbuild,
               const unsigned max_degree, const float alpha,
@@ -69,6 +72,9 @@ dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
   if (!center_finder) {
     center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>();
   }
+  if (!density_computer) {
+    density_computer = std::make_shared<DPC::KthDistanceDensityComputer>();
+  }
 
   DPC::Method method;
   std::istringstream(method_str) >> method;
@@ -77,9 +83,10 @@ dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
 
   RawDataset raw_data(data_path);
 
-  DPC::ClusteringResult result = DPC::dpc_framework(
-      K, L, Lnn, raw_data, center_finder, output_path, decision_graph_path,
-      Lbuild, max_degree, alpha, num_clusters, method, graph_type);
+  DPC::ClusteringResult result =
+      DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, density_computer,
+                         output_path, decision_graph_path, Lbuild, max_degree,
+                         alpha, num_clusters, method, graph_type);
 
   aligned_free(raw_data.data);
 
@@ -88,7 +95,8 @@ dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
 
 NB_MODULE(dpc_ann_ext, m) {
   m.def("dpc_filenames", &dpc_filenames, "data_path"_a, "K"_a = 6, "L"_a = 12,
-        "Lnn"_a = 4, "center_finder"_a = nullptr, "output_path"_a = "",
+        "Lnn"_a = 4, "center_finder"_a = nullptr,
+        "density_computer"_a = nullptr, "output_path"_a = "",
         "decision_graph_path"_a = "", "Lbuild"_a = 12, "max_degree"_a = 16,
         "alpha"_a = 1.2, "num_clusters"_a = 4, "method"_a = "Doubling",
         "graph_type"_a = "Vamana",
@@ -98,7 +106,8 @@ NB_MODULE(dpc_ann_ext, m) {
 
   // Don't want to allow conversion since then it will copy
   m.def("dpc_numpy", &dpc_numpy, "data"_a.noconvert(), "K"_a = 6, "L"_a = 12,
-        "Lnn"_a = 4, "center_finder"_a = nullptr, "output_path"_a = "",
+        "Lnn"_a = 4, "center_finder"_a = nullptr,
+        "density_computer"_a = nullptr, "output_path"_a = "",
         "decision_graph_path"_a = "", "Lbuild"_a = 12, "max_degree"_a = 16,
         "alpha"_a = 1.2, "num_clusters"_a = 4, "method"_a = "Doubling",
         "graph_type"_a = "Vamana",
@@ -121,4 +130,10 @@ NB_MODULE(dpc_ann_ext, m) {
   nb::class_<DPC::ProductCenterFinder<double>, DPC::CenterFinder<double>>(
       m, "ProductCenterFinder")
       .def(nb::init<size_t>(), "num_clusters"_a);
+
+  nb::class_<DPC::KthDistanceDensityComputer, DPC::DensityComputer>(
+      m, "KthDistanceDensityComputer");
+
+  nb::class_<DPC::NormalizedDensityComputer, DPC::DensityComputer>(
+      m, "NormalizedDensityComputer");
 }

@@ -24,7 +24,7 @@ run_command("./build/dpc_framework_exe  --query_file ./data/gaussian_example/gau
 
 gt_path = "data/gaussian_example/gaussian_4_1000.gt"
 output_path = "results/gaussian_4_1000.cluster"
-metrics1 = cluster_eval.eval_cluster_files(gt_path, output_path, verbose=True)
+metrics1 = cluster_eval.eval_clusters_wrapper(gt_path, output_path, verbose=True)
 print(metrics1)
 
 run_command("./build/dpc_framework_exe  --query_file ./data/gaussian_example/gaussian_4_1000.data \
@@ -33,5 +33,5 @@ run_command("./build/dpc_framework_exe  --query_file ./data/gaussian_example/gau
 
 gt_path = "data/gaussian_example/gaussian_4_1000.gt"
 output_path = "results/gaussian_4_1000.cluster"
-metrics1 = cluster_eval.eval_cluster_files(gt_path, output_path, verbose=True)
+metrics1 = cluster_eval.eval_clusters_wrapper(gt_path, output_path, verbose=True)
 print(metrics1)
