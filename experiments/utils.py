@@ -1,12 +1,13 @@
 import time
 
 # Should already have parent folder on path for this to work
-from post_processors.cluster_eval import eval_cluster_files
+from post_processors.cluster_eval import eval_clusters_wrapper
 import os
 import pandas as pd
 import sys
 from union_find import UnionFind
 import numpy as np
+import dpc_ann
 
 quality_headers = [
     "recall50",
@@ -81,7 +82,7 @@ def create_results_file(prefix=""):
 
 def eval_cluster_and_write_results(
     gt_cluster_path,
-    cluster_path,
+    found_clusters,
     compare_to_ground_truth,
     results_file,
     dataset,
@@ -97,9 +98,9 @@ def eval_cluster_and_write_results(
         (str(adjusted_time_reports[key]) if key in adjusted_time_reports else "")
         for key in time_check_headers
     ]
-    cluster_results = eval_cluster_files(
+    cluster_results = eval_clusters_wrapper(
         gt_path=gt_cluster_path,
-        cluster_path=cluster_path,
+        found_clusters=found_clusters,
         verbose=False,
         eval_metrics=quality_headers,
     )
@@ -125,11 +126,12 @@ def make_results_folder(dataset):
     return dataset_folder
 
 
-def get_cutoff(dataset):
+def get_threshold_center_finder(dataset):
     # From analyzing decision graph
-    return {
-        "mnist": {"distance_cutoff": 3, "center_density_cutoff": 0.7},
-        "s2": {"distance_cutoff": 102873},
-        "s3": {"distance_cutoff": 102873},
-        "unbalance": {"distance_cutoff": 30000},
+    settings = {
+        "mnist": {"dependant_dist_threshold": 3, "density_threshold": 0.7},
+        "s2": {"dependant_dist_threshold": 102873},
+        "s3": {"dependant_dist_threshold": 102873},
+        "unbalance": {"dependant_dist_threshold": 30000},
     }[dataset]
+    return {"center_finder": dpc_ann.ThresholdCenterFinder(**settings)}

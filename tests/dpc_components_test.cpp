@@ -220,6 +220,110 @@ TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
   EXPECT_THAT(centers, UnorderedElementsAre(0, 3, 4, 5));
 }
 
+// Function to check if a set contains numbers from 0 to 49
+bool ContainsNumbers(const std::set<int> &inputSet) {
+  for (int i = 0; i < 50; ++i) {
+    if (inputSet.find(i) == inputSet.end()) {
+      std::cout << i << std::endl;
+      return false; // Number not found in the set
+    }
+  }
+  return true; // All numbers from 1 to 50 are found
+}
+
+TEST_F(SmallDPCFrameworkTest, ProductCenterFinderTest) {
+  int num_clusters = 50;
+  int n = 100;
+  ProductCenterFinder<double> center_finder(num_clusters);
+  std::vector<double> densities(n);
+  std::vector<double> reweighted_densities;
+  std::set<int> noise_pts;
+  std::vector<std::pair<int, double>> dep_ptrs(n);
+  const double max_dist = sqrt(std::numeric_limits<double>::max());
+  dep_ptrs[0] = {num_data, max_dist};
+  for (int i = 1; i < n; ++i) {
+    dep_ptrs[i] = {i - 1, 1.5};
+  }
+  for (int i = 0; i < n; ++i) {
+    densities[i] = n - i;
+  }
+  auto centers =
+      center_finder(densities, reweighted_densities, noise_pts, dep_ptrs);
+  ASSERT_EQ(num_clusters, centers.size());
+  ASSERT_TRUE(ContainsNumbers(centers));
+}
+
+// Function to check if a set contains numbers from 50 to 99
+bool ContainsNumbers2(const std::set<int> &inputSet) {
+  for (int i = 0; i < 50; ++i) {
+    if (inputSet.find(99-i) == inputSet.end()) {
+      std::cout << i << std::endl;
+      return false; // Number not found in the set
+    }
+  }
+  return true;
+}
+
+TEST_F(SmallDPCFrameworkTest, ProductCenterFinderUseWeightedTest) {
+  int num_clusters = 50;
+  int n = 100;
+  ProductCenterFinder<double> center_finder(num_clusters, true);
+  std::vector<double> densities(n);
+  std::vector<double> reweighted_densities(n);
+  std::set<int> noise_pts;
+  std::vector<std::pair<int, double>> dep_ptrs(n);
+  const double max_dist = sqrt(std::numeric_limits<double>::max());
+  dep_ptrs[n-1] = {num_data, max_dist};
+  for (int i = 0; i < n-1; ++i) {
+    dep_ptrs[i] = {i - 1, 1.5};
+  }
+  for (int i = 0; i < n; ++i) {
+    densities[i] = n - i;
+    reweighted_densities[i] = i;
+  }
+  auto centers =
+      center_finder(densities, reweighted_densities, noise_pts, dep_ptrs);
+  ASSERT_EQ(num_clusters, centers.size());
+  ASSERT_TRUE(ContainsNumbers2(centers));
+}
+
+
+// Test case for when use_reweighted_density_ is true
+TEST_F(SmallDPCFrameworkTest, UseReweightedDensity) {
+    ProductCenterFinder<double> finder(2, true);
+    
+    std::vector<double> densities = {1.0, 2.0, 300};
+    std::vector<double> re_weighted_densities = {6.0, 4.0, 2.0};
+    std::set<int> noise_pts = {2};
+    std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
+    
+    // Act
+    std::set<int> centers = finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
+    
+    // Assert
+    ASSERT_EQ(centers.size(), 2);
+    EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
+}
+
+// Test case for when use_reweighted_density_ is false
+TEST_F(SmallDPCFrameworkTest, NoReweightedDensity) {
+    // Arrange
+    ProductCenterFinder<double> finder(2);
+    
+    std::vector<double> densities = {1.0, 2.0, 3.0};
+    std::vector<double> re_weighted_densities;
+    std::set<int> noise_pts = {2};
+    std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
+    
+    // Act
+    std::set<int> centers = finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
+    
+    // Assert
+    ASSERT_EQ(centers.size(), 2);
+    EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
+}
+
+
 TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   auto cluster_assigner = UFClusterAssigner<double>();
   RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);

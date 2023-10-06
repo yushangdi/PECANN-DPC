@@ -28,11 +28,13 @@
 #include "bruteforce.h"
 #include "utils.h"
 
+// #include <boost/json.hpp>
+
 namespace DPC {
 
 ClusteringResult dpc_framework(
     const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
-    float density_cutoff, float distance_cutoff, float center_density_cutoff,
+    const std::shared_ptr<CenterFinder<double>> &center_finder,
     const std::string &output_path, const std::string &decision_graph_path,
     const unsigned Lbuild, const unsigned max_degree, const float alpha,
     const unsigned num_clusters, Method method, GraphType graph_type) {
@@ -88,11 +90,9 @@ ClusteringResult dpc_framework(
   output_metadata["Compute dependent points time"] = t.next_time();
 
   // Compute centers
-  auto center_finder =
-      ThresholdCenterFinder<double>(distance_cutoff, center_density_cutoff);
-  center_finder.initialize(dataset_knn);
+  center_finder->initialize(dataset_knn);
   auto centers =
-      center_finder(densities, reweighted_densities, noise_points, dep_ptrs);
+      (*center_finder)(densities, reweighted_densities, noise_points, dep_ptrs);
 
   // Compute noises, skipping this step for now.
 

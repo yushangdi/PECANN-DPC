@@ -15,13 +15,13 @@ from utils import (
     create_results_file,
     eval_cluster_and_write_results,
     make_results_folder,
-    get_cutoff,
+    get_threshold_center_finder,
 )
 
 import dpc_ann
 
 
-def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True):
+def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
     cluster_results_file = create_results_file()
 
     for dataset in datasets:
@@ -35,8 +35,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True
                 decision_graph_path=f"{prefix}.dg ",
                 output_path=f"{prefix}.cluster",
                 graph_type=graph_type,
-                **get_cutoff(dataset),
-                use_new_framework=new_framework,
+                **get_threshold_center_finder(dataset),
             )
 
             time_reports = clustering_result.metadata
@@ -44,7 +43,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True
             # Eval cluster against ground truth and write results
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
-                cluster_path=f"{prefix}.cluster",
+                found_clusters=f"{prefix}.cluster",
                 compare_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
@@ -55,7 +54,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True
             # Eval cluster against brute force DPC
             eval_cluster_and_write_results(
                 gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
-                cluster_path=f"{prefix}.cluster",
+                found_clusters=f"{prefix}.cluster",
                 compare_to_ground_truth=False,
                 results_file=cluster_results_file,
                 dataset=dataset,

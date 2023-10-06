@@ -22,14 +22,13 @@ def test_gaussian():
     data = np.load("./data/gaussian_example/gaussian_4_1000.npy").astype("float32")
     data = np.pad(data, [(0, 0), (0, 6)])
     times = dpc_ann.dpc_numpy(
-        distance_cutoff=8.36,
+        center_finder=dpc_ann.ThresholdCenterFinder(dependant_dist_threshold=8.36),
         data=data,
         decision_graph_path=decision_graph_path,
         output_path=output_path,
         graph_type=graph_type,
     )
-    print(times)
-    metrics1 = cluster_eval.eval_cluster_files(gt_path, output_path, verbose=True)
+    metrics1 = cluster_eval.eval_clusters_wrapper(gt_path, output_path, verbose=True)
 
     output_path = "./results/gaussian_4_1000_file.cluster"
     time_reports = dpc_ann.dpc_filenames(
@@ -37,10 +36,10 @@ def test_gaussian():
         decision_graph_path=decision_graph_path,
         output_path=output_path,
         graph_type=graph_type,
-        distance_cutoff=8.36,
+        center_finder=dpc_ann.ThresholdCenterFinder(dependant_dist_threshold=8.36),
     )
     print(time_reports)
-    metrics2 = cluster_eval.eval_cluster_files(gt_path, output_path, verbose=True)
+    metrics2 = cluster_eval.eval_clusters_wrapper(gt_path, output_path, verbose=True)
 
     assert sorted(metrics1.items()) == sorted(metrics2.items())
     print(metrics1)

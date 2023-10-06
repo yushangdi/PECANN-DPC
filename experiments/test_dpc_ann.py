@@ -20,7 +20,6 @@ from utils import (
     create_results_file,
     eval_cluster_and_write_results,
     make_results_folder,
-    product_cluster_dg,
 )
 
 
@@ -31,14 +30,7 @@ def run_dpc_ann_configurations(
     graph_types=None,
     search_range=None,
     compare_against_gt=True,
-    run_new_dpc_framework=True,
-    run_old_dpc_framework=False,
 ):
-    if not run_new_dpc_framework and not run_old_dpc_framework:
-        raise ValueError(
-            "At least one of run_new_dpc_framework or run_old_dpc_framework must be true"
-        )
-
     cluster_results_file = create_results_file()
 
     options = []
@@ -86,11 +78,6 @@ def run_dpc_ann_configurations(
 
     data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
-    def create_product_clustering(decision_graph_path, num_clusters, output_path):
-        clusters = product_cluster_dg(decision_graph_path, num_clusters)
-        clusters = clusters.reshape((len(clusters), 1))
-        np.savetxt(output_path, clusters, fmt="%i")
-
     ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
     ground_truth_decision_graph_path = (
         f"results/{dataset_folder}/{dataset}_BruteForce.dg"
@@ -99,84 +86,56 @@ def run_dpc_ann_configurations(
         dpc_ann.dpc_numpy(
             graph_type="BruteForce",
             decision_graph_path=ground_truth_decision_graph_path,
-            # output_path=ground_truth_cluster_path,
-            # **get_cutoff(dataset),
+            output_path=ground_truth_cluster_path,
             data=data,
+            center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),
         )
-    # Always recreate ground truth clustering
-    create_product_clustering(
-        ground_truth_decision_graph_path, num_clusters, ground_truth_cluster_path
-    )
 
-    def try_command(graph_type, command, use_new_framework):
-        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
-        if use_new_framework:
-            prefix += "_new"
+    def try_command(graph_type, command):
+        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}_new"
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
-            # **get_cutoff(dataset),
             data=data,
             decision_graph_path=f"{prefix}.dg",
-            use_new_framework=use_new_framework
-            # output_path=f"{prefix}.cluster",
+            center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),
         )
-        times = clustering_result.metadata
-
-        # Create product clustering manually using dg file output
-        # TODO: Add product clustering option to framework directly
-        create_product_clustering(
-            decision_graph_path=f"{prefix}.dg",
-            num_clusters=num_clusters,
-            output_path=f"{prefix}.cluster",
-        )
-
-        if use_new_framework:
-            graph_type += "_new"
 
         # Eval cluster against ground truth and write results
         if compare_against_gt:
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
-                cluster_path=f"{prefix}.cluster",
+                found_clusters=np.array(clustering_result.clusters),
                 compare_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
-                time_reports=times,
+                time_reports=clustering_result.metadata,
             )
 
         # Eval cluster against brute force DPC
         eval_cluster_and_write_results(
             gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
-            cluster_path=f"{prefix}.cluster",
+            found_clusters=np.array(clustering_result.clusters),
             compare_to_ground_truth=False,
             results_file=cluster_results_file,
             dataset=dataset,
             method=graph_type,
-            time_reports=times,
+            time_reports=clustering_result.metadata,
         )
 
     for graph_type, command in tqdm(options):
-        new_framework_settings = []
-        if run_new_dpc_framework:
-            new_framework_settings.append(True)
-        if run_old_dpc_framework:
-            new_framework_settings.append(False)
-        for use_new_framework in new_framework_settings:
-            p = multiprocessing.Process(
-                target=try_command, args=(graph_type, command, use_new_framework)
-            )
-            p.start()
+        p = multiprocessing.Process(target=try_command, args=(graph_type, command))
+        p.start()
 
-            exitcode = p.join(timeout=timeout_s)
+        exitcode = p.join(timeout=timeout_s)
 
-            if p.is_alive():
-                p.terminate()
-                p.join()
-                print(graph_type, "timed out!")
-            elif exitcode != 0:
-                print(graph_type, "had exit code", str(p.exitcode) + "!")
+        if p.is_alive():
+            p.terminate()
+            p.join()
+            print(graph_type, "timed out!")
+        elif exitcode != 0:
+            print(graph_type, "had exit code", str(p.exitcode) + "!")
 
     return cluster_results_file
 

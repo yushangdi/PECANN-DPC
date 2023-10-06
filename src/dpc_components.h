@@ -89,15 +89,45 @@ public:
 // delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
 private:
-  double delta_threshold_;
+  double dependant_dist_threshold;
   double density_threshold_;
 
 public:
-  ThresholdCenterFinder(double delta_threshold, double density_threshold)
-      : CenterFinder<T>(), delta_threshold_(delta_threshold),
+  ThresholdCenterFinder(double dependant_dist_threshold,
+                        double density_threshold)
+      : CenterFinder<T>(), dependant_dist_threshold(dependant_dist_threshold),
         density_threshold_(density_threshold) {}
 
+  ThresholdCenterFinder()
+      : CenterFinder<T>(),
+        dependant_dist_threshold(std::numeric_limits<float>::max()),
+        density_threshold_(0) {}
+
   ~ThresholdCenterFinder() {}
+
+  std::set<int>
+  operator()(const std::vector<T> &densities,
+             const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
+             const std::vector<std::pair<int, double>> &dep_ptrs) override;
+};
+
+// Centers are top k points by product of density times dependent distance.
+// If use_reweighted_density_ is true, use reweighted_densities for profducts.
+// noise points can also be cluster centers.
+template <typename T> class ProductCenterFinder : public CenterFinder<T> {
+private:
+  size_t num_clusters_;
+  bool use_reweighted_density_ = false;
+
+public:
+  ProductCenterFinder(size_t num_clusters)
+      : CenterFinder<T>(), num_clusters_(num_clusters) {}
+  ProductCenterFinder(int num_cluster, bool use_reweighted_density)
+      : CenterFinder<T>(), num_clusters_(num_cluster),
+        use_reweighted_density_(use_reweighted_density) {}
+
+  ~ProductCenterFinder() {}
 
   std::set<int>
   operator()(const std::vector<T> &densities,
