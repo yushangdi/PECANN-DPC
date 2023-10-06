@@ -322,7 +322,7 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
     }
     if (noise_pts.find(i) != noise_pts.end())
       return false;
-    if (dep_ptrs[i].second >= delta_threshold_ &&
+    if (dep_ptrs[i].second >= dependant_dist_threshold &&
         densities[i] >= density_threshold_) {
       return true;
     }
@@ -404,6 +404,10 @@ DPC::compute_dep_ptr<float>(parlay::sequence<Tvec_point<float> *> &,
 // For ThresholdCenterFinder
 template class DPC::ThresholdCenterFinder<float>;
 template class DPC::ThresholdCenterFinder<double>;
+
+// For ProductCenterFinder
+template class DPC::ProductCenterFinder<float>;
+template class DPC::ProductCenterFinder<double>;
 
 // For UFClusterAssigner
 template class DPC::UFClusterAssigner<float>;

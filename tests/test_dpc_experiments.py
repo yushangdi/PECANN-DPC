@@ -30,9 +30,7 @@ def test_mnist_ari():
             num_clusters=10,
             graph_types=["Vamana"],
             search_range=[32],
-            compare_against_gt=True,
-            run_new_dpc_framework=True,
-            run_old_dpc_framework=True,
+            compare_against_gt=True
         )
     )
     assert (results["ARI"][results["comparison"] == "ground truth"] > 0.3).all()

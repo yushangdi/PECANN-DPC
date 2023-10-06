@@ -1,6 +1,8 @@
 #include "doubling_dpc.h"
 #include <boost/program_options.hpp>
 
+bool report_stats = true;
+
 namespace po = boost::program_options;
 
 int main(int argc, char **argv) {

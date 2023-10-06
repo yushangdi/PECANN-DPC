@@ -34,7 +34,6 @@ namespace DPC {
 
 ClusteringResult dpc_framework(
     const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
-    const boost::json::value &center_finder_json,
     const std::shared_ptr<CenterFinder<double>> &center_finder,
     const std::string &output_path, const std::string &decision_graph_path,
     const unsigned Lbuild, const unsigned max_degree, const float alpha,

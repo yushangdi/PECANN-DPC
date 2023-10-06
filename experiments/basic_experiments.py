@@ -21,7 +21,7 @@ from utils import (
 import dpc_ann
 
 
-def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True):
+def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
     cluster_results_file = create_results_file()
 
     for dataset in datasets:
@@ -36,7 +36,6 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"], new_framework=True
                 output_path=f"{prefix}.cluster",
                 graph_type=graph_type,
                 **get_cutoff(dataset),
-                use_new_framework=new_framework,
             )
 
             time_reports = clustering_result.metadata

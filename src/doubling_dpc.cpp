@@ -30,9 +30,8 @@
 #include "union_find.h"
 #include "utils.h"
 
-bool report_stats = true;
-
 namespace DPC {
+
 // v, i, densities, data_aligned_dim, Lnn, index
 template <class T>
 std::pair<uint32_t, double>

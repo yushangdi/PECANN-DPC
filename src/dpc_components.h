@@ -89,13 +89,19 @@ public:
 // delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
 private:
-  double delta_threshold_;
+  double dependant_dist_threshold;
   double density_threshold_;
 
 public:
-  ThresholdCenterFinder(double delta_threshold, double density_threshold)
-      : CenterFinder<T>(), delta_threshold_(delta_threshold),
+  ThresholdCenterFinder(double dependant_dist_threshold,
+                        double density_threshold)
+      : CenterFinder<T>(), dependant_dist_threshold(dependant_dist_threshold),
         density_threshold_(density_threshold) {}
+
+  ThresholdCenterFinder()
+      : CenterFinder<T>(),
+        dependant_dist_threshold(std::numeric_limits<float>::max()),
+        density_threshold_(0) {}
 
   ~ThresholdCenterFinder() {}
 

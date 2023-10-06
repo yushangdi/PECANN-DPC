@@ -7,6 +7,7 @@ import pandas as pd
 import sys
 from union_find import UnionFind
 import numpy as np
+import dpc_ann
 
 quality_headers = [
     "recall50",
@@ -127,9 +128,10 @@ def make_results_folder(dataset):
 
 def get_cutoff(dataset):
     # From analyzing decision graph
-    return {
-        "mnist": {"distance_cutoff": 3, "center_density_cutoff": 0.7},
-        "s2": {"distance_cutoff": 102873},
-        "s3": {"distance_cutoff": 102873},
-        "unbalance": {"distance_cutoff": 30000},
+    settings = {
+        "mnist": {"dependant_dist_threshold": 3, "density_threshold": 0.7},
+        "s2": {"dependant_dist_threshold": 102873},
+        "s3": {"dependant_dist_threshold": 102873},
+        "unbalance": {"dependant_dist_threshold": 30000},
     }[dataset]
+    return {"center_finder": dpc_ann.ThresholdCenterFinder(**settings)}

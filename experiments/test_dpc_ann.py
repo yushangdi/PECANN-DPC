@@ -30,14 +30,8 @@ def run_dpc_ann_configurations(
     num_clusters,
     graph_types=None,
     search_range=None,
-    compare_against_gt=True,
-    run_new_dpc_framework=True,
-    run_old_dpc_framework=False,
+    compare_against_gt=True
 ):
-    if not run_new_dpc_framework and not run_old_dpc_framework:
-        raise ValueError(
-            "At least one of run_new_dpc_framework or run_old_dpc_framework must be true"
-        )
 
     cluster_results_file = create_results_file()
 
@@ -108,17 +102,14 @@ def run_dpc_ann_configurations(
         ground_truth_decision_graph_path, num_clusters, ground_truth_cluster_path
     )
 
-    def try_command(graph_type, command, use_new_framework):
-        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
-        if use_new_framework:
-            prefix += "_new"
+    def try_command(graph_type, command):
+        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}_new"
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
             # **get_cutoff(dataset),
             data=data,
             decision_graph_path=f"{prefix}.dg",
-            use_new_framework=use_new_framework
             # output_path=f"{prefix}.cluster",
         )
         times = clustering_result.metadata
@@ -130,9 +121,6 @@ def run_dpc_ann_configurations(
             num_clusters=num_clusters,
             output_path=f"{prefix}.cluster",
         )
-
-        if use_new_framework:
-            graph_type += "_new"
 
         # Eval cluster against ground truth and write results
         if compare_against_gt:
@@ -158,25 +146,19 @@ def run_dpc_ann_configurations(
         )
 
     for graph_type, command in tqdm(options):
-        new_framework_settings = []
-        if run_new_dpc_framework:
-            new_framework_settings.append(True)
-        if run_old_dpc_framework:
-            new_framework_settings.append(False)
-        for use_new_framework in new_framework_settings:
-            p = multiprocessing.Process(
-                target=try_command, args=(graph_type, command, use_new_framework)
-            )
-            p.start()
+        p = multiprocessing.Process(
+            target=try_command, args=(graph_type, command)
+        )
+        p.start()
 
-            exitcode = p.join(timeout=timeout_s)
+        exitcode = p.join(timeout=timeout_s)
 
-            if p.is_alive():
-                p.terminate()
-                p.join()
-                print(graph_type, "timed out!")
-            elif exitcode != 0:
-                print(graph_type, "had exit code", str(p.exitcode) + "!")
+        if p.is_alive():
+            p.terminate()
+            p.join()
+            print(graph_type, "timed out!")
+        elif exitcode != 0:
+            print(graph_type, "had exit code", str(p.exitcode) + "!")
 
     return cluster_results_file
 
