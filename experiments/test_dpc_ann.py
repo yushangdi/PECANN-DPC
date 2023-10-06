@@ -30,9 +30,8 @@ def run_dpc_ann_configurations(
     num_clusters,
     graph_types=None,
     search_range=None,
-    compare_against_gt=True
+    compare_against_gt=True,
 ):
-
     cluster_results_file = create_results_file()
 
     options = []
@@ -146,9 +145,7 @@ def run_dpc_ann_configurations(
         )
 
     for graph_type, command in tqdm(options):
-        p = multiprocessing.Process(
-            target=try_command, args=(graph_type, command)
-        )
+        p = multiprocessing.Process(target=try_command, args=(graph_type, command))
         p.start()
 
         exitcode = p.join(timeout=timeout_s)

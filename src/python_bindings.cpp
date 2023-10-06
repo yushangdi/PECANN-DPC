@@ -21,12 +21,18 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
                       nb::c_contig>
               data,
           const unsigned K, const unsigned L, const unsigned Lnn,
-          const std::shared_ptr<DPC::CenterFinder<double>> &center_finder,
+          std::shared_ptr<DPC::CenterFinder<double>> center_finder,
           const std::string &output_path,
           const std::string &decision_graph_path, const unsigned Lbuild,
           const unsigned max_degree, const float alpha,
           const unsigned num_clusters, const std::string &method_str,
           const std::string &graph_type_str) {
+
+  // For some reason default arguments in the nanobind call below aren't
+  // working, so need to check for null and set here
+  if (!center_finder) {
+    center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>();
+  }
 
   float *data_ptr = data.data();
   size_t num_data = data.shape(0);
@@ -52,12 +58,16 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
 DPC::ClusteringResult
 dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
               const unsigned Lnn,
-              const std::shared_ptr<DPC::CenterFinder<double>> &center_finder,
+              std::shared_ptr<DPC::CenterFinder<double>> center_finder,
               const std::string &output_path,
               const std::string &decision_graph_path, const unsigned Lbuild,
               const unsigned max_degree, const float alpha,
               const unsigned num_clusters, const std::string &method_str,
               const std::string &graph_type_str) {
+
+  if (!center_finder) {
+    center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>();
+  }
 
   DPC::Method method;
   std::istringstream(method_str) >> method;
@@ -99,11 +109,15 @@ NB_MODULE(dpc_ann_ext, m) {
       .def_rw("clusters", &DPC::ClusteringResult::clusters)
       .def_rw("metadata", &DPC::ClusteringResult::output_metadata);
 
-  nb::class_<DPC::ThresholdCenterFinder<double>>(m, "ThresholdCenterFinder")
+  nb::class_<DPC::CenterFinder<double>>(m, "CenterFinder");
+
+  nb::class_<DPC::ThresholdCenterFinder<double>, DPC::CenterFinder<double>>(
+      m, "ThresholdCenterFinder")
       .def(nb::init<double, double>(),
            "dependant_dist_threshold"_a = std::numeric_limits<float>::max(),
            "density_threshold"_a = 0);
 
-  nb::class_<DPC::ProductCenterFinder<double>>(m, "ProductCenterFinder")
+  nb::class_<DPC::ProductCenterFinder<double>, DPC::CenterFinder<double>>(
+      m, "ProductCenterFinder")
       .def(nb::init<size_t>(), "num_clusters"_a);
 }

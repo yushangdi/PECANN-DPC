@@ -15,7 +15,7 @@ from utils import (
     create_results_file,
     eval_cluster_and_write_results,
     make_results_folder,
-    get_cutoff,
+    get_threshold_center_finder,
 )
 
 import dpc_ann
@@ -35,7 +35,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
                 decision_graph_path=f"{prefix}.dg ",
                 output_path=f"{prefix}.cluster",
                 graph_type=graph_type,
-                **get_cutoff(dataset),
+                **get_threshold_center_finder(dataset),
             )
 
             time_reports = clustering_result.metadata

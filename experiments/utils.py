@@ -126,7 +126,7 @@ def make_results_folder(dataset):
     return dataset_folder
 
 
-def get_cutoff(dataset):
+def get_threshold_center_finder(dataset):
     # From analyzing decision graph
     settings = {
         "mnist": {"dependant_dist_threshold": 3, "density_threshold": 0.7},
