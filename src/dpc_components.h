@@ -118,6 +118,22 @@ public:
   reweight_density(const std::vector<double> &densities) override;
 };
 
+// Sun, Lin, et al. "Density peaks clustering based on k-nearest neighbors and
+// self-recommendation." International Journal of Machine Learning and
+// Cybernetics 12 (2021): 1913-1938.
+// density depends on mutual k-nn (definition 4-6) in paper
+class MutalKNNDensityComputer : public DensityComputer {
+public:
+  MutalKNNDensityComputer() : DensityComputer() {}
+
+  // Return the density. 1/ the distance to kth nearest neighbor.
+  std::vector<double> operator()() override;
+
+  // Re-weighted rho' = rho / (average rho among knn).
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+};
+
 // Centers are points with density >=  density_threshold_ and distance >=
 // delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {

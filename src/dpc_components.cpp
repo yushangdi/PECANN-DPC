@@ -13,6 +13,7 @@
 #include "ParlayANN/algorithms/utils/parse_files.h"
 #include "ParlayANN/algorithms/vamana/neighbors.h"
 
+#include <map>
 #include <set>
 #include <utility>
 #include <vector>
@@ -342,7 +343,7 @@ std::vector<double> ExpSquaredDensityComputer::operator()() {
   parlay::parallel_for(0, data_num, [&](int i) {
     auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
       const double dist = this->knn_[i * k + j].second;
-      return dist * dist;
+      return dist;
     });
     double density = exp(-1.0 * parlay::reduce(knn_densities) / k);
     densities[i] = density;
@@ -351,6 +352,46 @@ std::vector<double> ExpSquaredDensityComputer::operator()() {
 }
 
 std::vector<double> ExpSquaredDensityComputer::reweight_density(
+    const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
+std::vector<double> MutalKNNDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  // knn_mapping[i] is a map from j to j's rank in i's nn.
+  std::vector<std::map<int, int>> knn_mapping(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    for (int kth = 0; kth < k; ++kth) {
+      // kth nearest neighbor of j is i.
+      const int neigh = this->knn_[i * k + kth].first;
+      knn_mapping[i][neigh] = kth;
+    }
+  });
+
+  parlay::parallel_for(0, data_num, [&](int i) {
+    double mnd = 0;      // mutual neighbor distance
+    int ng_size = 0;     // number of mutual neighbors;
+    double dist_sum = 0; // sum of euclidean distance to mutual neighbors.
+    for (int kth = 0; kth < k; ++kth) {
+      const auto [neigh, dist] = this->knn_[i * k + kth];
+      const auto itr = knn_mapping[neigh].find(i);
+      if (itr != knn_mapping[neigh].end()) {
+        const int eps_pq = itr->second;
+        ng_size++;
+        dist_sum += sqrt(dist);
+        //  add 2 because c++ start with 0 indexing
+        mnd += 1 / (kth + eps_pq + 2);
+      }
+    }
+    double density = mnd * ng_size / dist_sum;
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double> MutalKNNDensityComputer::reweight_density(
     const std::vector<double> &densities) {
   return std::vector<double>();
 }
