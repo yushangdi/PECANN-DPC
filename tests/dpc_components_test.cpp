@@ -388,6 +388,26 @@ TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   EXPECT_THAT(cluster, ElementsAre(1, 1, 2, 3, 4, 9, 9, 9, 9, 9));
 }
 
+TEST_F(SmallDPCFrameworkTest, ExpSquaredDensityComputerTest) {
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  ExpSquaredDensityComputer density_computer;
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  std::vector<double> expected(num_data);
+  expected[0] = exp(-425.0/3);
+  expected[num_data - 1] = exp(-425.0/3);
+  for (int i = 1; i < num_data - 1; ++i) {
+    expected[i] = exp(-50.0/3);
+  }
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
+}
+
 } // namespace DPC
 
 int main(int argc, char **argv) {

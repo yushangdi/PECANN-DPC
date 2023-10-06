@@ -335,6 +335,26 @@ std::vector<double> NormalizedDensityComputer::reweight_density(
   return new_densities;
 }
 
+std::vector<double> ExpSquaredDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
+      const double dist = this->knn_[i * k + j].second;
+      return dist * dist;
+    });
+    double density = exp(-1.0 * parlay::reduce(knn_densities) / k);
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double> ExpSquaredDensityComputer::reweight_density(
+    const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
 template <typename T>
 std::set<int> ThresholdCenterFinder<T>::operator()(
     const std::vector<T> &densities,

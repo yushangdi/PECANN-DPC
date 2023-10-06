@@ -102,6 +102,21 @@ public:
   reweight_density(const std::vector<double> &densities) override;
 };
 
+// Du, Mingjing, Shifei Ding, and Hongjie Jia. "Study on density peaks
+// clustering based on k-nearest neighbors and principal component analysis."
+// Knowledge-Based Systems 99 (2016): 135-145.
+class ExpSquaredDensityComputer : public DensityComputer {
+public:
+  ExpSquaredDensityComputer() : DensityComputer() {}
+
+  // Return the density. 1/ the distance to kth nearest neighbor.
+  std::vector<double> operator()() override;
+
+  // Re-weighted rho' = rho / (average rho among knn).
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+};
+
 // Centers are points with density >=  density_threshold_ and distance >=
 // delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {
