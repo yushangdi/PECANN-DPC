@@ -397,10 +397,10 @@ TEST_F(SmallDPCFrameworkTest, ExpSquaredDensityComputerTest) {
   auto densities = density_computer();
 
   std::vector<double> expected(num_data);
-  expected[0] = exp(-425.0/3);
-  expected[num_data - 1] = exp(-425.0/3);
+  expected[0] = exp(-425.0 / 3);
+  expected[num_data - 1] = exp(-425.0 / 3);
   for (int i = 1; i < num_data - 1; ++i) {
-    expected[i] = exp(-50.0/3);
+    expected[i] = exp(-50.0 / 3);
   }
 
   for (int i = 0; i < num_data; ++i) {

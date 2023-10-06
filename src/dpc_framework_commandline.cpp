@@ -95,6 +95,9 @@ int main(int argc, char **argv) {
   } else if (density_method == "Normalized") {
     std::cout << "NormalizedDensityComputer\n";
     density_computer = std::make_shared<DPC::NormalizedDensityComputer>();
+  } else if (density_method == "ExpSquared") {
+    std::cout << "ExpSquaredDensityComputer\n";
+    density_computer = std::make_shared<DPC::ExpSquaredDensityComputer>();
   } else {
     std::cerr << "Invalid density method\n";
     exit(1);

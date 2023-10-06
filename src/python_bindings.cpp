@@ -144,7 +144,7 @@ NB_MODULE(dpc_ann_ext, m) {
   nb::class_<DPC::NormalizedDensityComputer, DPC::DensityComputer>(
       m, "NormalizedDensityComputer")
       .def(nb::init());
-  
+
   nb::class_<DPC::ExpSquaredDensityComputer, DPC::DensityComputer>(
       m, "ExpSquaredDensityComputer")
       .def(nb::init());
