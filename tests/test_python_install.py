@@ -28,7 +28,6 @@ def test_gaussian():
         output_path=output_path,
         graph_type=graph_type,
     )
-    print("HERE", gt_path, output_path, times)
     metrics1 = cluster_eval.eval_clusters_wrapper(gt_path, output_path, verbose=True)
 
     output_path = "./results/gaussian_4_1000_file.cluster"

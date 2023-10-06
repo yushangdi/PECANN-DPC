@@ -76,6 +76,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  // TODO: If we want to keep mainintaing this command line, add options for
+  // other center finders
   DPC::dpc_framework(K, L, Lnn, query_file,
                      std::make_shared<DPC::ThresholdCenterFinder<double>>(
                          dist_cutoff, center_density_cutoff),
