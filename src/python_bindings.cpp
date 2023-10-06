@@ -1,5 +1,6 @@
 #include "IO.h"
 #include "doubling_dpc.h"
+#include "dpc_components.h"
 #include "dpc_framework.h"
 #include "utils.h"
 #include <nanobind/nanobind.h>
@@ -18,8 +19,8 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
                       nb::c_contig>
               data,
           const unsigned K, const unsigned L, const unsigned Lnn,
-          float density_cutoff, float distance_cutoff,
-          float center_density_cutoff, const std::string &output_path,
+          const std::shared_ptr<DPC::CenterFinder<double>> &center_finder,
+          const std::string &output_path,
           const std::string &decision_graph_path, const unsigned Lbuild,
           const unsigned max_degree, const float alpha,
           const unsigned num_clusters, const std::string &method_str,
@@ -43,24 +44,28 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
 
   if (use_new_framework) {
     std::cout << "Using new DPC framework" << std::endl;
-    return DPC::dpc_framework(
-        K, L, Lnn, raw_data, density_cutoff, distance_cutoff,
-        center_density_cutoff, output_path, decision_graph_path, Lbuild,
-        max_degree, alpha, num_clusters, method, graph_type);
+    return DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, output_path,
+                              decision_graph_path, Lbuild, max_degree, alpha,
+                              num_clusters, method, graph_type);
   }
 
   // TODO: Deprecate this
+  if (auto threshold_finder =
+          dynamic_cast<DPC::ThresholdCenterFinder<double> *>(
+              center_finder.get())) {
+    return {DPC::dpc(K, L, Lnn, raw_data, density_cutoff, distance_cutoff,
+                     center_density_cutoff, output_path, decision_graph_path,
+                     Lbuild, max_degree, alpha, num_clusters, method,
+                     graph_type),
+            {}};
+  }
   std::cout << "Using old DPC code" << std::endl;
-  return {DPC::dpc(K, L, Lnn, raw_data, density_cutoff, distance_cutoff,
-                   center_density_cutoff, output_path, decision_graph_path,
-                   Lbuild, max_degree, alpha, num_clusters, method, graph_type),
-          {}};
 }
 
 DPC::ClusteringResult
 dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
-              const unsigned Lnn, float density_cutoff, float distance_cutoff,
-              float center_density_cutoff, const std::string &output_path,
+              const unsigned Lnn, float density_cutoff,
+              const std::shared_ptr<CenterFinder<double>> &center_finder,
               const std::string &decision_graph_path, const unsigned Lbuild,
               const unsigned max_degree, const float alpha,
               const unsigned num_clusters, const std::string &method_str,

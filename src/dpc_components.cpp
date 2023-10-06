@@ -333,6 +333,31 @@ std::set<int> ThresholdCenterFinder<T>::operator()(
 }
 
 template <typename T>
+std::set<int> ProductCenterFinder<T>::operator()(
+    const std::vector<T> &densities,
+    const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,
+    const std::vector<std::pair<int, double>> &dep_ptrs) {
+
+  parlay::sequence<double> negative_products(dep_ptrs.size());
+  parlay::parallel_for(0, negative_products.size(), [&](int i) {
+    negative_products[i] = -densities[i] * dep_ptrs[i].second;
+    if (dep_ptrs[i].first == densities.size()) {
+      negative_products[i] = -std::numeric_limits<double>::infinity();
+    }
+  });
+  double centroid_threshold =
+      -1 * parlay::kth_smallest_copy(negative_products, num_clusters_);
+
+  auto data_num = densities.size();
+  auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
+  auto centers_seq = parlay::filter(ids, [&](size_t i) {
+    return -negative_products[i] > centroid_threshold;
+  });
+  std::set<int> centers(centers_seq.begin(), centers_seq.end());
+  return centers;
+}
+
+template <typename T>
 std::vector<int> UFClusterAssigner<T>::operator()(
     const std::vector<T> &densities,
     const std::vector<T> &re_weighted_densities, const std::set<int> &noise_pts,

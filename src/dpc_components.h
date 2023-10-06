@@ -106,6 +106,24 @@ public:
              const std::vector<std::pair<int, double>> &dep_ptrs) override;
 };
 
+// Centers are top k points by product of density times dependent distance
+template <typename T> class ProductCenterFinder : public CenterFinder<T> {
+private:
+  size_t num_clusters_;
+
+public:
+  ProductCenterFinder(size_t num_clusters)
+      : CenterFinder<T>(), num_clusters_(num_clusters) {}
+
+  ~ProductCenterFinder() {}
+
+  std::set<int>
+  operator()(const std::vector<T> &densities,
+             const std::vector<T> &re_weighted_densities,
+             const std::set<int> &noise_pts,
+             const std::vector<std::pair<int, double>> &dep_ptrs) override;
+};
+
 // Non-center points merge with their dependent points using union-find.
 template <typename T> class UFClusterAssigner : public ClusterAssigner<T> {
 
