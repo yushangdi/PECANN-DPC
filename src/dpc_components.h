@@ -97,7 +97,7 @@ public:
   // Return the density. 1/ the distance to kth nearest neighbor.
   std::vector<double> operator()() override;
 
-  // Re-weighted rho' = rho / (average rho among knn).
+  // Re-weighted rho' = rho / (average rho among k nearest neighbor).
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
 };
@@ -110,10 +110,11 @@ class ExpSquaredDensityComputer : public DensityComputer {
 public:
   ExpSquaredDensityComputer() : DensityComputer() {}
 
-  // Return the density. 1/ the distance to kth nearest neighbor.
+  // density[i] = exp(-1/k * sum_k(squared dist to kth nn)). exp(-1 * average
+  // squared distance among k nearest neighbors).
   std::vector<double> operator()() override;
 
-  // Re-weighted rho' = rho / (average rho among knn).
+  // Return empty vector
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
 };
@@ -127,10 +128,14 @@ class MutualKNNDensityComputer : public DensityComputer {
 public:
   MutualKNNDensityComputer() : DensityComputer() {}
 
-  // Return the density. 1/ the distance to kth nearest neighbor.
+  // Return the density. density[i] = MND * number of mutual nearest neighbors /
+  // sum of distances to mutual nearest neighbors. i and j are mutual nearest
+  // neighbors if i is in j's knn and vice versa.
+  // MND is sum_{q \in p's mutual nearest neighbors} 1/(eps_{pq} + eps_{qp}).
+  // If p is the eps-th neighbour of q, then eps_{pq} = eps.
   std::vector<double> operator()() override;
 
-  // Re-weighted rho' = rho / (average rho among knn).
+  // Return empty vector
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
 };
@@ -171,9 +176,7 @@ private:
   bool use_reweighted_density_ = false;
 
 public:
-  ProductCenterFinder(size_t num_clusters)
-      : CenterFinder<T>(), num_clusters_(num_clusters) {}
-  ProductCenterFinder(int num_cluster, bool use_reweighted_density)
+  ProductCenterFinder(int num_cluster, bool use_reweighted_density = false)
       : CenterFinder<T>(), num_clusters_(num_cluster),
         use_reweighted_density_(use_reweighted_density) {}
 
