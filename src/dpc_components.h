@@ -122,6 +122,7 @@ public:
 // self-recommendation." International Journal of Machine Learning and
 // Cybernetics 12 (2021): 1913-1938.
 // density depends on mutual k-nn (definition 4-6) in paper
+// the density is inf if the only mutual k-nn is itself.
 class MutualKNNDensityComputer : public DensityComputer {
 public:
   MutualKNNDensityComputer() : DensityComputer() {}

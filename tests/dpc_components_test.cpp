@@ -408,6 +408,27 @@ TEST_F(SmallDPCFrameworkTest, ExpSquaredDensityComputerTest) {
   }
 }
 
+TEST_F(SmallDPCFrameworkTest, MutualKNNDensityComputerTest) {
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  MutualKNNDensityComputer density_computer;
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  std::vector<double> expected(num_data);
+  expected[0] = 3.0 / 2.0 / sqrt(5);
+  expected[1] = 19.0 * 3.0 / 40.0 / sqrt(5);
+  for (int i = 2; i < num_data - 1; ++i) {
+    expected[i] = 27.0 / 20.0 / sqrt(5);
+  }
+  expected[num_data - 1] = 0.7 * 2 / sqrt(5);
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
+}
+
 } // namespace DPC
 
 int main(int argc, char **argv) {

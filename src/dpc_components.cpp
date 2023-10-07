@@ -382,10 +382,13 @@ std::vector<double> MutualKNNDensityComputer::operator()() {
         ng_size++;
         dist_sum += sqrt(dist);
         //  add 2 because c++ start with 0 indexing
-        mnd += 1 / (kth + eps_pq + 2);
+        mnd += 1.0 / (kth + eps_pq + 2);
       }
     }
-    double density = mnd * ng_size / dist_sum;
+    double density = std::numeric_limits<double>::infinity();
+    if (dist_sum != 0) {
+      density = mnd * ng_size / dist_sum;
+    }
     densities[i] = density;
   });
   return densities;

@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
   } else if (density_method == "ExpSquared") {
     std::cout << "ExpSquaredDensityComputer\n";
     density_computer = std::make_shared<DPC::ExpSquaredDensityComputer>();
-  }  else if (density_method == "MutualKNN") {
+  } else if (density_method == "MutualKNN") {
     std::cout << "MutualKNNDensityComputer\n";
     density_computer = std::make_shared<DPC::MutualKNNDensityComputer>();
   } else {
