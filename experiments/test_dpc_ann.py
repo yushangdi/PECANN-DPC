@@ -30,8 +30,9 @@ def run_dpc_ann_configurations(
     graph_types=None,
     search_range=None,
     compare_against_gt=True,
+    results_file_prefix="",
 ):
-    cluster_results_file = create_results_file()
+    cluster_results_file = create_results_file(prefix=results_file_prefix)
 
     options = []
 
@@ -66,7 +67,7 @@ def run_dpc_ann_configurations(
                 if graph_type in ["pyNNDescent", "HCNNG"]:
                     if beam_search_construction < 16:
                         continue
-                    for num_clusters in range(1, 6):
+                    for num_clusters in range(1, 4):
                         new_command_line = dict(command_line)
                         command_line["num_clusters"] = num_clusters
                         new_method = method + "_" + str(num_clusters)
@@ -159,6 +160,9 @@ if __name__ == "__main__":
         default=20,
         type=int,
     )
+    parser.add_argument(
+        "--results_file_prefix", help="Prefix for the results files", default=""
+    )
     parser.add_argument("--dont_compare_against_gt", default=False, action="store_true")
     parser.add_argument("-search_range", nargs="+", type=int)
     parser.add_argument("-graph_types", nargs="+", type=str)
@@ -171,4 +175,5 @@ if __name__ == "__main__":
         compare_against_gt=not args.dont_compare_against_gt,
         search_range=args.search_range,
         graph_types=args.graph_types,
+        results_file_prefix=args.results_file_prefix,
     )
