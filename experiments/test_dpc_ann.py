@@ -95,6 +95,14 @@ def run_dpc_ann_configurations(
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
+            density_computer=dpc_ann.RaceDensityComputer(
+                dpc_ann.RACE(
+                    num_estimators=8,
+                    hashes_per_estimator=12,
+                    data_dim=768,
+                    lsh_family=dpc_ann.CosineFamily(),
+                )
+            ),
             data=data,
             decision_graph_path=f"{prefix}.dg",
             center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),

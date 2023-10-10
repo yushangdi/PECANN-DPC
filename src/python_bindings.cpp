@@ -142,8 +142,8 @@ NB_MODULE(dpc_ann_ext, m) {
       .def(nb::init());
 
   nb::class_<DPC::RaceDensityComputer, DPC::DensityComputer>(
-      m, "RaceDensityComputer");
-  // .def(nb::init<std::shared_ptr<RACE>>(), "race_sketch");
+      m, "RaceDensityComputer")
+      .def(nb::init<std::shared_ptr<RACE>>(), "race_sketch"_a);
 
   nb::class_<LSHFamily>(m, "LSHFamily");
 
@@ -152,5 +152,6 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<RACE>(m, "RACE").def(
       nb::init<size_t, size_t, size_t, std::shared_ptr<LSHFamily>>(),
-      "num_estimators", "hashes_per_estimator", "data_dim", "lsh_family");
+      "num_estimators"_a, "hashes_per_estimator"_a, "data_dim"_a,
+      "lsh_family"_a);
 }
