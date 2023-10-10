@@ -13,13 +13,14 @@ int main(int argc, char **argv) {
   float density_cutoff, dist_cutoff, center_density_cutoff;
   unsigned int K = 6;
   unsigned int L = 12;
-  unsigned int Lnn = 4;
+  unsigned int Lnn = 8; // need to >= K, otherwise all knn searches are bruteforce.
   unsigned int Lbuild = 12;
   unsigned int max_degree = 16;
   unsigned int num_clusters = 4; // only used for pyNNDescent.
   float alpha = 1.2;
   Method method = Method::Doubling;
   GraphType graph_type = GraphType::Vamana;
+  std::string density_method;
 
   po::options_description desc("DPC");
   desc.add_options()("help", "produce help message")(
@@ -57,7 +58,10 @@ int main(int argc, char **argv) {
       "Method (Doubling or BlindProbe). Only works when bruteforce=false.")(
       "graph_type",
       po::value<GraphType>(&graph_type)->default_value(GraphType::Vamana),
-      "Graph type (Vamana or pyNNDescent or HCNNG or BruteForce).");
+      "Graph type (Vamana or pyNNDescent or HCNNG or BruteForce).")(
+      "density_method",
+      po::value<std::string>(&density_method)->default_value("KthDistance"),
+      "density computation method");
 
   po::variables_map vm;
   try {
@@ -75,12 +79,31 @@ int main(int argc, char **argv) {
     }
     return 1;
   }
+  std::shared_ptr<DPC::DensityComputer> density_computer;
+  std::shared_ptr<DPC::CenterFinder<double>> center_finder;
+
+  if(graph_type != GraphType::BruteForce && L <= K){
+    std::cout << "warning: if L <= K, all nearest neighbor searches are bruteforce \n";
+    std::cout << "L=" << L << " K=" << K << std::endl;
+  }
+
+  if (density_method == "KthDistance") {
+    std::cout << "KthDistanceDensityComputer\n";
+    density_computer = std::make_shared<DPC::KthDistanceDensityComputer>();
+  } else if (density_method == "Normalized") {
+    std::cout << "NormalizedDensityComputer\n";
+    density_computer = std::make_shared<DPC::NormalizedDensityComputer>();
+  } else {
+    std::cerr << "Invalid density method\n";
+    exit(1);
+  }
+
+  center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>(
+      dist_cutoff, center_density_cutoff);
 
   // TODO: If we want to keep mainintaing this command line, add options for
   // other center finders
-  DPC::dpc_framework(K, L, Lnn, query_file,
-                     std::make_shared<DPC::ThresholdCenterFinder<double>>(
-                         dist_cutoff, center_density_cutoff),
+  DPC::dpc_framework(K, L, Lnn, query_file, center_finder, density_computer,
                      output_file, decision_graph_path, Lbuild, max_degree,
                      alpha, num_clusters, method, graph_type);
 }

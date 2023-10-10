@@ -195,6 +195,44 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
   }
 }
 
+TEST_F(SmallDPCFrameworkTest, NormalizedDensityComputerTest) {
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  NormalizedDensityComputer density_computer;
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  std::vector<double> expected(num_data);
+  expected[0] = 1 / sqrt(20);
+  expected[num_data - 1] = 1 / sqrt(20);
+  for (int i = 1; i < num_data - 1; ++i) {
+    expected[i] = 1 / sqrt(5);
+  }
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
+
+  std::vector<double> test_densities{5, 1, 2, 3, 2, 3, 2, 3, 2, 13};
+  auto new_densities = density_computer.reweight_density(test_densities);
+  expected[0] = 5 / (8.0 / 3);
+  expected[1] = 1 / (8.0 / 3);
+  expected[2] = 2 / (2);
+  expected[3] = 3 / (7.0 / 3);
+  expected[4] = 2 / (8.0 / 3);
+  expected[5] = 3 / (7.0 / 3);
+  expected[6] = 2 / (8.0 / 3);
+  expected[7] = 3 / (7.0 / 3);
+  expected[8] = 2 / (18.0 / 3);
+  expected[9] = 13 / (18.0 / 3);
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(new_densities[i], expected[i])
+        << "Mismatch at point " << i;
+  }
+}
+
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
   double distance_cutoff = 10;
   double center_density_cutoff = 2;
@@ -256,7 +294,7 @@ TEST_F(SmallDPCFrameworkTest, ProductCenterFinderTest) {
 // Function to check if a set contains numbers from 50 to 99
 bool ContainsNumbers2(const std::set<int> &inputSet) {
   for (int i = 0; i < 50; ++i) {
-    if (inputSet.find(99-i) == inputSet.end()) {
+    if (inputSet.find(99 - i) == inputSet.end()) {
       std::cout << i << std::endl;
       return false; // Number not found in the set
     }
@@ -273,8 +311,8 @@ TEST_F(SmallDPCFrameworkTest, ProductCenterFinderUseWeightedTest) {
   std::set<int> noise_pts;
   std::vector<std::pair<int, double>> dep_ptrs(n);
   const double max_dist = sqrt(std::numeric_limits<double>::max());
-  dep_ptrs[n-1] = {num_data, max_dist};
-  for (int i = 0; i < n-1; ++i) {
+  dep_ptrs[n - 1] = {num_data, max_dist};
+  for (int i = 0; i < n - 1; ++i) {
     dep_ptrs[i] = {i - 1, 1.5};
   }
   for (int i = 0; i < n; ++i) {
@@ -287,42 +325,42 @@ TEST_F(SmallDPCFrameworkTest, ProductCenterFinderUseWeightedTest) {
   ASSERT_TRUE(ContainsNumbers2(centers));
 }
 
-
 // Test case for when use_reweighted_density_ is true
 TEST_F(SmallDPCFrameworkTest, UseReweightedDensity) {
-    ProductCenterFinder<double> finder(2, true);
-    
-    std::vector<double> densities = {1.0, 2.0, 300};
-    std::vector<double> re_weighted_densities = {6.0, 4.0, 2.0};
-    std::set<int> noise_pts = {2};
-    std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
-    
-    // Act
-    std::set<int> centers = finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
-    
-    // Assert
-    ASSERT_EQ(centers.size(), 2);
-    EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
+  ProductCenterFinder<double> finder(2, true);
+
+  std::vector<double> densities = {1.0, 2.0, 300};
+  std::vector<double> re_weighted_densities = {6.0, 4.0, 2.0};
+  std::set<int> noise_pts = {2};
+  std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
+
+  // Act
+  std::set<int> centers =
+      finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
+
+  // Assert
+  ASSERT_EQ(centers.size(), 2);
+  EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
 }
 
 // Test case for when use_reweighted_density_ is false
 TEST_F(SmallDPCFrameworkTest, NoReweightedDensity) {
-    // Arrange
-    ProductCenterFinder<double> finder(2);
-    
-    std::vector<double> densities = {1.0, 2.0, 3.0};
-    std::vector<double> re_weighted_densities;
-    std::set<int> noise_pts = {2};
-    std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
-    
-    // Act
-    std::set<int> centers = finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
-    
-    // Assert
-    ASSERT_EQ(centers.size(), 2);
-    EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
-}
+  // Arrange
+  ProductCenterFinder<double> finder(2);
 
+  std::vector<double> densities = {1.0, 2.0, 3.0};
+  std::vector<double> re_weighted_densities;
+  std::set<int> noise_pts = {2};
+  std::vector<std::pair<int, double>> dep_ptrs = {{0, 100}, {2, 200}, {0, 0.9}};
+
+  // Act
+  std::set<int> centers =
+      finder(densities, re_weighted_densities, noise_pts, dep_ptrs);
+
+  // Assert
+  ASSERT_EQ(centers.size(), 2);
+  EXPECT_THAT(centers, UnorderedElementsAre(0, 1));
+}
 
 TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   auto cluster_assigner = UFClusterAssigner<double>();

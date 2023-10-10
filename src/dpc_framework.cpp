@@ -35,6 +35,7 @@ namespace DPC {
 ClusteringResult dpc_framework(
     const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
     const std::shared_ptr<CenterFinder<double>> &center_finder,
+    std::shared_ptr<DPC::DensityComputer> &density_computer,
     const std::string &output_path, const std::string &decision_graph_path,
     const unsigned Lbuild, const unsigned max_degree, const float alpha,
     const unsigned num_clusters, Method method, GraphType graph_type) {
@@ -61,17 +62,16 @@ ClusteringResult dpc_framework(
   if (graph_type == GraphType::BruteForce) {
     knn = compute_knn_bruteforce(raw_data, K + 1, D);
   } else {
-    knn = compute_knn(graph, raw_data, K + 1, Lnn, D);
+    knn = compute_knn(graph, raw_data, K + 1, L, D);
   }
   DatasetKnn dataset_knn(raw_data, D, K + 1, knn);
 
   output_metadata["Find knn time"] = t.next_time();
 
   // Compute density
-  auto density_computer = KthDistanceDensityComputer();
-  density_computer.initialize(dataset_knn);
-  auto densities = density_computer();
-  auto reweighted_densities = density_computer.reweight_density(densities);
+  density_computer->initialize(dataset_knn);
+  auto densities = density_computer->operator()();
+  auto reweighted_densities = density_computer->reweight_density(densities);
   std::set<int> noise_points;
 
   output_metadata["Compute density time"] = t.next_time();
@@ -83,7 +83,7 @@ ClusteringResult dpc_framework(
                                           noise_points, D);
   } else {
     dep_ptrs = compute_dep_ptr(graph, parsed_data.points, dataset_knn, raw_data,
-                               densities, noise_points, D, L,
+                               densities, noise_points, D, Lnn,
                                /* round_limit = */ 4);
   }
 

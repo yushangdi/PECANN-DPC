@@ -93,7 +93,7 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
     auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first);
     };
-    if (beamElts.size() <= K) { // found less than K neighbors during the search
+    if (beamElts.size() < K) { // found less than K neighbors during the search
       std::vector<std::pair<int, double>> dists(data_num);
       parlay::parallel_for(0, data_num, [&](size_t j) {
         dists[j] = std::make_pair(j, D->distance(graph[i]->coordinates.begin(),
@@ -307,6 +307,32 @@ std::vector<double> KthDistanceDensityComputer::operator()() {
 std::vector<double> KthDistanceDensityComputer::reweight_density(
     const std::vector<double> &densities) {
   return {};
+}
+
+std::vector<double> NormalizedDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    densities[i] = 1.0 / sqrt(this->knn_[(i + 1) * k - 1].second);
+  });
+  return densities;
+}
+
+std::vector<double> NormalizedDensityComputer::reweight_density(
+    const std::vector<double> &densities) {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> new_densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
+      auto neigh = this->knn_[i * k + j].first;
+      return densities[neigh];
+    });
+    double avg_density = parlay::reduce(knn_densities) / k;
+    new_densities[i] = densities[i] / avg_density;
+  });
+  return new_densities;
 }
 
 template <typename T>

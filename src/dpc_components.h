@@ -72,15 +72,32 @@ compute_dep_ptr_bruteforce(const RawDataset &raw_data,
                            const std::vector<double> &densities,
                            const std::set<int> &noise_pts, Distance *D);
 
+// D. Floros, T. Liu, N. Pitsianis and X. Sun, "Sparse Dual of the Density Peaks
+// Algorithm for Cluster Analysis of High-dimensional Data," 2018 IEEE High
+// Performance extreme Computing Conference (HPEC), 2018, pp. 1-14,
+// doi: 10.1109/HPEC.2018.8547519
 class KthDistanceDensityComputer : public DensityComputer {
 public:
-  // Here we're passing the necessary arguments to the base class constructor
   KthDistanceDensityComputer() : DensityComputer() {}
 
-  // Return the density.
+  // Return the density. 1/ the distance to kth nearest neighbor.
   std::vector<double> operator()() override;
 
-  // Reweight the density of each point in $v$ based on knn.
+  // Return empty vector
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+};
+
+// https://ieeexplore.ieee.org/document/8765754
+// Enhancing density peak clustering via density normalization
+class NormalizedDensityComputer : public DensityComputer {
+public:
+  NormalizedDensityComputer() : DensityComputer() {}
+
+  // Return the density. 1/ the distance to kth nearest neighbor.
+  std::vector<double> operator()() override;
+
+  // Re-weighted rho' = rho / (average rho among knn).
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
 };
