@@ -46,6 +46,8 @@ set(CC_SOURCES_FRAMEWORK
     src/dpc_framework.cpp
     src/dpc_components.cpp
     src/bruteforce.cpp
+    src/sketching/RACE.cpp
+    src/sketching/LSHFamily.cpp
     )
 
 add_library(dpc_ann_framework_cc STATIC ${CC_SOURCES_FRAMEWORK})

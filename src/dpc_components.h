@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RACE.h"
+#include "sketching/RACE.h"
 #include "computers.h"
 #include <set>
 #include <utility>

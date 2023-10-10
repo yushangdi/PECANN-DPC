@@ -195,7 +195,7 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
   }
 }
 
-TEST_F(SmallDPCFrameworkTest, RaeDensityComputerTest) {
+TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
   RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
   int K = 3;
   DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
