@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "IO.h"
+#include "computers.h"
 #include "dpc_components.h"
 #include "utils.h"
 
