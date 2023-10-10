@@ -196,20 +196,24 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
 }
 
 TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
-  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  std::vector<float> race_data_vec = {1, 0,  1, 0,  0, 1, -1, 0};
+  int rounded_dim;
+  float* race_data_ptr = get_aligned_data(race_data_vec, data_dim, rounded_dim);
+  RawDataset race_data = RawDataset(race_data_ptr, 4, data_dim, aligned_dim);
   int K = 3;
-  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+
   auto cosine_family = std::make_shared<CosineFamily>(42);
-  auto race = std::make_shared<RACE>(3, 3, 2, cosine_family);
+  size_t num_repetitions = 10;
+  size_t hashes_per_repetition = 3;
+  auto race = std::make_shared<RACE>(num_repetitions, hashes_per_repetition, data_dim, cosine_family);
   RaceDensityComputer density_computer(race);
+
+  DatasetKnn dataset_knn(race_data, D, K, knn_expected);
   density_computer.initialize(dataset_knn);
   auto densities = density_computer();
 
-  // Since we are using a cosine family for distance, every point in our test
-  // dataset is the same, so every point should collide with every other point
-  for (int i = 0; i < num_data; ++i) {
-    EXPECT_DOUBLE_EQ(densities[i], 10) << "Mismatch at point " << i;
-  }
+  
+  EXPECT_DOUBLE_EQ(densities[0], 2 + std::pow(0.5, hashes_per_repetition)) << "Mismatch at point " << 0;
 }
 
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {

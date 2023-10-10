@@ -42,6 +42,8 @@ compile_commands.json
 
 __pycache__
 
+.cache
+
 # Include these simple datasets so we don't need to redownload during github actions
 !data/gaussian_example
 !data/s_datasets
