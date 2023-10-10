@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RACE.h"
 #include "computers.h"
 #include <set>
 #include <utility>
@@ -83,6 +84,23 @@ public:
   // Reweight the density of each point in $v$ based on knn.
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
+};
+
+class RaceDensityComputer : public DensityComputer {
+public:
+  // Here we're passing the necessary arguments to the base class constructor
+  RaceDensityComputer(std::shared_ptr<RACE> race_sketch)
+      : DensityComputer(), race_sketch_(race_sketch) {}
+
+  // Return the density.
+  std::vector<double> operator()() override;
+
+  // Reweight the density of each point in $v$ based on knn.
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+
+private:
+  std::shared_ptr<RACE> race_sketch_;
 };
 
 // Centers are points with density >=  density_threshold_ and distance >=

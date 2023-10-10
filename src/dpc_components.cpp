@@ -309,6 +309,21 @@ std::vector<double> KthDistanceDensityComputer::reweight_density(
   return {};
 }
 
+std::vector<double> RaceDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    densities[i] = 1.0 / sqrt(this->knn_[(i + 1) * k - 1].second);
+  });
+  return densities;
+}
+
+std::vector<double>
+RaceDensityComputer::reweight_density(const std::vector<double> &densities) {
+  return {};
+}
+
 template <typename T>
 std::set<int> ThresholdCenterFinder<T>::operator()(
     const std::vector<T> &densities,
