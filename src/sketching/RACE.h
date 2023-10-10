@@ -5,8 +5,7 @@
 
 // TODO(Josh): Replace float with template
 // TODO(Josh): Benchmark with and without std::atomic
-// TODO(Josh): Move impls
-
+// Add better tests
 
 class RACE {
 public:
@@ -16,6 +15,9 @@ public:
   void add(const float *data);
 
   double query(const float *data);
+
+  RACE (const RACE&) = delete;
+  RACE& operator= (const RACE&) = delete;
 
 private:
   std::vector<size_t> get_hashes(const float *data);

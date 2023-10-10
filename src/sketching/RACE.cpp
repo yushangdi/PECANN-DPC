@@ -26,7 +26,7 @@ double RACE::query(const float *data) {
   size_t total = 0;
   for (size_t i = 0; i < num_estimators_; i++) {
     size_t hash = hashes.at(i);
-    total += race_array[i * num_estimators_ + hash];
+    total += race_array.at(i * num_estimators_ + hash);
   }
   return total / (double) num_estimators_;
 }
