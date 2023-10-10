@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
   Method method = Method::Doubling;
   GraphType graph_type = GraphType::Vamana;
   std::string density_method;
+  std::string density_method;
 
   po::options_description desc("DPC");
   desc.add_options()("help", "produce help message")(
