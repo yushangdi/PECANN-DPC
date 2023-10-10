@@ -15,7 +15,7 @@ public:
 
   void add(const float *data);
 
-  size_t query(const float *data);
+  double query(const float *data);
 
 private:
   std::vector<size_t> get_hashes(const float *data);

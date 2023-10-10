@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sketching/RACE.h"
 #include "computers.h"
+#include "sketching/RACE.h"
 #include <set>
 #include <utility>
 #include <vector>

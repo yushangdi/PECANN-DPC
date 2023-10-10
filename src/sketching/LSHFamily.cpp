@@ -12,8 +12,9 @@ void CosineFamily::init(size_t num_hash_functions, size_t data_dim) {
 }
 
 std::vector<size_t> CosineFamily::hash(const float *data) {
-  auto result = std::vector<size_t>(random_normals.size() / data_dim_);
-  for (size_t i = 0; i < random_normals.size(); i += data_dim_) {
+  size_t num_outputs = random_normals.size() / data_dim_; 
+  auto result = std::vector<size_t>(num_outputs);
+  for (size_t i = 0; i < num_outputs; i ++) {
     float total = 0;
     for (size_t j = 0; j < data_dim_; j++) {
       total += random_normals.at(i * data_dim_ + j) * data[j];

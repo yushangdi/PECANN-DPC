@@ -81,7 +81,7 @@ TEST_F(SmallDPCFrameworkTest, ConstructGraphTest) {
   using T = float;
   ParsedDataset parsed_data;
   int Lbuild = 3;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 2;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -118,7 +118,7 @@ TEST_F(SmallDPCFrameworkTest, KNNTest) {
   using T = float;
   ParsedDataset parsed_data;
   int Lbuild = 10;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 10;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -156,7 +156,7 @@ TEST_F(SmallDPCFrameworkTest, DepPtrTest) {
   ParsedDataset parsed_data;
   int Lbuild = 10;
   int L = 5;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 10;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -205,15 +205,10 @@ TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
   density_computer.initialize(dataset_knn);
   auto densities = density_computer();
 
-  std::vector<double> expected(num_data);
-  expected[0] = 1 / sqrt(20);
-  expected[num_data - 1] = 1 / sqrt(20);
-  for (int i = 1; i < num_data - 1; ++i) {
-    expected[i] = 1 / sqrt(5);
-  }
-
+  // Since we are using a cosine family for distance, every point in our test
+  // dataset is the same, so every point should collide with every other point
   for (int i = 0; i < num_data; ++i) {
-    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+    EXPECT_DOUBLE_EQ(densities[i], 10) << "Mismatch at point " << i;
   }
 }
 

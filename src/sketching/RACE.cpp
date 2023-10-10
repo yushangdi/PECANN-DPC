@@ -21,14 +21,14 @@ void RACE::add(const float *data) {
   }
 }
 
-size_t RACE::query(const float *data) {
+double RACE::query(const float *data) {
   auto hashes = get_hashes(data);
   size_t total = 0;
   for (size_t i = 0; i < num_estimators_; i++) {
     size_t hash = hashes.at(i);
     total += race_array[i * num_estimators_ + hash];
   }
-  return total;
+  return total / (double) num_estimators_;
 }
 
 
