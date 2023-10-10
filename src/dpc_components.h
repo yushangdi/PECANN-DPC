@@ -103,6 +103,29 @@ private:
   std::shared_ptr<RACE> race_sketch_;
 };
 
+
+class WrappedDensityComputer : public DensityComputer {
+public:
+  // Here we're passing the necessary arguments to the base class constructor
+  WrappedDensityComputer(std::vector<double> densities, std::vector<double> reweighted_densities = {})
+      : DensityComputer(), densities_(densities), reweighted_densities_(reweighted_densities) {}
+
+  // Return the density.
+  std::vector<double> operator()() override {
+    return densities_;
+  }
+
+  // Reweight the density of each point in $v$ based on knn.
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override {
+    return reweighted_densities_;
+  }
+
+private:
+  std::vector<double> densities_, reweighted_densities_;
+};
+
+
 // Centers are points with density >=  density_threshold_ and distance >=
 // delta_threshold_ and are not noisy points.
 template <typename T> class ThresholdCenterFinder : public CenterFinder<T> {

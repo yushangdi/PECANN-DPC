@@ -8,6 +8,7 @@ from tqdm import tqdm
 import numpy as np
 import multiprocessing
 import argparse
+from sklearn.preprocessing import normalize
 
 import dpc_ann
 
@@ -76,6 +77,9 @@ def run_dpc_ann_configurations(
     dataset_folder = make_results_folder(dataset)
 
     data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
+    data = normalize(data, axis=1, norm='l2')
+    with open("kd_cos_12.txt") as f:
+        densities = [float(line.strip()) for line in f.readlines()]
 
     ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
     ground_truth_decision_graph_path = (
@@ -95,14 +99,15 @@ def run_dpc_ann_configurations(
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
-            density_computer=dpc_ann.RaceDensityComputer(
-                dpc_ann.RACE(
-                    num_estimators=8,
-                    hashes_per_estimator=12,
-                    data_dim=768,
-                    lsh_family=dpc_ann.CosineFamily(),
-                )
-            ),
+            # density_computer=dpc_ann.RaceDensityComputer(
+            #     dpc_ann.RACE(
+            #         num_estimators=8,
+            #         hashes_per_estimator=12,
+            #         data_dim=768,
+            #         lsh_family=dpc_ann.CosineFamily(),
+            #     )
+            # ),
+            density_computer=dpc_ann.WrappedDensityComputer(densities),
             data=data,
             decision_graph_path=f"{prefix}.dg",
             center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),

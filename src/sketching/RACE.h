@@ -5,7 +5,9 @@
 
 // TODO(Josh): Replace float with template
 // TODO(Josh): Benchmark with and without std::atomic
-// Add better tests
+// TODO(Josh): Add better tests
+// TODO(Josh): Fix bug blowing up adding more repetitions (and getting worse)
+// TODO(Josh): Namespace
 
 class RACE {
 public:

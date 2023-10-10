@@ -145,6 +145,10 @@ NB_MODULE(dpc_ann_ext, m) {
       m, "RaceDensityComputer")
       .def(nb::init<std::shared_ptr<RACE>>(), "race_sketch"_a);
 
+  nb::class_<DPC::WrappedDensityComputer, DPC::DensityComputer>(
+      m, "WrappedDensityComputer")
+      .def(nb::init<std::vector<double>, std::vector<double>>(), "densities"_a, "reweighted_densities"_a = std::vector<double>());
+
   nb::class_<LSHFamily>(m, "LSHFamily");
 
   nb::class_<CosineFamily, LSHFamily>(m, "CosineFamily")
