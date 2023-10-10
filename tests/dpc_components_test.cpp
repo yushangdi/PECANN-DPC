@@ -195,6 +195,28 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
   }
 }
 
+TEST_F(SmallDPCFrameworkTest, RaeDensityComputerTest) {
+  RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);
+  int K = 3;
+  DatasetKnn dataset_knn(raw_data, D, K, knn_expected);
+  auto cosine_family = std::make_shared<CosineFamily>(42);
+  auto race = std::make_shared<RACE>(3, 3, 2, cosine_family);
+  RaceDensityComputer density_computer(race);
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  std::vector<double> expected(num_data);
+  expected[0] = 1 / sqrt(20);
+  expected[num_data - 1] = 1 / sqrt(20);
+  for (int i = 1; i < num_data - 1; ++i) {
+    expected[i] = 1 / sqrt(5);
+  }
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
+}
+
 TEST_F(SmallDPCFrameworkTest, ThresholdCenterFinderTest) {
   double distance_cutoff = 10;
   double center_density_cutoff = 2;
