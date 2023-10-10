@@ -65,12 +65,10 @@ def run_dpc_ann_configurations(
                     "graph_type": graph_type,
                 }
                 if graph_type in ["pyNNDescent", "HCNNG"]:
-                    if beam_search_construction < 16:
-                        continue
-                    for num_clusters in range(1, 4):
+                    for num_clusters_in_build in range(1, 4):
                         new_command_line = dict(command_line)
-                        command_line["num_clusters"] = num_clusters
-                        new_method = method + "_" + str(num_clusters)
+                        command_line["num_clusters"] = num_clusters_in_build
+                        new_method = method + "_" + str(num_clusters_in_build)
                         options.append((new_method, new_command_line))
                 else:
                     options.append((method, command_line))
