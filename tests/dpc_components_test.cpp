@@ -202,12 +202,11 @@ TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
   RawDataset race_data = RawDataset(race_data_ptr, 4, data_dim, aligned_dim);
   int K = 3;
 
-  auto cosine_family = std::make_shared<CosineFamily>(42);
+  auto cosine_family = std::make_shared<Sketching::CosineFamily>(42);
   size_t num_repetitions = 10000;
   size_t hashes_per_repetition = 3;
-  auto race = std::make_shared<RACE>(num_repetitions, hashes_per_repetition,
-                                     data_dim, cosine_family);
-  RaceDensityComputer density_computer(race);
+  RaceDensityComputer density_computer(num_repetitions, hashes_per_repetition,
+                                       data_dim, cosine_family);
 
   DatasetKnn dataset_knn(race_data, D, K, knn_expected);
   density_computer.initialize(dataset_knn);

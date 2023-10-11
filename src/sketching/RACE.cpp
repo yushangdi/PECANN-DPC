@@ -2,6 +2,8 @@
 #include <cmath>
 #include <iostream>
 
+namespace DPC::Sketching {
+
 RACE::RACE(size_t num_estimators, size_t hashes_per_estimator, size_t data_dim,
            std::shared_ptr<LSHFamily> lsh_family)
     : data_dim_(data_dim), num_estimators_(num_estimators),
@@ -48,3 +50,4 @@ std::vector<size_t> RACE::get_hashes(const float *data) {
   return result;
 }
 
+}

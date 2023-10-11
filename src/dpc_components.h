@@ -106,8 +106,11 @@ public:
 class RaceDensityComputer : public DensityComputer {
 public:
   // Here we're passing the necessary arguments to the base class constructor
-  RaceDensityComputer(std::shared_ptr<RACE> race_sketch)
-      : DensityComputer(), race_sketch_(race_sketch) {}
+  RaceDensityComputer(size_t num_estimators, size_t hashes_per_estimator,
+                      size_t data_dim,
+                      std::shared_ptr<Sketching::LSHFamily> lsh_family)
+      : DensityComputer(), race_sketch_(num_estimators, hashes_per_estimator,
+                                        data_dim, lsh_family) {}
 
   // Return the density.
   std::vector<double> operator()() override;
@@ -117,7 +120,7 @@ public:
   reweight_density(const std::vector<double> &densities) override;
 
 private:
-  std::shared_ptr<RACE> race_sketch_;
+  Sketching::RACE race_sketch_;
 };
 
 class WrappedDensityComputer : public DensityComputer {

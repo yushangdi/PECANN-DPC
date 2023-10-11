@@ -1,12 +1,11 @@
+#pragma once
+
 #include <atomic>
 #include <memory>
 #include <vector>
 #include "LSHFamily.h"
 
-// TODO(Josh): Replace float with template
-// TODO(Josh): Benchmark with and without std::atomic
-// TODO(Josh): Namespace
-// TODO(Josh): Change to construct in Density object
+namespace DPC::Sketching {
 
 class RACE {
 public:
@@ -27,3 +26,5 @@ private:
   std::shared_ptr<LSHFamily> lsh_funcs_;
   std::vector<std::atomic<size_t>> race_array;
 };
+
+}

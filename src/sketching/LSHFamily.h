@@ -1,5 +1,9 @@
+#pragma once
+
 #include <cstddef>
 #include <vector>
+
+namespace DPC::Sketching {
 
 class LSHFamily {
 public:
@@ -25,3 +29,5 @@ private:
   size_t seed_;
   std::vector<float> random_normals;
 };
+
+}

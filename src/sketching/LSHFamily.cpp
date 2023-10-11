@@ -1,6 +1,8 @@
 #include "LSHFamily.h"
 #include <random>
 
+namespace DPC::Sketching {
+
 void CosineFamily::init(size_t num_hash_functions, size_t data_dim) {
   data_dim_ = data_dim;
   std::default_random_engine generator(seed_);
@@ -22,4 +24,6 @@ std::vector<size_t> CosineFamily::hash(const float *data) {
     result.at(i) = total > 0;
   }
   return result;
+}
+
 }

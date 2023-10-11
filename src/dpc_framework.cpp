@@ -28,8 +28,6 @@
 #include "bruteforce.h"
 #include "utils.h"
 
-// #include <boost/json.hpp>
-
 namespace DPC {
 
 ClusteringResult dpc_framework(
