@@ -132,8 +132,7 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<DPC::ProductCenterFinder<double>, DPC::CenterFinder<double>>(
       m, "ProductCenterFinder")
-      .def(nb::init<size_t>(), "num_clusters"_a)
-      .def(nb::init<int, bool>(), "num_clusters"_a, "use_reweighted_density"_a);
+      .def(nb::init<int, bool>(), "num_clusters"_a, "use_reweighted_density"_a = false);
 
   nb::class_<DPC::DensityComputer>(m, "DensityComputer");
 
@@ -143,5 +142,13 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<DPC::NormalizedDensityComputer, DPC::DensityComputer>(
       m, "NormalizedDensityComputer")
+      .def(nb::init());
+
+  nb::class_<DPC::ExpSquaredDensityComputer, DPC::DensityComputer>(
+      m, "ExpSquaredDensityComputer")
+      .def(nb::init());
+
+  nb::class_<DPC::MutualKNNDensityComputer, DPC::DensityComputer>(
+      m, "MutualKNNDensityDensityComputer")
       .def(nb::init());
 }

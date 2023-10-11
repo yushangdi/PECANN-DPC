@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   float density_cutoff, dist_cutoff, center_density_cutoff;
   unsigned int K = 6;
   unsigned int L = 12;
-  unsigned int Lnn = 8; // need to >= K, otherwise all knn searches are bruteforce.
+  unsigned int Lnn = 8;
   unsigned int Lbuild = 12;
   unsigned int max_degree = 16;
   unsigned int num_clusters = 4; // only used for pyNNDescent.
@@ -82,8 +82,9 @@ int main(int argc, char **argv) {
   std::shared_ptr<DPC::DensityComputer> density_computer;
   std::shared_ptr<DPC::CenterFinder<double>> center_finder;
 
-  if(graph_type != GraphType::BruteForce && L <= K){
-    std::cout << "warning: if L <= K, all nearest neighbor searches are bruteforce \n";
+  if (graph_type != GraphType::BruteForce && L <= K) {
+    std::cout << "warning: if L <= K, all nearest neighbor searches are "
+                 "bruteforce \n";
     std::cout << "L=" << L << " K=" << K << std::endl;
   }
 
@@ -93,6 +94,12 @@ int main(int argc, char **argv) {
   } else if (density_method == "Normalized") {
     std::cout << "NormalizedDensityComputer\n";
     density_computer = std::make_shared<DPC::NormalizedDensityComputer>();
+  } else if (density_method == "ExpSquared") {
+    std::cout << "ExpSquaredDensityComputer\n";
+    density_computer = std::make_shared<DPC::ExpSquaredDensityComputer>();
+  } else if (density_method == "MutualKNN") {
+    std::cout << "MutualKNNDensityComputer\n";
+    density_computer = std::make_shared<DPC::MutualKNNDensityComputer>();
   } else {
     std::cerr << "Invalid density method\n";
     exit(1);
