@@ -66,7 +66,7 @@ def run_dpc_ann_configurations(
                     "graph_type": graph_type,
                 }
                 if graph_type in ["pyNNDescent", "HCNNG"]:
-                    for num_clusters_in_build in range(1, 4):
+                    for num_clusters_in_build in range(1, 2):
                         new_command_line = dict(command_line)
                         command_line["num_clusters"] = num_clusters_in_build
                         new_method = method + "_" + str(num_clusters_in_build)
