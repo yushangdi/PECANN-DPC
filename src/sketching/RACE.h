@@ -5,9 +5,8 @@
 
 // TODO(Josh): Replace float with template
 // TODO(Josh): Benchmark with and without std::atomic
-// TODO(Josh): Add better tests
-// TODO(Josh): Fix bug blowing up adding more repetitions (and getting worse)
 // TODO(Josh): Namespace
+// TODO(Josh): Change to construct in Density object
 
 class RACE {
 public:
@@ -24,7 +23,7 @@ public:
 private:
   std::vector<size_t> get_hashes(const float *data);
 
-  size_t num_estimators_, hashes_per_estimator_, data_dim_;
+  size_t num_estimators_, estimator_range_, data_dim_, hashes_per_estimator_;
   std::shared_ptr<LSHFamily> lsh_funcs_;
   std::vector<std::atomic<size_t>> race_array;
 };

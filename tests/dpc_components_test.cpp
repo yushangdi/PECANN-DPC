@@ -196,27 +196,38 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
 }
 
 TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
-  std::vector<float> race_data_vec = {1, 0,  1, 0,  0, 1, -1, 0};
+  std::vector<float> race_data_vec = {1, 0, 1, 0, 0, 1, -1, 0};
   int rounded_dim;
-  float* race_data_ptr = get_aligned_data(race_data_vec, data_dim, rounded_dim);
+  float *race_data_ptr = get_aligned_data(race_data_vec, data_dim, rounded_dim);
   RawDataset race_data = RawDataset(race_data_ptr, 4, data_dim, aligned_dim);
   int K = 3;
 
   auto cosine_family = std::make_shared<CosineFamily>(42);
-  size_t num_repetitions = 10;
+  size_t num_repetitions = 10000;
   size_t hashes_per_repetition = 3;
-  auto race = std::make_shared<RACE>(num_repetitions, hashes_per_repetition, data_dim, cosine_family);
+  auto race = std::make_shared<RACE>(num_repetitions, hashes_per_repetition,
+                                     data_dim, cosine_family);
   RaceDensityComputer density_computer(race);
 
   DatasetKnn dataset_knn(race_data, D, K, knn_expected);
   density_computer.initialize(dataset_knn);
   auto densities = density_computer();
 
-  
-  EXPECT_DOUBLE_EQ(densities[0], 2 + std::pow(0.5, hashes_per_repetition)) << "Mismatch at point " << 0;
+  // The collision probability for two vectors using signed random projection
+  // LSH is (1 - angle / pi), so we can calculate the expected density of each
+  // point as the sum over these collision probabilities raised to the
+  // hashes_per_repetition.
+  std::vector<double> expected_densities = {
+      2 + std::pow(0.5, hashes_per_repetition),
+      2 + std::pow(0.5, hashes_per_repetition),
+      1 + 3 * std::pow(0.5, hashes_per_repetition),
+      1 + std::pow(0.5, hashes_per_repetition)};
 
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_NEAR(densities[i], expected_densities[i], 0.1)
+        << "Mismatch at point " << i;
+  }
 }
-
 
 TEST_F(SmallDPCFrameworkTest, NormalizedDensityComputerTest) {
   RawDataset raw_data = RawDataset(data, num_data, data_dim, aligned_dim);

@@ -151,7 +151,8 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<DPC::WrappedDensityComputer, DPC::DensityComputer>(
       m, "WrappedDensityComputer")
-      .def(nb::init<std::vector<double>, std::vector<double>>(), "densities"_a, "reweighted_densities"_a = std::vector<double>());
+      .def(nb::init<std::vector<double>, std::vector<double>>(), "densities"_a,
+           "reweighted_densities"_a = std::vector<double>());
 
   nb::class_<LSHFamily>(m, "LSHFamily");
 

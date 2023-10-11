@@ -344,7 +344,6 @@ std::vector<double> RaceDensityComputer::operator()() {
   });
   parlay::parallel_for(0, data_num, [&](int i) {
     densities[i] = race_sketch_->query(&this->data_[this->aligned_dim_ * i]);
-    densities[i] = 1.0 / sqrt(this->knn_[(i + 1) * k - 1].second);
   });
   return densities;
 }

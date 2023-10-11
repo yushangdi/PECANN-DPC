@@ -8,7 +8,6 @@ from tqdm import tqdm
 import numpy as np
 import multiprocessing
 import argparse
-from sklearn.preprocessing import normalize
 
 import dpc_ann
 
@@ -31,6 +30,7 @@ def run_dpc_ann_configurations(
     graph_types=None,
     search_range=None,
     compare_against_gt=True,
+    compare_against_bf=True,
     results_file_prefix="",
 ):
     cluster_results_file = create_results_file(prefix=results_file_prefix)
@@ -77,15 +77,12 @@ def run_dpc_ann_configurations(
     dataset_folder = make_results_folder(dataset)
 
     data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
-    data = normalize(data, axis=1, norm='l2')
-    with open("kd_cos_12.txt") as f:
-        densities = [float(line.strip()) for line in f.readlines()]
 
     ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
     ground_truth_decision_graph_path = (
         f"results/{dataset_folder}/{dataset}_BruteForce.dg"
     )
-    if not os.path.isfile(ground_truth_cluster_path):
+    if not os.path.isfile(ground_truth_cluster_path) and compare_against_bf:
         dpc_ann.dpc_numpy(
             graph_type="BruteForce",
             decision_graph_path=ground_truth_decision_graph_path,
@@ -99,15 +96,6 @@ def run_dpc_ann_configurations(
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
-            # density_computer=dpc_ann.RaceDensityComputer(
-            #     dpc_ann.RACE(
-            #         num_estimators=8,
-            #         hashes_per_estimator=12,
-            #         data_dim=768,
-            #         lsh_family=dpc_ann.CosineFamily(),
-            #     )
-            # ),
-            density_computer=dpc_ann.WrappedDensityComputer(densities),
             data=data,
             decision_graph_path=f"{prefix}.dg",
             center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),
@@ -126,15 +114,16 @@ def run_dpc_ann_configurations(
             )
 
         # Eval cluster against brute force DPC
-        eval_cluster_and_write_results(
-            gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
-            found_clusters=np.array(clustering_result.clusters),
-            compare_to_ground_truth=False,
-            results_file=cluster_results_file,
-            dataset=dataset,
-            method=graph_type,
-            time_reports=clustering_result.metadata,
-        )
+        if compare_against_bf:
+            eval_cluster_and_write_results(
+                gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
+                found_clusters=np.array(clustering_result.clusters),
+                compare_to_ground_truth=False,
+                results_file=cluster_results_file,
+                dataset=dataset,
+                method=graph_type,
+                time_reports=clustering_result.metadata,
+            )
 
     for graph_type, command in tqdm(options):
         p = multiprocessing.Process(target=try_command, args=(graph_type, command))
@@ -175,6 +164,7 @@ if __name__ == "__main__":
         "--results_file_prefix", help="Prefix for the results files", default=""
     )
     parser.add_argument("--dont_compare_against_gt", default=False, action="store_true")
+    parser.add_argument("--dont_compare_against_bf", default=False, action="store_true")
     parser.add_argument("-search_range", nargs="+", type=int)
     parser.add_argument("-graph_types", nargs="+", type=str)
     args = parser.parse_args()
@@ -184,6 +174,7 @@ if __name__ == "__main__":
         timeout_s=args.timeout,
         num_clusters=args.num_clusters,
         compare_against_gt=not args.dont_compare_against_gt,
+        compare_against_bf=not args.dont_compare_against_bf,
         search_range=args.search_range,
         graph_types=args.graph_types,
         results_file_prefix=args.results_file_prefix,
