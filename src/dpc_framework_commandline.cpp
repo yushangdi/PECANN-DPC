@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
   } else if (density_method == "RaceDensityComputer") {
     std::cout << "RaceDensityComputer\n";
     auto cosine_family = std::make_shared<DPC::Sketching::CosineFamily>(42);
-    size_t num_repetitions = 10000;
-    size_t hashes_per_repetition = 3;
+    size_t num_repetitions = 64;
+    size_t hashes_per_repetition = log(raw_data.num_data);
     density_computer = std::make_shared<DPC::RaceDensityComputer>(
         num_repetitions, hashes_per_repetition, raw_data.data_dim,
         cosine_family);
