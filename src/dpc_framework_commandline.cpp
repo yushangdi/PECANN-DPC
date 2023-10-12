@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
     std::cout << "L=" << L << " K=" << K << std::endl;
   }
 
+  RawDataset raw_data(query_file);
+
   if (density_method == "KthDistance") {
     std::cout << "KthDistanceDensityComputer\n";
     density_computer = std::make_shared<DPC::KthDistanceDensityComputer>();
@@ -100,6 +102,14 @@ int main(int argc, char **argv) {
   } else if (density_method == "MutualKNN") {
     std::cout << "MutualKNNDensityComputer\n";
     density_computer = std::make_shared<DPC::MutualKNNDensityComputer>();
+  } else if (density_method == "RaceDensityComputer") {
+    std::cout << "RaceDensityComputer\n";
+    auto cosine_family = std::make_shared<DPC::Sketching::CosineFamily>(42);
+    size_t num_repetitions = 10000;
+    size_t hashes_per_repetition = 3;
+    density_computer = std::make_shared<DPC::RaceDensityComputer>(
+        num_repetitions, hashes_per_repetition, raw_data.data_dim,
+        cosine_family);
   } else {
     std::cerr << "Invalid density method\n";
     exit(1);
@@ -110,7 +120,7 @@ int main(int argc, char **argv) {
 
   // TODO: If we want to keep mainintaing this command line, add options for
   // other center finders
-  DPC::dpc_framework(K, L, Lnn, query_file, center_finder, density_computer,
+  DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, density_computer,
                      output_file, decision_graph_path, Lbuild, max_degree,
                      alpha, num_clusters, method, graph_type);
 }
