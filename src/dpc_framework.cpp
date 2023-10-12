@@ -28,12 +28,11 @@
 #include "bruteforce.h"
 #include "utils.h"
 
-// #include <boost/json.hpp>
-
 namespace DPC {
 
 ClusteringResult dpc_framework(
-    const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
+    const unsigned K, const unsigned L, const unsigned Lnn,
+    RawDataset &raw_data,
     const std::shared_ptr<CenterFinder<double>> &center_finder,
     std::shared_ptr<DPC::DensityComputer> &density_computer,
     const std::string &output_path, const std::string &decision_graph_path,
@@ -70,7 +69,7 @@ ClusteringResult dpc_framework(
 
   // Compute density
   density_computer->initialize(dataset_knn);
-  auto densities = density_computer->operator()();
+  auto densities = (*density_computer)();
   auto reweighted_densities = density_computer->reweight_density(densities);
   std::set<int> noise_points;
 

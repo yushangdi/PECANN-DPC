@@ -1,6 +1,7 @@
 #pragma once
 
 #include "computers.h"
+#include "sketching/RACE.h"
 #include <set>
 #include <utility>
 #include <vector>
@@ -138,6 +139,47 @@ public:
   // Return empty vector
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
+};
+
+class RaceDensityComputer : public DensityComputer {
+public:
+  // Here we're passing the necessary arguments to the base class constructor
+  RaceDensityComputer(size_t num_estimators, size_t hashes_per_estimator,
+                      size_t data_dim,
+                      std::shared_ptr<Sketching::LSHFamily> lsh_family)
+      : DensityComputer(), race_sketch_(num_estimators, hashes_per_estimator,
+                                        data_dim, lsh_family) {}
+
+  // Return the density.
+  std::vector<double> operator()() override;
+
+  // Reweight the density of each point in $v$ based on knn.
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+
+private:
+  Sketching::RACE race_sketch_;
+};
+
+class WrappedDensityComputer : public DensityComputer {
+public:
+  // Here we're passing the necessary arguments to the base class constructor
+  WrappedDensityComputer(std::vector<double> densities,
+                         std::vector<double> reweighted_densities = {})
+      : DensityComputer(), densities_(densities),
+        reweighted_densities_(reweighted_densities) {}
+
+  // Return the density.
+  std::vector<double> operator()() override { return densities_; }
+
+  // Reweight the density of each point in $v$ based on knn.
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override {
+    return reweighted_densities_;
+  }
+
+private:
+  std::vector<double> densities_, reweighted_densities_;
 };
 
 // Centers are points with density >=  density_threshold_ and distance >=

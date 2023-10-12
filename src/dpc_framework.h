@@ -15,7 +15,7 @@ struct ClusteringResult {
 };
 
 ClusteringResult dpc_framework(
-    const unsigned K, const unsigned L, const unsigned Lnn, RawDataset raw_data,
+    const unsigned K, const unsigned L, const unsigned Lnn, RawDataset& raw_data,
     const std::shared_ptr<CenterFinder<double>> &center_finder,
     std::shared_ptr<DPC::DensityComputer> &density_computer,
     const std::string &output_path, const std::string &decision_graph_path,

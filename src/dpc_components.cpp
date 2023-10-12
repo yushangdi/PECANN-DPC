@@ -399,6 +399,24 @@ std::vector<double> MutualKNNDensityComputer::reweight_density(
   return std::vector<double>();
 }
 
+std::vector<double> RaceDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    race_sketch_.add(&this->data_[this->aligned_dim_ * i]);
+  });
+  parlay::parallel_for(0, data_num, [&](int i) {
+    densities[i] = race_sketch_.query(&this->data_[this->aligned_dim_ * i]);
+  });
+  return densities;
+}
+
+std::vector<double>
+RaceDensityComputer::reweight_density(const std::vector<double> &densities) {
+  return {};
+}
+
 template <typename T>
 std::set<int> ThresholdCenterFinder<T>::operator()(
     const std::vector<T> &densities,

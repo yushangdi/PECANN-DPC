@@ -132,7 +132,8 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<DPC::ProductCenterFinder<double>, DPC::CenterFinder<double>>(
       m, "ProductCenterFinder")
-      .def(nb::init<int, bool>(), "num_clusters"_a, "use_reweighted_density"_a = false);
+      .def(nb::init<int, bool>(), "num_clusters"_a,
+           "use_reweighted_density"_a = false);
 
   nb::class_<DPC::DensityComputer>(m, "DensityComputer");
 
@@ -144,6 +145,23 @@ NB_MODULE(dpc_ann_ext, m) {
       m, "NormalizedDensityComputer")
       .def(nb::init());
 
+  nb::class_<DPC::RaceDensityComputer, DPC::DensityComputer>(
+      m, "RaceDensityComputer")
+      .def(nb::init<size_t, size_t, size_t,
+                    std::shared_ptr<DPC::Sketching::LSHFamily>>(),
+           "num_estimators"_a, "hashes_per_estimator"_a, "data_dim"_a,
+           "lsh_family"_a);
+
+  nb::class_<DPC::WrappedDensityComputer, DPC::DensityComputer>(
+      m, "WrappedDensityComputer")
+      .def(nb::init<std::vector<double>, std::vector<double>>(), "densities"_a,
+           "reweighted_densities"_a = std::vector<double>());
+
+  nb::class_<DPC::Sketching::LSHFamily>(m, "LSHFamily");
+
+  nb::class_<DPC::Sketching::CosineFamily, DPC::Sketching::LSHFamily>(
+      m, "CosineFamily")
+      .def(nb::init<size_t>(), "seed"_a = 42);
   nb::class_<DPC::ExpSquaredDensityComputer, DPC::DensityComputer>(
       m, "ExpSquaredDensityComputer")
       .def(nb::init());

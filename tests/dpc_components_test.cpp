@@ -81,7 +81,7 @@ TEST_F(SmallDPCFrameworkTest, ConstructGraphTest) {
   using T = float;
   ParsedDataset parsed_data;
   int Lbuild = 3;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 2;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -118,7 +118,7 @@ TEST_F(SmallDPCFrameworkTest, KNNTest) {
   using T = float;
   ParsedDataset parsed_data;
   int Lbuild = 10;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 10;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -156,7 +156,7 @@ TEST_F(SmallDPCFrameworkTest, DepPtrTest) {
   ParsedDataset parsed_data;
   int Lbuild = 10;
   int L = 5;
-  int alpha = 1.2;
+  float alpha = 1.2;
   int max_degree = 10;
   int num_clusters = 1;
   GraphType graph_type = GraphType::Vamana;
@@ -192,6 +192,39 @@ TEST_F(SmallDPCFrameworkTest, KthDistanceDensityComputerTest) {
 
   for (int i = 0; i < num_data; ++i) {
     EXPECT_DOUBLE_EQ(densities[i], expected[i]) << "Mismatch at point " << i;
+  }
+}
+
+TEST_F(SmallDPCFrameworkTest, RaceDensityComputerTest) {
+  std::vector<float> race_data_vec = {1, 0, 1, 0, 0, 1, -1, 0};
+  int rounded_dim;
+  float *race_data_ptr = get_aligned_data(race_data_vec, data_dim, rounded_dim);
+  RawDataset race_data = RawDataset(race_data_ptr, 4, data_dim, aligned_dim);
+  int K = 3;
+
+  auto cosine_family = std::make_shared<Sketching::CosineFamily>(42);
+  size_t num_repetitions = 10000;
+  size_t hashes_per_repetition = 3;
+  RaceDensityComputer density_computer(num_repetitions, hashes_per_repetition,
+                                       data_dim, cosine_family);
+
+  DatasetKnn dataset_knn(race_data, D, K, knn_expected);
+  density_computer.initialize(dataset_knn);
+  auto densities = density_computer();
+
+  // The collision probability for two vectors using signed random projection
+  // LSH is (1 - angle / pi), so we can calculate the expected density of each
+  // point as the sum over these collision probabilities raised to the
+  // hashes_per_repetition.
+  std::vector<double> expected_densities = {
+      2 + std::pow(0.5, hashes_per_repetition),
+      2 + std::pow(0.5, hashes_per_repetition),
+      1 + 3 * std::pow(0.5, hashes_per_repetition),
+      1 + std::pow(0.5, hashes_per_repetition)};
+
+  for (int i = 0; i < num_data; ++i) {
+    EXPECT_NEAR(densities[i], expected_densities[i], 0.1)
+        << "Mismatch at point " << i;
   }
 }
 
