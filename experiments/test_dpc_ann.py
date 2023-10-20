@@ -23,6 +23,28 @@ from utils import (
 )
 
 
+def create_density_computer(density_info, dataset):
+    if density_info == "kth":
+        return dpc_ann.KthDistanceDensityComputer()
+    if density_info == "normalized":
+        return dpc_ann.NormalizedDensityComputer()
+    if density_info == "race":
+        if dataset != "imagenet":
+            raise ValueError(
+                "No default settings yet for race with non imagenet dataset"
+            )
+        return dpc_ann.RaceDensityComputer(
+            num_estimators=32,
+            hashes_per_estimator=18,
+            data_dim=1024,
+            lsh_family=dpc_ann.CosineFamily(),
+        )
+    if density_info == "exp":
+        return dpc_ann.ExpSquaredDensityComputer()
+    if density_info == "mutual":
+        return dpc_ann.MutualKNNDensityDensityComputer()
+
+
 def run_dpc_ann_configurations(
     dataset,
     timeout_s,
@@ -51,27 +73,32 @@ def run_dpc_ann_configurations(
         beam_search_clustering,
         beam_search_density,
     ) in itertools.product(search_range, search_range, search_range, search_range):
-        # We are assuming Vamana value of alpha = 1.1 (experimentally verified) works well for other graph methods
-        # TODO(Josh): Validate this assumption? Can just leave running in background somewhere
-        # for alpha in [1, 1.05, 1.1, 1.15, 1.2]:
-        for alpha in [1.1]:
-            for graph_type in graph_types:
-                method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}"
-                command_line = {
-                    "max_degree": max_degree,
-                    "alpha": alpha,
-                    "Lbuild": beam_search_construction,
-                    "L": beam_search_density,
-                    "Lnn": beam_search_clustering,
-                    "graph_type": graph_type,
-                }
-                if graph_type in ["pyNNDescent", "HCNNG"]:
-                    for num_clusters_in_build in range(1, 2):
-                        new_command_line = dict(command_line)
+        for alpha in [
+            1.1
+        ]:  # For now just always use alpha = 1.1, seems to perform the best
+            # for density in ["kth", "normalized", "race", "exp", "mutual"]:
+            for density in ["kth"]:
+                for graph_type in graph_types:
+                    method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}"
+                    command_line = {
+                        "max_degree": max_degree,
+                        "alpha": alpha,
+                        "Lbuild": beam_search_construction,
+                        "L": beam_search_density,
+                        "Lnn": beam_search_clustering,
+                        "graph_type": graph_type,
+                        "density_computer": create_density_computer(density, dataset),
+                        "center_finder": dpc_ann.ProductCenterFinder(
+                            num_clusters=num_clusters,
+                            use_reweighted_density=(density == "normalized"),
+                        ),
+                        "K": 16,
+                    }
+                    if graph_type in ["pyNNDescent", "HCNNG"]:
+                        num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
                         command_line["num_clusters"] = num_clusters_in_build
-                        new_method = method + "_" + str(num_clusters_in_build)
-                        options.append((new_method, new_command_line))
-                else:
+                        method += "_" + str(num_clusters_in_build)
+
                     options.append((method, command_line))
 
     dataset_folder = make_results_folder(dataset)
@@ -92,13 +119,12 @@ def run_dpc_ann_configurations(
         )
 
     def try_command(graph_type, command):
-        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}_new"
+        prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
 
         clustering_result = dpc_ann.dpc_numpy(
             **command,
             data=data,
             decision_graph_path=f"{prefix}.dg",
-            center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),
         )
 
         # Eval cluster against ground truth and write results

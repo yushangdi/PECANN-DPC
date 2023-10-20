@@ -2,6 +2,8 @@ import faiss
 import numpy as np
 import sys
 import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 from pathlib import Path
 import torch
 import time
@@ -21,9 +23,10 @@ parser.add_argument(
     help="Dataset name (should be a file named data/<dataset>/<dataset>.npy and data/dataset/<dataset>gt).",
 )
 parser.add_argument(
-    "num_clusters",
-    help="How many clusters to use for kmeans",
+    "--num_clusters",
+    help="How many clusters to use for kmeans (default is the exact number of classes in the ground truth)",
     type=int,
+    default=None,
 )
 parser.add_argument(
     "--max_iterations",
@@ -33,8 +36,15 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+num_clusters = args.num_clusters
+if num_clusters is None:
+    num_clusters = int(len(set(np.loadtxt(f"data/{args.dataset}/{args.dataset}.gt"))))
+
+print(f"Clustering with {num_clusters} clusters")
+
 x = np.load(f"data/{args.dataset}/{args.dataset}.npy")
 cluster_result_path = f"results/{args.dataset}/kmeans.cluster"
+Path(cluster_result_path).parent.mkdir(parents=True, exist_ok=True)
 results_file = create_results_file("kmeans")
 
 for nredo in range(1, 5):
@@ -42,9 +52,10 @@ for nredo in range(1, 5):
         if nredo * niter > args.max_iterations:
             continue
         built_start_time = time.time()
-        verbose = False
+        verbose = True
         d = x.shape[1]
-        kmeans = faiss.Kmeans(d, args.num_clusters, niter=niter, verbose=verbose)
+        kmeans = faiss.Kmeans(d, num_clusters, niter=niter, verbose=verbose)
+        print(x)
         kmeans.train(x)
         built_time = time.time() - built_start_time
 
