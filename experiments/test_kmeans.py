@@ -14,7 +14,11 @@ abspath = Path(__file__).resolve().parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 
-from utils import create_results_file, eval_cluster_and_write_results
+from utils import (
+    create_results_file,
+    eval_cluster_and_write_results,
+    make_results_folder,
+)
 
 
 parser = argparse.ArgumentParser(description="Run kmeans on passed in dataset.")
@@ -43,8 +47,8 @@ if num_clusters is None:
 print(f"Clustering with {num_clusters} clusters")
 
 x = np.load(f"data/{args.dataset}/{args.dataset}.npy")
+make_results_folder(args.dataset)
 cluster_result_path = f"results/{args.dataset}/kmeans.cluster"
-Path(cluster_result_path).parent.mkdir(parents=True, exist_ok=True)
 results_file = create_results_file("kmeans")
 
 for nredo in range(1, 5):

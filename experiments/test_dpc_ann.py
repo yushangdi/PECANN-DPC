@@ -23,20 +23,17 @@ from utils import (
 )
 
 
-def create_density_computer(density_info, dataset):
+def create_density_computer(density_info, data):
     if density_info == "kth":
         return dpc_ann.KthDistanceDensityComputer()
     if density_info == "normalized":
         return dpc_ann.NormalizedDensityComputer()
     if density_info == "race":
-        if dataset != "imagenet":
-            raise ValueError(
-                "No default settings yet for race with non imagenet dataset"
-            )
+        # These numbers are just a really basic heuristic
         return dpc_ann.RaceDensityComputer(
             num_estimators=32,
             hashes_per_estimator=18,
-            data_dim=1024,
+            data_dim=data.shape[1],
             lsh_family=dpc_ann.CosineFamily(),
         )
     if density_info == "exp":
@@ -59,6 +56,9 @@ def run_dpc_ann_configurations(
 
     options = []
 
+    dataset_folder = make_results_folder(dataset)
+    data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
+
     if search_range == None:
         search_range = [8, 16, 32, 64]
         if dataset == "imagenet":
@@ -77,7 +77,7 @@ def run_dpc_ann_configurations(
             1.1
         ]:  # For now just always use alpha = 1.1, seems to perform the best
             # for density in ["kth", "normalized", "race", "exp", "mutual"]:
-            for density in ["kth"]:
+            for density in ["race"]:
                 for graph_type in graph_types:
                     method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}"
                     command_line = {
@@ -87,7 +87,7 @@ def run_dpc_ann_configurations(
                         "L": beam_search_density,
                         "Lnn": beam_search_clustering,
                         "graph_type": graph_type,
-                        "density_computer": create_density_computer(density, dataset),
+                        "density_computer": create_density_computer(density, data),
                         "center_finder": dpc_ann.ProductCenterFinder(
                             num_clusters=num_clusters,
                             use_reweighted_density=(density == "normalized"),
@@ -100,10 +100,6 @@ def run_dpc_ann_configurations(
                         method += "_" + str(num_clusters_in_build)
 
                     options.append((method, command_line))
-
-    dataset_folder = make_results_folder(dataset)
-
-    data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
     ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
     ground_truth_decision_graph_path = (
