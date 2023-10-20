@@ -77,7 +77,7 @@ def run_dpc_ann_configurations(
             1.1
         ]:  # For now just always use alpha = 1.1, seems to perform the best
             # for density in ["kth", "normalized", "race", "exp", "mutual"]:
-            for density in ["race"]:
+            for density in ["kth"]:
                 for graph_type in graph_types:
                     method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}"
                     command_line = {
@@ -92,7 +92,7 @@ def run_dpc_ann_configurations(
                             num_clusters=num_clusters,
                             use_reweighted_density=(density == "normalized"),
                         ),
-                        "K": 16,
+                        "K": 6,
                     }
                     if graph_type in ["pyNNDescent", "HCNNG"]:
                         num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
