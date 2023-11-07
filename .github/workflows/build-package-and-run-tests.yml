@@ -37,7 +37,9 @@ jobs:
         python-version: '3.x'
 
     - name: Install python dependencies
-      run: pip3 install -r requirements.txt
+      run: |
+        pip3 install --upgrade pip
+        pip3 install -r requirements.txt
     
     - name: Install Boost
       run: sudo apt-get install libboost-program-options-dev
