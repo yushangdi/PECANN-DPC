@@ -165,16 +165,19 @@ inline void writeKnnGraphToFile(const std::vector<std::pair<int, double>> &knn,
   if (normalized) {
     auto weights = parlay::delayed_tabulate(
         knn.size(), [&](std::size_t i) { return knn[i].second; });
-    max_weight = *parlay::max_element(weights);
+    max_weight = sqrt(*parlay::max_element(weights));
+    std::cout << "max_weght: " << max_weight << std::endl;
   }
 
   for (int u = 0; u < n; ++u) {
     for (int j = 0; j < k; ++j) {
-      const auto [v, w] = knn[u * k + j];
+      auto [v, w] = knn[u * k + j];
+      if (u==v) continue;
+      w = sqrt(w);
       if (normalized) {
-        outFile << u << " " << v << " " << w << '\n';
+        outFile << u << "\t" << v << "\t" << 1.0 / (1.0 + (w / max_weight)) << '\n';
       } else {
-        outFile << u << " " << v << " " << 1 / (1 + (w / max_weight)) << '\n';
+        outFile << u << "\t" << v << "\t" << w << '\n';
       }
     }
   }

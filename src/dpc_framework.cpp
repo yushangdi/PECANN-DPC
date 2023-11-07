@@ -69,7 +69,7 @@ ClusteringResult dpc_framework(
   output_metadata["Find knn time"] = t.next_time();
   // Output knn graph
   if (knn_graph_path != "") {
-    writeKnnGraphToFile(knn, raw_data.num_data, K, knn_graph_path, true);
+    writeKnnGraphToFile(knn, raw_data.num_data, K + 1, knn_graph_path, true);
   }
   t.next_time();
 
