@@ -52,12 +52,12 @@ jobs:
     - name: Run CMake
       run: |
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPYTHON_EXECUTABLE=/opt/hostedtoolcache/Python/3.8.18/x64/bin/python3.8
 
     - name: Build with Make
       run: |
         cd build
-        cmake --build . --config ${{env.BUILD_TYPE}}
+        cmake --build . --config ${{env.BUILD_TYPE}} -DPYTHON_EXECUTABLE=/opt/hostedtoolcache/Python/3.8.18/x64/bin/python3.8
         
     - name: Download mnist
       run: bin/download_mnist.sh
