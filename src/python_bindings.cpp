@@ -17,18 +17,17 @@ namespace nb = nanobind;
 using namespace nb::literals;
 
 // TODO(Josh): Make data requirment more flexible? e.g. allow doubles or ints
-DPC::ClusteringResult
-dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
-                      nb::c_contig>
-              data,
-          const unsigned K, const unsigned L, const unsigned Lnn,
-          std::shared_ptr<DPC::CenterFinder<double>> center_finder,
-          std::shared_ptr<DPC::DensityComputer> density_computer,
-          const std::string &output_path,
-          const std::string &decision_graph_path, const unsigned Lbuild,
-          const unsigned max_degree, const float alpha,
-          const unsigned num_clusters, const std::string &method_str,
-          const std::string &graph_type_str) {
+DPC::ClusteringResult dpc_numpy(
+    nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
+                nb::c_contig>
+        data,
+    const unsigned K, const unsigned L, const unsigned Lnn,
+    std::shared_ptr<DPC::CenterFinder<double>> center_finder,
+    std::shared_ptr<DPC::DensityComputer> density_computer,
+    const std::string &output_path, const std::string &decision_graph_path,
+    const std::string &knn_graph_path, const unsigned Lbuild,
+    const unsigned max_degree, const float alpha, const unsigned num_clusters,
+    const std::string &method_str, const std::string &graph_type_str) {
 
   // For some reason default arguments in the nanobind call below aren't
   // working, so need to check for null and set here
@@ -57,20 +56,19 @@ dpc_numpy(nb::ndarray<float, nb::shape<nb::any, nb::any>, nb::device::cpu,
 
   return DPC::dpc_framework(K, L, Lnn, raw_data, center_finder,
                             density_computer, output_path, decision_graph_path,
-                            Lbuild, max_degree, alpha, num_clusters, method,
-                            graph_type);
+                            knn_graph_path, Lbuild, max_degree, alpha,
+                            num_clusters, method, graph_type);
 }
 
-DPC::ClusteringResult
-dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
-              const unsigned Lnn,
-              std::shared_ptr<DPC::CenterFinder<double>> center_finder,
-              std::shared_ptr<DPC::DensityComputer> density_computer,
-              const std::string &output_path,
-              const std::string &decision_graph_path, const unsigned Lbuild,
-              const unsigned max_degree, const float alpha,
-              const unsigned num_clusters, const std::string &method_str,
-              const std::string &graph_type_str) {
+DPC::ClusteringResult dpc_filenames(
+    const std::string &data_path, const unsigned K, const unsigned L,
+    const unsigned Lnn,
+    std::shared_ptr<DPC::CenterFinder<double>> center_finder,
+    std::shared_ptr<DPC::DensityComputer> density_computer,
+    const std::string &output_path, const std::string &decision_graph_path,
+    const std::string &knn_graph_path, const unsigned Lbuild,
+    const unsigned max_degree, const float alpha, const unsigned num_clusters,
+    const std::string &method_str, const std::string &graph_type_str) {
 
   if (!center_finder) {
     center_finder = std::make_shared<DPC::ThresholdCenterFinder<double>>();
@@ -86,10 +84,10 @@ dpc_filenames(const std::string &data_path, const unsigned K, const unsigned L,
 
   RawDataset raw_data(data_path);
 
-  DPC::ClusteringResult result =
-      DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, density_computer,
-                         output_path, decision_graph_path, Lbuild, max_degree,
-                         alpha, num_clusters, method, graph_type);
+  DPC::ClusteringResult result = DPC::dpc_framework(
+      K, L, Lnn, raw_data, center_finder, density_computer, output_path,
+      decision_graph_path, knn_graph_path, Lbuild, max_degree, alpha,
+      num_clusters, method, graph_type);
 
   aligned_free(raw_data.data);
 
@@ -100,9 +98,9 @@ NB_MODULE(dpc_ann_ext, m) {
   m.def("dpc_filenames", &dpc_filenames, "data_path"_a, "K"_a = 6, "L"_a = 12,
         "Lnn"_a = 4, "center_finder"_a = nullptr,
         "density_computer"_a = nullptr, "output_path"_a = "",
-        "decision_graph_path"_a = "", "Lbuild"_a = 12, "max_degree"_a = 16,
-        "alpha"_a = 1.2, "num_clusters"_a = 4, "method"_a = "Doubling",
-        "graph_type"_a = "Vamana",
+        "decision_graph_path"_a = "", "knn_graph_path"_a = "", "Lbuild"_a = 12,
+        "max_degree"_a = 16, "alpha"_a = 1.2, "num_clusters"_a = 4,
+        "method"_a = "Doubling", "graph_type"_a = "Vamana",
         "This function clusters the passed in numpy data and returns a "
         "ClusteringResult object with the clusters and metadata about the "
         "clustering process (including fine grained timing results).");
@@ -111,9 +109,9 @@ NB_MODULE(dpc_ann_ext, m) {
   m.def("dpc_numpy", &dpc_numpy, "data"_a.noconvert(), "K"_a = 6, "L"_a = 12,
         "Lnn"_a = 4, "center_finder"_a = nullptr,
         "density_computer"_a = nullptr, "output_path"_a = "",
-        "decision_graph_path"_a = "", "Lbuild"_a = 12, "max_degree"_a = 16,
-        "alpha"_a = 1.2, "num_clusters"_a = 4, "method"_a = "Doubling",
-        "graph_type"_a = "Vamana",
+        "decision_graph_path"_a = "", "knn_graph_path"_a = "", "Lbuild"_a = 12,
+        "max_degree"_a = 16, "alpha"_a = 1.2, "num_clusters"_a = 4,
+        "method"_a = "Doubling", "graph_type"_a = "Vamana",
         "This function clusters the passed in files and returns a "
         "ClusteringResult object with the clusters and metadata about the "
         "clustering process (including fine grained timing results).");

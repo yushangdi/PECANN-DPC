@@ -1,5 +1,6 @@
 #pragma once
 
+#include "parlay/primitives.h"
 #include <boost/algorithm/string.hpp> // For boost::to_lower
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -144,6 +145,38 @@ inline void writeVectorToFile(const std::vector<T> &vec,
   }
   for (const T &item : vec) {
     outFile << item << '\n';
+  }
+  outFile.close();
+}
+
+// Write knn to `filepath`. `knn` stores the `k` nearest neighbors of `n`
+// points. If `normalized`, the weights are normalized by the maximum weight,
+// and then by (1/(1+w)).
+inline void writeKnnGraphToFile(const std::vector<std::pair<int, double>> &knn,
+                                const std::size_t n,
+                                const int k, const std::string &filepath, bool normalized) {
+  std::ofstream outFile(filepath);
+  if (!outFile) {
+    std::cerr << "Error opening file: " << filepath << std::endl;
+    return;
+  }
+  assert(knn.size() == n * k);
+  double max_weight;
+  if (normalized) {
+    auto weights = parlay::delayed_tabulate(
+        knn.size(), [&](std::size_t i) { return knn[i].second; });
+    max_weight = *parlay::max_element(weights);
+  }
+
+  for (int u = 0; u < n; ++u) {
+    for (int j = 0; j < k; ++j) {
+      const auto [v, w] = knn[u * k + j];
+      if (normalized) {
+        outFile << u << " " << v << " " << w << '\n';
+      } else {
+        outFile << u << " " << v << " " << 1 / (1 + (w / max_weight)) << '\n';
+      }
+    }
   }
   outFile.close();
 }
