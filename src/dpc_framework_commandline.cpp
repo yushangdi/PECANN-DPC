@@ -9,7 +9,7 @@ namespace po = boost::program_options;
 int main(int argc, char **argv) {
   using Method = DPC::Method;
   using GraphType = DPC::GraphType;
-  std::string query_file, output_file, decision_graph_path;
+  std::string query_file, output_file, decision_graph_path, knn_graph_path;
   float density_cutoff, dist_cutoff, center_density_cutoff;
   unsigned int K = 6;
   unsigned int L = 12;
@@ -45,6 +45,9 @@ int main(int argc, char **argv) {
       "decision_graph_path",
       po::value<std::string>(&decision_graph_path)->default_value(""),
       "Output decision_graph_path")(
+      "knn_graph_path",
+      po::value<std::string>(&knn_graph_path)->default_value(""),
+      "Output knn_graph_path")(
       "density_cutoff", po::value<float>(&density_cutoff)->default_value(0),
       "Density below which points are treated as noise")(
       "center_density_cutoff",
@@ -121,6 +124,6 @@ int main(int argc, char **argv) {
   // TODO: If we want to keep mainintaing this command line, add options for
   // other center finders
   DPC::dpc_framework(K, L, Lnn, raw_data, center_finder, density_computer,
-                     output_file, decision_graph_path, Lbuild, max_degree,
-                     alpha, num_clusters, method, graph_type);
+                     output_file, decision_graph_path, knn_graph_path, Lbuild,
+                     max_degree, alpha, num_clusters, method, graph_type);
 }

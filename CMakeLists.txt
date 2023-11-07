@@ -25,9 +25,23 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# -------------------------------------------------
+# Include parlay
+
+include(FetchContent)
+FetchContent_Declare(parlaylib
+  GIT_REPOSITORY  https://github.com/cmuparlay/parlaylib.git
+  GIT_TAG         master
+)
+FetchContent_GetProperties(parlaylib)
+if(NOT parlaylib_POPULATED)
+  FetchContent_Populate(parlaylib)  
+  add_subdirectory(${parlaylib_SOURCE_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 # -------------------------- Includes ------------------------------------------
 
-include_directories("ParlayANN/parlaylib/include")
+# include_directories("ParlayANN/parlaylib/include")
 include_directories(".")
 
 # --------------------- Create CC Library --------------------------------------
@@ -40,7 +54,7 @@ set(CC_SOURCES
 
 add_library(dpc_ann_cc STATIC ${CC_SOURCES})
 target_compile_options(dpc_ann_cc PRIVATE ${COMPILE_OPTIONS})
-target_link_libraries(dpc_ann_cc Threads::Threads)
+target_link_libraries(dpc_ann_cc Threads::Threads parlay)
 
 set(CC_SOURCES_FRAMEWORK
     src/dpc_framework.cpp
@@ -52,7 +66,7 @@ set(CC_SOURCES_FRAMEWORK
 
 add_library(dpc_ann_framework_cc STATIC ${CC_SOURCES_FRAMEWORK})
 target_compile_options(dpc_ann_framework_cc PRIVATE ${COMPILE_OPTIONS})
-target_link_libraries(dpc_ann_framework_cc Threads::Threads)
+target_link_libraries(dpc_ann_framework_cc Threads::Threads parlay)
 
 # -------------------- Add Test Executable ----------------------------------
 
@@ -62,7 +76,7 @@ set(TEST_SOURCES
 )
 
 add_executable(dpc_tests ${TEST_SOURCES})
-target_link_libraries(dpc_tests gtest_main gmock_main dpc_ann_framework_cc)
+target_link_libraries(dpc_tests gtest_main gmock_main dpc_ann_framework_cc parlay)
 target_compile_options(dpc_tests PRIVATE ${COMPILE_OPTIONS})
 
 enable_testing()
