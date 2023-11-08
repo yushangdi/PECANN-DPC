@@ -194,7 +194,10 @@ def run_dpc_ann_configurations(
         p = multiprocessing.Process(target=try_command, args=(graph_type, command))
         p.start()
 
-        exitcode = p.join(timeout=timeout_s)
+        if graph_type.startswith("BruteForce"):
+            exitcode = p.join()  # No timeout when doing brute force
+        else:
+            exitcode = p.join(timeout=timeout_s)
 
         if p.is_alive():
             p.terminate()
