@@ -3,6 +3,7 @@ pandas
 tqdm
 pytest
 nanobind
+torchvision
 matplotlib
 scipy
 scikit-learn
