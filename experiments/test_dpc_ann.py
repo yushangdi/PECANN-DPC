@@ -40,16 +40,19 @@ def create_density_computer(density_info, data):
         return dpc_ann.ExpSquaredDensityComputer()
     if density_info == "mutual":
         return dpc_ann.MutualKNNDensityDensityComputer()
+    raise ValueError(f"Unknown density type {density_info}")
 
 
 def run_dpc_ann_configurations(
     dataset,
     timeout_s,
     num_clusters,
-    graph_types=None,
-    search_range=None,
+    graph_types=["Vamana", "HCNNG", "pyNNDescent"],
+    search_range="Default",  # [8, 16, 32, 64] unless imagenet, then also 128 and 256
     compare_against_gt=True,
     compare_against_bf=True,
+    density_methods=["kth"],
+    Ks=[6],
     results_file_prefix="",
 ):
     cluster_results_file = create_results_file(prefix=results_file_prefix)
@@ -59,13 +62,10 @@ def run_dpc_ann_configurations(
     dataset_folder = make_results_folder(dataset)
     data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
-    if search_range == None:
+    if search_range == "Default":
         search_range = [8, 16, 32, 64]
         if dataset == "imagenet":
             search_range += [128, 256]
-
-    if graph_types == None:
-        graph_types = ["Vamana", "HCNNG", "pyNNDescent"]
 
     for (
         max_degree,
@@ -74,32 +74,32 @@ def run_dpc_ann_configurations(
         beam_search_density,
     ) in itertools.product(search_range, search_range, search_range, search_range):
         for alpha in [
-            1.1
-        ]:  # For now just always use alpha = 1.1, seems to perform the best
-            # for density in ["kth", "normalized", "race", "exp", "mutual"]:
-            for density in ["kth"]:
-                for graph_type in graph_types:
-                    method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}"
-                    command_line = {
-                        "max_degree": max_degree,
-                        "alpha": alpha,
-                        "Lbuild": beam_search_construction,
-                        "L": beam_search_density,
-                        "Lnn": beam_search_clustering,
-                        "graph_type": graph_type,
-                        "density_computer": create_density_computer(density, data),
-                        "center_finder": dpc_ann.ProductCenterFinder(
-                            num_clusters=num_clusters,
-                            use_reweighted_density=(density == "normalized"),
-                        ),
-                        "K": 6,
-                    }
-                    if graph_type in ["pyNNDescent", "HCNNG"]:
-                        num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
-                        command_line["num_clusters"] = num_clusters_in_build
-                        method += "_" + str(num_clusters_in_build)
+            1.1  # For now just always use alpha = 1.1, seems to perform the best
+        ]:
+            for K in Ks:
+                for density in density_methods:
+                    for graph_type in graph_types:
+                        method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}_{K}"
+                        command_line = {
+                            "max_degree": max_degree,
+                            "alpha": alpha,
+                            "Lbuild": beam_search_construction,
+                            "L": max(2 * K, beam_search_density),
+                            "Lnn": beam_search_clustering,
+                            "graph_type": graph_type,
+                            "density_computer": create_density_computer(density, data),
+                            "center_finder": dpc_ann.ProductCenterFinder(
+                                num_clusters=num_clusters,
+                                use_reweighted_density=(density == "normalized"),
+                            ),
+                            "K": K,
+                        }
+                        if graph_type in ["pyNNDescent", "HCNNG"]:
+                            num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
+                            command_line["num_clusters"] = num_clusters_in_build
+                            method += "_" + str(num_clusters_in_build)
 
-                    options.append((method, command_line))
+                        options.append((method, command_line))
 
     ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
     ground_truth_decision_graph_path = (
@@ -189,7 +189,15 @@ if __name__ == "__main__":
     parser.add_argument("--dont_compare_against_bf", default=False, action="store_true")
     parser.add_argument("-search_range", nargs="+", type=int)
     parser.add_argument("-graph_types", nargs="+", type=str)
+    parser.add_argument("-Ks", nargs="+", type=int)
+    parser.add_argument("-density_methods", nargs="+", type=str)
     args = parser.parse_args()
+
+    extras = {}
+    arg_dict = vars(args)
+    for optional in ["search_range", "graph_types", "Ks", "density_methods"]:
+        if arg_dict[optional] != None:
+            extras[optional] = arg_dict[optional]
 
     run_dpc_ann_configurations(
         dataset=args.dataset,
@@ -197,7 +205,6 @@ if __name__ == "__main__":
         num_clusters=args.num_clusters,
         compare_against_gt=not args.dont_compare_against_gt,
         compare_against_bf=not args.dont_compare_against_bf,
-        search_range=args.search_range,
-        graph_types=args.graph_types,
         results_file_prefix=args.results_file_prefix,
+        **extras,
     )
