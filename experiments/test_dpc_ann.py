@@ -43,6 +43,82 @@ def create_density_computer(density_info, data):
     raise ValueError(f"Unknown density type {density_info}")
 
 
+def get_configurations_to_run(
+    dataset,
+    num_clusters,
+    graph_types,
+    search_range,
+    compare_against_bf,
+    density_methods,
+    Ks,
+    dataset_folder,
+    data,
+):
+    configurations = []
+
+    alpha = 1.1  # For now just always use alpha = 1.1, seems to perform the best
+
+    for K in Ks:
+        for density_method in density_methods:
+            ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce_{density_method}_{K}.cluster"
+            run_bf = graph_types[0] == "BruteForce" or (
+                compare_against_bf and not os.path.isfile(ground_truth_cluster_path)
+            )
+            if run_bf:
+                command_line = {
+                    "graph_type": "BruteForce",
+                    "output_path": ground_truth_cluster_path,
+                    "density_computer": create_density_computer(density_method, data),
+                    "center_finder": dpc_ann.ProductCenterFinder(
+                        num_clusters=num_clusters,
+                        use_reweighted_density=(density_method == "normalized"),
+                    ),
+                    "K": K,
+                }
+                configurations.append(
+                    (f"BruteForce_{density_method}_{K}", command_line)
+                )
+
+            for graph_type in graph_types:
+                if graph_type == "BruteForce":
+                    continue
+
+                for (
+                    max_degree,
+                    beam_search_construction,
+                    beam_search_clustering,
+                    beam_search_density,
+                ) in itertools.product(
+                    search_range, search_range, search_range, search_range
+                ):
+                    method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density_method}_{K}"
+                    command_line = {
+                        "max_degree": max_degree,
+                        "alpha": alpha,
+                        "Lbuild": beam_search_construction,
+                        "L": max(2 * K, beam_search_density),
+                        "Lnn": beam_search_clustering,
+                        "graph_type": graph_type,
+                        "density_computer": create_density_computer(
+                            density_method, data
+                        ),
+                        "center_finder": dpc_ann.ProductCenterFinder(
+                            num_clusters=num_clusters,
+                            use_reweighted_density=(density_method == "normalized"),
+                        ),
+                        "K": K,
+                    }
+                    if graph_type in ["pyNNDescent", "HCNNG"]:
+                        num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
+                        command_line["num_clusters"] = num_clusters_in_build
+                        # TODO: For now not recording num clusters in graph building because always choosing 1
+                        # method += "_" + str(num_clusters_in_build)
+
+                    configurations.append((method, command_line))
+
+    return configurations
+
+
 def run_dpc_ann_configurations(
     dataset,
     timeout_s,
@@ -57,8 +133,6 @@ def run_dpc_ann_configurations(
 ):
     cluster_results_file = create_results_file(prefix=results_file_prefix)
 
-    options = []
-
     dataset_folder = make_results_folder(dataset)
     data = np.load(f"data/{dataset_folder}/{dataset}.npy").astype("float32")
 
@@ -67,52 +141,20 @@ def run_dpc_ann_configurations(
         if dataset == "imagenet":
             search_range += [128, 256]
 
-    for (
-        max_degree,
-        beam_search_construction,
-        beam_search_clustering,
-        beam_search_density,
-    ) in itertools.product(search_range, search_range, search_range, search_range):
-        for alpha in [
-            1.1  # For now just always use alpha = 1.1, seems to perform the best
-        ]:
-            for K in Ks:
-                for density in density_methods:
-                    for graph_type in graph_types:
-                        method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density}_{K}"
-                        command_line = {
-                            "max_degree": max_degree,
-                            "alpha": alpha,
-                            "Lbuild": beam_search_construction,
-                            "L": max(2 * K, beam_search_density),
-                            "Lnn": beam_search_clustering,
-                            "graph_type": graph_type,
-                            "density_computer": create_density_computer(density, data),
-                            "center_finder": dpc_ann.ProductCenterFinder(
-                                num_clusters=num_clusters,
-                                use_reweighted_density=(density == "normalized"),
-                            ),
-                            "K": K,
-                        }
-                        if graph_type in ["pyNNDescent", "HCNNG"]:
-                            num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
-                            command_line["num_clusters"] = num_clusters_in_build
-                            method += "_" + str(num_clusters_in_build)
+    if "BruteForce" in graph_types and graph_types[0] != "BruteForce":
+        raise ValueError("If running BruteForce, BruteForce must come first in list.")
 
-                        options.append((method, command_line))
-
-    ground_truth_cluster_path = f"results/{dataset_folder}/{dataset}_BruteForce.cluster"
-    ground_truth_decision_graph_path = (
-        f"results/{dataset_folder}/{dataset}_BruteForce.dg"
+    configurations = get_configurations_to_run(
+        dataset,
+        num_clusters,
+        graph_types,
+        search_range,
+        compare_against_bf,
+        density_methods,
+        Ks,
+        dataset_folder,
+        data,
     )
-    if not os.path.isfile(ground_truth_cluster_path) and compare_against_bf:
-        dpc_ann.dpc_numpy(
-            graph_type="BruteForce",
-            decision_graph_path=ground_truth_decision_graph_path,
-            output_path=ground_truth_cluster_path,
-            data=data,
-            center_finder=dpc_ann.ProductCenterFinder(num_clusters=num_clusters),
-        )
 
     def try_command(graph_type, command):
         prefix = f"results/{dataset_folder}/{dataset}_{graph_type}"
@@ -137,8 +179,9 @@ def run_dpc_ann_configurations(
 
         # Eval cluster against brute force DPC
         if compare_against_bf:
+            bf_extension = "_".join(graph_type.split("_")[-2:])
             eval_cluster_and_write_results(
-                gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
+                gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce_{bf_extension}.cluster",
                 found_clusters=np.array(clustering_result.clusters),
                 compare_to_ground_truth=False,
                 results_file=cluster_results_file,
@@ -147,7 +190,7 @@ def run_dpc_ann_configurations(
                 time_reports=clustering_result.metadata,
             )
 
-    for graph_type, command in tqdm(options):
+    for graph_type, command in tqdm(configurations):
         p = multiprocessing.Process(target=try_command, args=(graph_type, command))
         p.start()
 
