@@ -23,7 +23,7 @@ for dataset, num_clusters, param_value in [
         graph_types=["Vamana"],
         search_range=[param_value],
         compare_against_bf=False,
-        density_methods=["kth", "normalized", "exp_sum", "sum_exp", "sum"],
+        density_methods=["kth", "normalized", "exp-sum", "sum-exp", "sum"],
         Ks=Ks,
         results_file_prefix=f"varying_k_{dataset}",
     )
