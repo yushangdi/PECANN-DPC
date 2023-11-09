@@ -36,8 +36,12 @@ def create_density_computer(density_info, data):
             data_dim=data.shape[1],
             lsh_family=dpc_ann.CosineFamily(),
         )
-    if density_info == "exp":
+    if density_info == "exp_sum":
         return dpc_ann.ExpSquaredDensityComputer()
+    if density_info == "sum_exp":
+        return dpc_ann.SumExpDensityComputer()
+    if density_info == "sum":
+        return dpc_ann.TopKSumDensityComputer()
     if density_info == "mutual":
         return dpc_ann.MutualKNNDensityDensityComputer()
     raise ValueError(f"Unknown density type {density_info}")

@@ -31,8 +31,9 @@ def main():
         "pyNNDescent": "tab:green",
         "HCNNG": "tab:orange",
         "kmeans": "tab:red",
+        "fastdp": "tab:purple",
     }
-    methods = ["Vamana", "pyNNDescent", "HCNNG", "kmeans"]
+    methods = ["Vamana", "pyNNDescent", "HCNNG", "kmeans", "fastdp"]
 
     dfs = {}
 

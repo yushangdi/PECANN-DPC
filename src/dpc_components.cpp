@@ -343,7 +343,7 @@ std::vector<double> ExpSquaredDensityComputer::operator()() {
   parlay::parallel_for(0, data_num, [&](int i) {
     auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
       const double dist = this->knn_[i * k + j].second;
-      return dist;
+      return dist * dist;
     });
     double density = exp(-1.0 * parlay::reduce(knn_densities) / k);
     densities[i] = density;
@@ -416,6 +416,49 @@ std::vector<double>
 RaceDensityComputer::reweight_density(const std::vector<double> &densities) {
   return {};
 }
+
+
+std::vector<double> SumExpDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
+      const double dist = std::exp(-this->knn_[i * k + j].second);
+      return dist * dist;
+    });
+    double density = parlay::reduce(knn_densities) / k;
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double> SumExpDensityComputer::reweight_density(
+    const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
+
+std::vector<double> TopKSumDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
+      const double dist = this->knn_[i * k + j].second;
+      return dist;
+    });
+    double density = -parlay::reduce(knn_densities);
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double> TopKSumDensityComputer::reweight_density(
+    const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
 
 template <typename T>
 std::set<int> ThresholdCenterFinder<T>::operator()(

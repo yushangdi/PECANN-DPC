@@ -137,6 +137,15 @@ NB_MODULE(dpc_ann_ext, m) {
 
   nb::class_<DPC::DensityComputer>(m, "DensityComputer");
 
+  nb::class_<DPC::SumExpDensityComputer, DPC::DensityComputer>(
+      m, "SumExpDensityComputer")
+      .def(nb::init());
+
+  nb::class_<DPC::TopKSumDensityComputer, DPC::DensityComputer>(
+      m, "TopKSumDensityComputer")
+      .def(nb::init());
+
+
   nb::class_<DPC::KthDistanceDensityComputer, DPC::DensityComputer>(
       m, "KthDistanceDensityComputer")
       .def(nb::init());
