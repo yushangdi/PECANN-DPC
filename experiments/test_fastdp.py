@@ -57,7 +57,7 @@ cluster_result_path = f"results/{args.dataset}/fastdp.cluster"
 results_file = create_results_file("fastdp")
 
 window = args.window
-for endcond in [0.001, 0.0001, 0.00001]:
+for endcond in [0.0001]:
     start = time.time()
     (clusters, peak_ids) = fastdp(
         x,
@@ -83,6 +83,6 @@ for endcond in [0.001, 0.0001, 0.00001]:
         compare_to_ground_truth=True,
         results_file=results_file,
         dataset=args.dataset,
-        method=f"fastdp_{window}_{endcond}_{num_clusters}",
+        method=f"fastdp_{window}_{endcond}_{args.K}",
         time_reports=times,
     )
