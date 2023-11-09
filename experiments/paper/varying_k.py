@@ -25,5 +25,5 @@ for dataset, num_clusters, param_value in [
         compare_against_bf=False,
         density_methods=["kth", "normalized", "exp_sum", "sum_exp", "sum"],
         Ks=Ks,
-        results_file_prefix=f"varying_k_{dataset}"
+        results_file_prefix=f"varying_k_{dataset}",
     )
