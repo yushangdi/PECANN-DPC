@@ -1,4 +1,12 @@
-from ..test_dpc_ann import run_dpc_ann_configurations
+import os
+from pathlib import Path
+import sys
+
+abspath = Path(__file__).resolve().parent.parent
+os.chdir(abspath)
+sys.path.append(str(abspath))
+
+from test_dpc_ann import run_dpc_ann_configurations
 
 Ks = [4, 8, 16, 32, 64]
 for dataset, num_clusters, param_value in [
