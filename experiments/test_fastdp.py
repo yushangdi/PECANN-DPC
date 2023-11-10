@@ -80,7 +80,7 @@ for endcond in [0.0001]:
     eval_cluster_and_write_results(
         gt_cluster_path=f"data/{args.dataset}/{args.dataset}.gt",
         found_clusters=cluster_result_path,
-        compare_to_ground_truth=True,
+        comparing_to_ground_truth=True,
         results_file=results_file,
         dataset=args.dataset,
         method=f"fastdp_{window}_{endcond}_{args.K}",

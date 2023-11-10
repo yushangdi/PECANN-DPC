@@ -18,7 +18,7 @@ for dataset, num_clusters, param_value in [
 ]:
     run_dpc_ann_configurations(
         dataset,
-        timeout_s=200,
+        timeout_s=2000,
         num_clusters=num_clusters,
         graph_types=["Vamana"],
         search_range=[param_value],

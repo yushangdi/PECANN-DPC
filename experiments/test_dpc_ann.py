@@ -174,7 +174,7 @@ def run_dpc_ann_configurations(
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
                 found_clusters=np.array(clustering_result.clusters),
-                compare_to_ground_truth=True,
+                comparing_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
@@ -187,7 +187,7 @@ def run_dpc_ann_configurations(
             eval_cluster_and_write_results(
                 gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce_{bf_extension}.cluster",
                 found_clusters=np.array(clustering_result.clusters),
-                compare_to_ground_truth=False,
+                comparing_to_ground_truth=False,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
