@@ -121,6 +121,7 @@ def eval_cluster_and_write_results(
             + [str(cluster_results[h]) for h in quality_headers]
         )
         f.write(",".join(fields) + "\n")
+    return cluster_results
 
 
 def make_results_folder(dataset):
