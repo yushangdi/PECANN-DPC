@@ -18,10 +18,6 @@ from experiments.test_dpc_ann import run_dpc_ann_configurations
 # parlay bug, I'm not sure, it might depend on how python isolates tests.
 
 
-# Test both old and new framework gets good ARI, and ARI is pretty close
-# Note that the ARI is not exactly the same between the old code and the new
-# framework, because of the neighbor optimization, but if that is removed it
-# is indeed exactly the same.
 def test_mnist_ari():
     results = pd.read_csv(
         run_dpc_ann_configurations(
@@ -33,9 +29,18 @@ def test_mnist_ari():
             compare_against_gt=True,
         )
     )
-    assert len(results) == 2
+    assert len(results) == 4
     assert (results["ARI"][results["comparison"] == "ground truth"] > 0.3).all()
-    assert (results["ARI"][results["comparison"] == "brute force"] > 0.95).all()
+
+    brute_force_results = results[results["method"].str.startswith("BruteForce")]
+    vamana_results = results[results["method"].str.startswith("Vamana")]
+    assert len(brute_force_results) == 2
+    assert len(vamana_results) == 2
+
+    assert (
+        brute_force_results["ARI"][results["comparison"] == "brute force"] == 1.0
+    ).all()
+    assert (vamana_results["ARI"][results["comparison"] == "brute force"] > 0.95).all()
 
 
 # Just test that we can run the basic experiments at all
