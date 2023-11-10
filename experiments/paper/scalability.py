@@ -73,7 +73,7 @@ for thread in threads:
         eval_cluster_and_write_results(
             gt_cluster_path=gt_path,
             found_clusters=np.array(clustering_result.clusters),
-            compare_to_ground_truth=False,
+            comparing_to_ground_truth=True,
             results_file=cluster_results_file,
             dataset="synthetic",
             method="Vamana_standard",

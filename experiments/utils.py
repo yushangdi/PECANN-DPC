@@ -88,7 +88,7 @@ def create_results_file(prefix=""):
 def eval_cluster_and_write_results(
     gt_cluster_path,
     found_clusters,
-    compare_to_ground_truth,
+    comparing_to_ground_truth,
     results_file,
     dataset,
     method,
@@ -114,7 +114,7 @@ def eval_cluster_and_write_results(
             [
                 dataset,
                 method,
-                "ground truth" if compare_to_ground_truth else "brute force",
+                "ground truth" if comparing_to_ground_truth else "brute force",
                 str(_num_threads()),
             ]
             + times
