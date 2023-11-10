@@ -26,12 +26,21 @@ num_clusters = 100
 
 current_threads = []
 core_groups = get_core_groups()
-for core in core_groups:
-    current_threads += core
+
+
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+
+threads = flatten(core_groups)
+
+print(threads)
+for thread in threads:
+    current_threads.append(thread)
     if len(current_threads) not in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
         continue
     os.environ["PARLAY_NUM_THREADS"] = f"{len(current_threads)}"
-    print(f"Running experiment with {len(current_threads)} threads")
+    print(f"Running experiment with {len(current_threads)} threads: {current_threads}")
 
     # TODO: Do we want to do something to ensure accuracy is above a certain threshold?
     for num_datapoints in num_datapoints_to_cluster:
