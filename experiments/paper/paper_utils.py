@@ -44,9 +44,9 @@ def generate_synthetic_data(num_datapoints, num_clusters, d=128, variance=0.05):
     shuffle(data, gt, random_state=0)
 
     closest_centers = _closest_center(data, cluster_centers)
-    best_ari = sklearn.metrics.adjusted_rand_score(gt, closest_centers)
-    print(points_per_cluster, "BEST", best_ari)
-    return data, gt, best_ari
+    # best_ari = sklearn.metrics.adjusted_rand_score(gt, closest_centers)
+    # print(points_per_cluster, "BEST", best_ari)
+    return data, gt
 
 
 def _get_siblings(thread_id):

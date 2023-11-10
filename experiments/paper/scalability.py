@@ -24,8 +24,12 @@ dataset_folder = make_results_folder("synthetic")
 
 def run_synthetic(current_threads, cluster_results_file):
     import dpc_ann
+
     os.environ["PARLAY_NUM_THREADS"] = f"{len(current_threads)}"
-    print(f"Running experiment with {len(current_threads)} threads: {current_threads}", flush=True)
+    print(
+        f"Running experiment with {len(current_threads)} threads: {current_threads}",
+        flush=True,
+    )
 
     # TODO: Do we want to do something to ensure accuracy is above a certain threshold?
     for num_datapoints in num_datapoints_to_cluster:
@@ -35,7 +39,7 @@ def run_synthetic(current_threads, cluster_results_file):
 
         os.sched_setaffinity(0, initial_threads)
 
-        data, gt, best_ari = generate_synthetic_data(num_datapoints, num_clusters)
+        data, gt = generate_synthetic_data(num_datapoints, num_clusters)
 
         os.sched_setaffinity(0, current_threads)
 
@@ -67,27 +71,26 @@ def run_synthetic(current_threads, cluster_results_file):
 
 
 def run_experiment():
-
     cluster_results_file = create_results_file(prefix="scalability")
 
     current_threads = []
     core_groups = get_core_groups()
 
-
     def flatten(l):
         return [item for sublist in l for item in sublist]
-
 
     threads = flatten(core_groups)
 
     print(threads)
     for thread in threads:
         current_threads.append(thread)
-        if len(current_threads) in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
-            p = multiprocessing.Process(target=run_synthetic, args=(current_threads, cluster_results_file))
+        if len(current_threads) in [4, 8, 16, 32, 64, 128, 256]:
+            p = multiprocessing.Process(
+                target=run_synthetic, args=(current_threads, cluster_results_file)
+            )
             p.start()
             p.join()
-    
+
 
 if __name__ == "__main__":
     run_experiment()
