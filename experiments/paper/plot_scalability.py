@@ -20,7 +20,7 @@ def plot_scalability_by_dataset_size(csv_file):
     plt.xscale("log")
     plt.yscale("log")
     plt.legend(title="Dataset")
-    plt.savefig("results/paper/synthetic.png")
+    plt.savefig("results/paper/synthetic.pdf")
 
 
 if __name__ == "__main__":

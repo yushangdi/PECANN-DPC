@@ -9,23 +9,30 @@ def plot_time_breakdown(df, dataset):
 
     time_columns = ["Built index time", "Compute dependent points time", "Find knn time", "Compute density time", "Find clusters time"]
 
+    to_plot = df[time_columns]
+
     plt.figure()
-    for i, (_, row) in enumerate(df.iterrows()):
-        plt.barh(i, row[time_columns], color=plt.cm.Paired.colors)
+
+    to_plot.plot.barh(stacked=True)
+
 
     plt.xlabel('Time (seconds)')
     plt.ylabel('Density Method')
-    plt.legend(time_columns, loc='upper right', bbox_to_anchor=(1.25, 1))
-    for i in range(len(time_columns)):
-        plt.gca().get_legend().legendHandles[i].set_color(plt.cm.Paired.colors[i])
 
     plt.yticks(range(len(df)), df['label_col'])
+    # plt.subplots_adjust(left=0.3, right=0.7)
+
+    # plt.tight_layout()    
+    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+    #       ncol=3, fancybox=True, shadow=True)
+    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
+
 
     # Add title
     plt.title('Clustering Time Breakdown')
 
     # Save the plot
-    plt.savefig(f'results/paper/time_breakdown_{dataset}.png')
+    plt.savefig(f'results/paper/time_breakdown_{dataset}.pdf', bbox_inches="tight")
 
 
 def plot_ari_vs_cluster_time(df, dataset):
