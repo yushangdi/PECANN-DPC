@@ -128,7 +128,7 @@ def run_dpc_ann_configurations(
     timeout_s,
     num_clusters,
     graph_types=["Vamana", "HCNNG", "pyNNDescent"],
-    search_range="Default",  # [8, 16, 32, 64] unless imagenet, then also 128 and 256
+    search_range="Default",  # Default is [8, 16, 32, 64] unless len(data) > 250,000, then also 128 and 256
     compare_against_gt=True,
     compare_against_bf=True,
     density_methods=["kth"],
@@ -142,7 +142,7 @@ def run_dpc_ann_configurations(
 
     if search_range == "Default":
         search_range = [8, 16, 32, 64]
-        if dataset == "imagenet":
+        if len(data) > 250000:
             search_range += [128, 256]
 
     if "BruteForce" in graph_types and graph_types[0] != "BruteForce":
