@@ -161,7 +161,6 @@ private:
   Sketching::RACE race_sketch_;
 };
 
-
 class SumExpDensityComputer : public DensityComputer {
 public:
   SumExpDensityComputer() : DensityComputer() {}
