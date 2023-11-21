@@ -18,10 +18,10 @@ def run_all_datasets_restrict_threads(current_threads):
 
     for dataset, num_clusters, param_value in [
         ("mnist", 10, 32),
-        # ("imagenet", 1000, 128),
-        # ("arxiv-clustering-s2s", 180, 64),
-        # ("reddit-clustering", 50, 64),
-        # ("birds", 525, 32),
+        ("imagenet", 1000, 128),
+        ("arxiv-clustering-s2s", 180, 64),
+        ("reddit-clustering", 50, 64),
+        ("birds", 525, 32),
     ]:
         run_dpc_ann_configurations(
             dataset,
