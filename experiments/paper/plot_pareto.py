@@ -14,13 +14,11 @@ def main():
         description="Plot a pareto frontier of total time vs. AMI"
     )
     parser.add_argument("folder", type=str, help="Folder to read csv files from.")
-    parser.add_argument("dataset", type=str, help="Dataset to plot from the csv files.")
     args = parser.parse_args()
 
     # Use glob to find files matching the pattern
     csv_files = glob.glob(args.folder + "/*pareto*.csv")
     df = pd.concat([pd.read_csv(path) for path in csv_files])
-    df = df[df["dataset"] == args.dataset]
 
     # Because some floats are too long for pandas to do this normally?
     df["ARI"] = pd.to_numeric(df["ARI"])
@@ -78,31 +76,14 @@ def main():
         plt.grid(True)
 
     for comparison in ["ground truth", "brute force"]:
-        new_plot(title=f"{args.dataset} ARI vs. clustering time")
+        new_plot(title=f"ARI vs. clustering time")
         for method in methods:
             plot_pareto(comparison, method)
 
         plt.legend(loc="lower right")
         plt.savefig(
-            f"results/graphs/pareto_frontier_plot_{args.dataset}_{comparison}.pdf",
+            f"results/paper/pareto_frontier_plot_{comparison}.pdf",
             bbox_inches="tight",
-        )
-
-    for method in methods:
-        new_plot(title=f'{method} grid search on {df.iloc[0]["dataset"]}')
-        comparison = "ground truth"
-        plot_pareto(comparison, method)
-        filtered_df, pareto_df = dfs[((comparison, method))]
-        plt.scatter(
-            filtered_df["Total time"],
-            filtered_df["ARI"],
-            color=colors[method],
-            alpha=0.5,
-        )
-
-        plt.legend(loc="lower right")
-        plt.savefig(
-            f"results/graphs/{method}_{args.dataset}_vs_gt.png", bbox_inches="tight"
         )
 
 
