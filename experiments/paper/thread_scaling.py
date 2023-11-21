@@ -48,7 +48,7 @@ def run_experiment():
     print(threads)
     for thread in threads:
         current_threads.append(thread)
-        if len(current_threads) in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+        if len(current_threads) in [1, 2, 4, 8, 16, 32, 60, 128, 256]:
             p = multiprocessing.Process(
                 target=run_all_datasets_restrict_threads, args=(current_threads,)
             )
