@@ -8,6 +8,7 @@ import sys
 from union_find import UnionFind
 import numpy as np
 import dpc_ann
+from tqdm import tqdm
 
 quality_headers = [
     "recall50",
@@ -34,26 +35,39 @@ def _num_threads():
 
 
 def _cluster_by_densities_distance_product(
-    graph, num_clusters, density_product, distance_product
+    graph, callback, num_cluster_values, density_product, distance_product
 ):
     parents = graph["Parent_ID"].to_numpy(copy=True)
     new_column = (np.log(graph["Density"]) * density_product) + (
         np.log(graph["Parent_Distance"]) * distance_product
     )
-    top_k_densities = new_column.nlargest(num_clusters)
-    parents[top_k_densities.index] = -1
 
     u = UnionFind()
     for i, p in enumerate(parents):
-        if p != -1:
-            u.unite(i, p)
-        else:
-            u.add(i)
+        u.add(i)
 
-    return np.array([u.find(i) for i in range(len(graph))])
+    results = []
+
+    num_clusters_so_far = len(graph)
+    with tqdm(total=len(num_cluster_values)) as pbar:
+        for i in np.argsort(new_column)[:-1]:
+            u.unite(i, parents[i])
+            num_clusters_so_far -= 1
+            if num_clusters_so_far in num_cluster_values:
+                results.append(
+                    (
+                        num_clusters_so_far,
+                        callback(np.array([u.find(i) for i in range(len(graph))])),
+                    )
+                )
+                pbar.update(1)
+
+    return results
 
 
-def product_cluster_dg(dg_path, num_clusters, density_product=1, distance_product=1):
+def product_cluster_dg(
+    dg_path, num_cluster_values, callback, density_product=1, distance_product=1
+):
     graph = pd.read_csv(
         dg_path, delimiter=" ", names=["Density", "Parent_Distance", "Parent_ID"]
     )
@@ -69,7 +83,8 @@ def product_cluster_dg(dg_path, num_clusters, density_product=1, distance_produc
 
     return _cluster_by_densities_distance_product(
         graph,
-        num_clusters=num_clusters,
+        callback,
+        num_cluster_values=num_cluster_values,
         density_product=density_product,
         distance_product=distance_product,
     )

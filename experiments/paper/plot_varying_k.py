@@ -24,7 +24,6 @@ def plot_time_breakdown(df, dataset, ax):
     ax.set_yticks(range(len(df)))
     ax.set_yticklabels(df["label_col"])
 
-    # ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
     ax.get_legend().remove()
 
     ax.set_title(dataset, fontsize=16)
@@ -89,13 +88,11 @@ def plot_combined_plots(folder_path):
 
         plt.suptitle(title, fontsize=20)
 
-        # Adjust layout
         plt.tight_layout()
 
         handles, labels = axes[0][1].get_legend_handles_labels()
         fig.legend(handles, labels, loc=(0.68, 0.3), fontsize=18)
 
-        # Save the combined plot
         combined_title = "_".join(title.split(" "))
         plt.savefig(f"results/paper/combined_{combined_title}.pdf")
 
