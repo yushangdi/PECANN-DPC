@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 def plot_scalability_by_dataset_size(csv_file):
     df = pd.read_csv(csv_file)
 
-    grouped_data = df.groupby("num_threads")
+    df["num_clusters"] = df["dataset"].str.split("_").str[2]
+    df["dataset_size"] = df["dataset"].str.split("_").str[1].astype("int64")
+    grouped_data = df.groupby("num_clusters")
 
     for name, group in grouped_data:
         plt.plot(
-            group["dataset"].str[9:].astype("int64"),
+            group["dataset_size"],
             group["Total time"],
-            label=f"{name} threads",
+            label=f"{name} clusters",
         )
 
     plt.xlabel("Dataset Size")
@@ -20,7 +22,7 @@ def plot_scalability_by_dataset_size(csv_file):
     plt.xscale("log")
     plt.yscale("log")
     plt.legend(title="Dataset")
-    plt.savefig("results/paper/synthetic.pdf")
+    plt.savefig("results/paper/dataset_size_scaling.pdf")
 
 
 if __name__ == "__main__":
@@ -31,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "csv_file",
         type=str,
-        help="Path to the CSV file containing the scalability experiment data data",
+        help="Path to the CSV file containing the dataset size scaling experiment data",
     )
 
     args = parser.parse_args()
