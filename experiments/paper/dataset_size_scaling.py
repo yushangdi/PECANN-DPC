@@ -23,7 +23,7 @@ dataset_folder = make_results_folder("synthetic")
 
 
 def run_synthetic():
-    cluster_results_file = create_results_file(prefix="thread_scaling")
+    cluster_results_file = create_results_file(prefix="dataset_size_scaling")
 
     for num_datapoints in num_datapoints_to_cluster:
         for num_clusters in num_clusters_options:

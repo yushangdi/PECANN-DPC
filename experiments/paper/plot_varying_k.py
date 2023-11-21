@@ -66,11 +66,13 @@ def plot_combined_plots(folder_path):
         "ARI vs Clustering Time",
         plot_ari_vs_cluster_time,
     ]:
+        is_clustering_time = title == "Clustering Time Breakdown"
         fig, axes = plt.subplots(
             num_rows,
             num_cols,
             figsize=(plot_scaler * num_cols, plot_scaler * num_rows),
             tight_layout=True,
+            sharey=is_clustering_time,
         )
         for i, csv_file in enumerate(csv_files):
             df = pd.read_csv(csv_file)
@@ -90,8 +92,11 @@ def plot_combined_plots(folder_path):
 
         plt.tight_layout()
 
-        handles, labels = axes[0][1].get_legend_handles_labels()
-        fig.legend(handles, labels, loc=(0.68, 0.3), fontsize=18)
+        handles, labels = axes[0][0].get_legend_handles_labels()
+        if is_clustering_time:
+            fig.legend(handles, labels, loc=(0.72, 0.3), fontsize=18)
+        else:
+            fig.legend(handles, labels, loc=(0.68, 0.3), fontsize=18)
 
         combined_title = "_".join(title.split(" "))
         plt.savefig(f"results/paper/combined_{combined_title}.pdf")
