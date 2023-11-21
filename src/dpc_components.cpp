@@ -341,10 +341,8 @@ std::vector<double> ExpSquaredDensityComputer::operator()() {
   int k = this->k_;
   std::vector<double> densities(data_num);
   parlay::parallel_for(0, data_num, [&](int i) {
-    auto knn_densities = parlay::delayed_seq<double>(k, [&](size_t j) {
-      const double dist = this->knn_[i * k + j].second;
-      return dist;
-    });
+    auto knn_densities = parlay::delayed_seq<double>(
+        k, [&](size_t j) { return this->knn_[i * k + j].second; });
     double density = exp(-1.0 * parlay::reduce(knn_densities) / k);
     densities[i] = density;
   });
@@ -417,6 +415,42 @@ RaceDensityComputer::reweight_density(const std::vector<double> &densities) {
   return {};
 }
 
+std::vector<double> SumExpDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(
+        k, [&](size_t j) { return std::exp(-this->knn_[i * k + j].second); });
+    double density = parlay::reduce(knn_densities) / k;
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double>
+SumExpDensityComputer::reweight_density(const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
+std::vector<double> TopKSumDensityComputer::operator()() {
+  int data_num = this->num_data_;
+  int k = this->k_;
+  std::vector<double> densities(data_num);
+  parlay::parallel_for(0, data_num, [&](int i) {
+    auto knn_densities = parlay::delayed_seq<double>(
+        k, [&](size_t j) { return std::sqrt(this->knn_[i * k + j].second); });
+    double density = -parlay::reduce(knn_densities);
+    densities[i] = density;
+  });
+  return densities;
+}
+
+std::vector<double>
+TopKSumDensityComputer::reweight_density(const std::vector<double> &densities) {
+  return std::vector<double>();
+}
+
 template <typename T>
 std::set<int> ThresholdCenterFinder<T>::operator()(
     const std::vector<T> &densities,
@@ -450,25 +484,26 @@ std::set<int> ProductCenterFinder<T>::operator()(
   if (use_reweighted_density_) {
     assert(re_weighted_densities.size() >= data_num);
   }
-  parlay::sequence<double> negative_products(data_num);
-  parlay::parallel_for(0, negative_products.size(), [&](int i) {
+  parlay::sequence<double> products(data_num);
+  parlay::parallel_for(0, products.size(), [&](int i) {
     if (use_reweighted_density_) {
-      negative_products[i] = -re_weighted_densities[i] * dep_ptrs[i].second;
+      products[i] = re_weighted_densities[i] * dep_ptrs[i].second;
     } else {
-      negative_products[i] = -densities[i] * dep_ptrs[i].second;
+      products[i] = densities[i] * dep_ptrs[i].second;
     }
     if (dep_ptrs[i].first == densities.size()) {
-      negative_products[i] = -std::numeric_limits<double>::infinity();
+      products[i] = std::numeric_limits<double>::infinity();
     }
   });
-  double centroid_threshold =
-      -1 * parlay::kth_smallest_copy(negative_products, num_clusters_);
 
-  auto ids = parlay::delayed_seq<int>(data_num, [](size_t i) { return i; });
-  auto centers_seq = parlay::filter(ids, [&](size_t i) {
-    return -negative_products[i] > centroid_threshold;
+  auto sorted_points =
+      parlay::sequence<int>::from_function(data_num, [](int i) { return i; });
+  parlay::sort_inplace(sorted_points, [&products](unsigned i, unsigned j) {
+    return products[i] > products[j];
   });
-  std::set<int> centers(centers_seq.begin(), centers_seq.end());
+
+  std::set<int> centers(sorted_points.begin(),
+                        sorted_points.begin() + num_clusters_);
   return centers;
 }
 

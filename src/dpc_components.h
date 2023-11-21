@@ -153,12 +153,36 @@ public:
   // Return the density.
   std::vector<double> operator()() override;
 
-  // Reweight the density of each point in $v$ based on knn.
+  // Return empty vector
   std::vector<double>
   reweight_density(const std::vector<double> &densities) override;
 
 private:
   Sketching::RACE race_sketch_;
+};
+
+class SumExpDensityComputer : public DensityComputer {
+public:
+  SumExpDensityComputer() : DensityComputer() {}
+
+  // density[i] = sum_i(exp(-squared dist to ith nn) for i in [1, k])
+  std::vector<double> operator()() override;
+
+  // Return empty vector
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
+};
+
+class TopKSumDensityComputer : public DensityComputer {
+public:
+  TopKSumDensityComputer() : DensityComputer() {}
+
+  // density[i] = -sum_i(dist to ith nn for i in [1, k])
+  std::vector<double> operator()() override;
+
+  // Return empty vector
+  std::vector<double>
+  reweight_density(const std::vector<double> &densities) override;
 };
 
 class WrappedDensityComputer : public DensityComputer {

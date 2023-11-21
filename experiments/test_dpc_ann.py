@@ -36,8 +36,12 @@ def create_density_computer(density_info, data):
             data_dim=data.shape[1],
             lsh_family=dpc_ann.CosineFamily(),
         )
-    if density_info == "exp":
+    if density_info == "exp-sum":
         return dpc_ann.ExpSquaredDensityComputer()
+    if density_info == "sum-exp":
+        return dpc_ann.SumExpDensityComputer()
+    if density_info == "sum":
+        return dpc_ann.TopKSumDensityComputer()
     if density_info == "mutual":
         return dpc_ann.MutualKNNDensityDensityComputer()
     raise ValueError(f"Unknown density type {density_info}")
@@ -124,7 +128,7 @@ def run_dpc_ann_configurations(
     timeout_s,
     num_clusters,
     graph_types=["Vamana", "HCNNG", "pyNNDescent"],
-    search_range="Default",  # [8, 16, 32, 64] unless imagenet, then also 128 and 256
+    search_range="Default",  # Default is [8, 16, 32, 64] unless len(data) > 250,000, then also 128 and 256
     compare_against_gt=True,
     compare_against_bf=True,
     density_methods=["kth"],
@@ -138,7 +142,7 @@ def run_dpc_ann_configurations(
 
     if search_range == "Default":
         search_range = [8, 16, 32, 64]
-        if dataset == "imagenet":
+        if len(data) > 250000:
             search_range += [128, 256]
 
     if "BruteForce" in graph_types and graph_types[0] != "BruteForce":
@@ -170,7 +174,7 @@ def run_dpc_ann_configurations(
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
                 found_clusters=np.array(clustering_result.clusters),
-                compare_to_ground_truth=True,
+                comparing_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
@@ -183,7 +187,7 @@ def run_dpc_ann_configurations(
             eval_cluster_and_write_results(
                 gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce_{bf_extension}.cluster",
                 found_clusters=np.array(clustering_result.clusters),
-                compare_to_ground_truth=False,
+                comparing_to_ground_truth=False,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,

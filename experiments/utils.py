@@ -25,7 +25,12 @@ time_check_headers = [
     "Find clusters time",
     "Total time",
 ]
-headers = [t for t in time_check_headers] + quality_headers
+misc_headers = ["dataset", "method", "comparison", "num_threads"]
+headers = misc_headers + time_check_headers + quality_headers
+
+
+def _num_threads():
+    return len(os.sched_getaffinity(0))
 
 
 def _cluster_by_densities_distance_product(
@@ -75,7 +80,7 @@ def create_results_file(prefix=""):
     cluster_results_file = f"results/cluster_analysis_{prefix}_{timestr}.csv"
 
     with open(cluster_results_file, "w") as f:
-        f.write("dataset,method,comparison," + ",".join(headers) + "\n")
+        f.write(",".join(headers) + "\n")
 
     return cluster_results_file
 
@@ -83,7 +88,7 @@ def create_results_file(prefix=""):
 def eval_cluster_and_write_results(
     gt_cluster_path,
     found_clusters,
-    compare_to_ground_truth,
+    comparing_to_ground_truth,
     results_file,
     dataset,
     method,
@@ -109,12 +114,14 @@ def eval_cluster_and_write_results(
             [
                 dataset,
                 method,
-                "ground truth" if compare_to_ground_truth else "brute force",
+                "ground truth" if comparing_to_ground_truth else "brute force",
+                str(_num_threads()),
             ]
             + times
             + [str(cluster_results[h]) for h in quality_headers]
         )
         f.write(",".join(fields) + "\n")
+    return cluster_results
 
 
 def make_results_folder(dataset):

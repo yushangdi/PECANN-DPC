@@ -44,7 +44,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
             eval_cluster_and_write_results(
                 gt_cluster_path=f"data/{dataset_folder}/{dataset}.gt",
                 found_clusters=f"{prefix}.cluster",
-                compare_to_ground_truth=True,
+                comparing_to_ground_truth=True,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
@@ -55,7 +55,7 @@ def run_basic_experiments(datasets=["s2", "s3", "unbalance"]):
             eval_cluster_and_write_results(
                 gt_cluster_path=f"results/{dataset_folder}/{dataset}_BruteForce.cluster",
                 found_clusters=f"{prefix}.cluster",
-                compare_to_ground_truth=False,
+                comparing_to_ground_truth=False,
                 results_file=cluster_results_file,
                 dataset=dataset,
                 method=graph_type,
