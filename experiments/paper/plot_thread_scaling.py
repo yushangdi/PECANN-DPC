@@ -31,6 +31,13 @@ def plot_scalability_by_number_of_threads(csv_folder):
     plt.xlabel("Number of Threads")
     plt.ylabel("Speedup")
     plt.legend(title="Dataset")
+
+    plt.axvline(30, c="black", linestyle=":")
+    plt.text(27.5, 0.75, "One complete NUMA node", rotation=90)
+
+    plt.axvline(60, c="black", linestyle=":")
+    plt.text(57.5, 0.75, "Two complete NUMA nodes", rotation=90)
+
     plt.savefig("results/paper/thread_scaling.pdf")
 
 

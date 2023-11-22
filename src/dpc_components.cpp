@@ -151,22 +151,23 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
   parlay::sequence<Tvec_point<T> *> start_points;
   start_points.push_back(data[query_id]);
 
-  int dep_ptr;
-  double minimum_dist;
+  int dep_ptr = densities.size();
+  double minimum_dist = std::numeric_limits<double>::max();
 
   if (round_limit == -1) {
     round_limit = densities.size(); // effectively no limit on round.
   }
 
   for (int round = 0; round < round_limit; ++round) {
+    if (L > 10000) {
+      break;
+    }
     auto [pairElts, dist_cmps] =
         beam_search<T>(data[query_id], data, start_points, L, data_dim, D);
     auto [beamElts, visitedElts] = pairElts;
 
     double query_density = densities[query_id];
     T *query_ptr = data[query_id]->coordinates.begin();
-    minimum_dist = std::numeric_limits<double>::max();
-    dep_ptr = densities.size();
     for (unsigned i = 0; i < beamElts.size(); i++) {
       const auto [id, dist] = beamElts[i];
       if (id == query_id)
