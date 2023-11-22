@@ -237,6 +237,7 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
   std::vector<unsigned> num_rounds(
       data_num, L); // the L used when dependent point is found.
   int prev_number = std::numeric_limits<int>::max();
+  auto start = std::chrono::system_clock::now();
   while (unfinished_points.size() > 300 &&
          prev_number > unfinished_points.size()) { // stop if unfinished_points
                                                    // number does not decrease
@@ -251,11 +252,14 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
         parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i) {
           return dep_ptrs[i].first == data_num;
         });
-    std::cout << "number: " << unfinished_points.size() << std::endl;
+    auto end = std::chrono::system_clock::now();
+    std::cout << "number: " << unfinished_points.size() << " " << (end - start).count() << std::endl;
   }
   std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
   bruteforce_dependent_point_all(data_num, unfinished_points, points, densities,
                                  dep_ptrs, D, data_dim);
+  auto end = std::chrono::system_clock::now();
+  std::cout << "bruteforce done " << (end - start).count() << std::endl;
   return dep_ptrs;
 }
 
