@@ -48,7 +48,9 @@ def run_experiment():
     print(threads)
     for thread in threads:
         current_threads.append(thread)
-        if len(current_threads) in [1, 2, 4, 8, 16, 32, 60, 128, 256]:
+        # Neccesary to rerun with just len(current_threads) in [60] and
+        # numactl -i all to get the best performance
+        if len(current_threads) in [1, 2, 4, 8, 16, 30, 60]:
             p = multiprocessing.Process(
                 target=run_all_datasets_restrict_threads, args=(current_threads,)
             )
