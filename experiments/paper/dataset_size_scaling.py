@@ -59,7 +59,7 @@ def run_synthetic():
     for num_datapoints in num_datapoints_to_cluster:
         for num_clusters in num_clusters_options:
             p = multiprocessing.Process(
-                target=run_synthetic,
+                target=run_synthetic_experiment,
                 args=(num_datapoints, num_clusters, cluster_results_file),
             )
             p.start()
