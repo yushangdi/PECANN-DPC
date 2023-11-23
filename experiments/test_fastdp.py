@@ -57,7 +57,7 @@ cluster_result_path = f"results/{args.dataset}/fastdp.cluster"
 results_file = create_results_file("fastdp")
 
 window = args.window
-for endcond in [0.0001]:
+for maxiter in [1, 2, 4, 8, 16, 32, 64]:
     start = time.time()
     (clusters, peak_ids) = fastdp(
         x,
@@ -66,8 +66,8 @@ for endcond in [0.0001]:
         num_neighbors=args.K,
         window=window,
         nndes_start=0.2,
-        maxiter=1000,
-        endcond=endcond,
+        maxiter=maxiter,
+        endcond=0,
         dtype="vec",
     )
 
@@ -83,6 +83,6 @@ for endcond in [0.0001]:
         comparing_to_ground_truth=True,
         results_file=results_file,
         dataset=args.dataset,
-        method=f"fastdp_{window}_{endcond}_{args.K}",
+        method=f"fastdp_{window}_{maxiter}_{args.K}",
         time_reports=times,
     )
