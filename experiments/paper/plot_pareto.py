@@ -54,7 +54,7 @@ def create_combined_pareto_plots(df):
     df["Total time"] = pd.to_numeric(df["Total time"])
 
     num_plots = df["dataset"].nunique()
-    num_cols = 2
+    num_cols = 3
     num_rows = (num_plots + num_cols - 1) // num_cols
     plot_scaler = 6
 

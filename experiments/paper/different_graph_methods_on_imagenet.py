@@ -14,6 +14,7 @@ run_dpc_ann_configurations(
     num_clusters=1000,
     compare_against_bf=True,
     density_methods=["kth"],
+    graph_types=["HCNNG", "pyNNDescent"],  # Can add Vamana from the other experiments
     Ks=[16],
     results_file_prefix=f"imagenet_different_methods",
 )
