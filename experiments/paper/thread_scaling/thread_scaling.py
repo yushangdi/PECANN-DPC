@@ -1,13 +1,34 @@
 import os
 from pathlib import Path
 import sys
-from paper_utils import get_core_groups
 import multiprocessing
 
-abspath = Path(__file__).resolve().parent.parent
+
+abspath = Path(__file__).resolve().parent.parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 
+
+def _get_siblings(thread_id):
+    with open(
+        f"/sys/devices/system/cpu/cpu{thread_id}/topology/thread_siblings_list"
+    ) as f:
+        return [int(i) for i in f.readline().strip().split(",")]
+
+
+def get_core_groups():
+    all_threads_available = os.sched_getaffinity(0)
+    main_thread_to_all = {}
+    for i in all_threads_available:
+        siblings = _get_siblings(i)
+        if siblings[0] not in main_thread_to_all:
+            main_thread_to_all[siblings[0]] = siblings
+        for s in siblings:
+            if s not in all_threads_available:
+                raise ValueError(
+                    f"Thread {s} not available to process, but is a thread sibling of {i} which is!"
+                )
+    return main_thread_to_all.values()
 
 def run_all_datasets_restrict_threads(current_threads):
     num_threads = len(current_threads)
