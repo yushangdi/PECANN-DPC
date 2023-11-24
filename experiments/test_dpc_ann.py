@@ -96,7 +96,7 @@ def get_configurations_to_run(
                     search_range, search_range, search_range, search_range
                 ):
                     if graph_type in ["pyNNDescent", "HCNNG"] and (
-                        beam_search_construction < 32
+                        beam_search_construction < 16 or max_degree < 16
                     ):
                         continue
 
