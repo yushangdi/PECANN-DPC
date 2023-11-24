@@ -118,7 +118,7 @@ def get_configurations_to_run(
                         "K": K,
                     }
                     if graph_type in ["pyNNDescent", "HCNNG"]:
-                        num_clusters_in_build = 1  # For now just always use 1 cluster, seems to perform the best
+                        num_clusters_in_build = 3  # For now just always use 3 clusters, seems to perform the best
                         command_line["num_clusters"] = num_clusters_in_build
                         # TODO: For now not recording num clusters in graph building because always choosing 1
                         # method += "_" + str(num_clusters_in_build)

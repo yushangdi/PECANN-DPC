@@ -45,6 +45,7 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
             method_group["cluster_ratio"] = (
                 method_group["num_clusters"] / gt_num_clusters[dataset_name]
             )
+            method_group = method_group.sort_values("cluster_ratio")
             ax.plot(
                 method_group["cluster_ratio"],
                 method_group["ARI"],
