@@ -96,10 +96,10 @@ def get_configurations_to_run(
                     search_range, search_range, search_range, search_range
                 ):
                     if graph_type in ["pyNNDescent", "HCNNG"] and (
-                        beam_search_construction < 16
+                        beam_search_construction < 32
                     ):
                         continue
-                    
+
                     method = f"{graph_type}_{max_degree}_{alpha}_{beam_search_construction}_{beam_search_density}_{beam_search_clustering}_{density_method}_{K}"
                     command_line = {
                         "max_degree": max_degree,
