@@ -6,7 +6,7 @@ abspath = Path(__file__).resolve().parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 
-from test_kmeans import run_kmeans
+from test_kmeans import run_kmeans_experiment
 
 for dataset, num_clusters in [
     ("mnist", 10),
@@ -15,4 +15,4 @@ for dataset, num_clusters in [
     ("reddit-clustering", 50),
     ("birds", 525),
 ]:
-    run_kmeans(dataset, prefix="kmeans_pareto")
+    run_kmeans_experiment(dataset, prefix="kmeans_pareto")

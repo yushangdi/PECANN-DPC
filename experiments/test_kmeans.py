@@ -21,7 +21,27 @@ from utils import (
 )
 
 
-def run_kmeans(
+def run_kmeans(data, num_clusters, nredo, niter):
+    built_start_time = time.time()
+    verbose = True
+    d = data.shape[1]
+    kmeans = faiss.Kmeans(d, num_clusters, niter=niter, nredo=nredo, verbose=verbose)
+    kmeans.train(data)
+    built_time = time.time() - built_start_time
+
+    find_clusters_start = time.time()
+    batch_size = 100000
+    clusters = []
+    for start in range(0, len(data), batch_size):
+        batch_x = data[start : start + batch_size]
+        distances = torch.cdist(torch.tensor(batch_x), torch.tensor(kmeans.centroids))
+        clusters += torch.argmin(distances, dim=1).tolist()
+    find_clusters_time = time.time() - find_clusters_start
+
+    return clusters, built_time, find_clusters_time, time.time() - built_start_time
+
+
+def run_kmeans_experiment(
     dataset,
     num_clusters=None,
     nredo_options=list(range(1, 5)),
@@ -43,25 +63,11 @@ def run_kmeans(
         for niter in niter_options:
             if nredo * niter > max_iterations:
                 continue
-            built_start_time = time.time()
-            verbose = True
-            d = x.shape[1]
-            kmeans = faiss.Kmeans(d, num_clusters, niter=niter, verbose=verbose)
-            kmeans.train(x)
-            built_time = time.time() - built_start_time
 
-            find_clusters_start = time.time()
-            batch_size = 100000
-            clusters = []
-            for start in range(0, len(x), batch_size):
-                batch_x = x[start : start + batch_size]
-                distances = torch.cdist(
-                    torch.tensor(batch_x), torch.tensor(kmeans.centroids)
-                )
-                clusters += torch.argmin(distances, dim=1).tolist()
-            find_clusters_time = time.time() - find_clusters_start
+            clusters, built_time, find_clusters_time, total_time = run_kmeans(
+                x, num_clusters, nredo, niter
+            )
 
-            total_time = time.time() - built_start_time
             with open(cluster_result_path, "w") as f:
                 for i in clusters:
                     f.write(str(i) + "\n")
@@ -104,4 +110,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    run_kmeans(args.dataset, args.num_clusters.args.max_iterations)
+    run_kmeans_experiment(args.dataset, args.num_clusters.args.max_iterations)
