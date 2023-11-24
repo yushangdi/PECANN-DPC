@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import sys
 
-abspath = Path(__file__).resolve().parent.parent
+abspath = Path(__file__).resolve().parent.parent.parent
 os.chdir(abspath)
 sys.path.append(str(abspath))
 

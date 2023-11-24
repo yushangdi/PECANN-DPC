@@ -9,7 +9,7 @@ sys.path.append(str(abspath))
 from test_dpc_ann import run_dpc_ann_configurations
 
 # Ks = [4, 8, 16, 32, 64]
-Ks = [4]
+Ks = [4, 8]
 for dataset, num_clusters, param_value in [
     # ("mnist", 10, 32),
     # ("imagenet", 1000, 128),
