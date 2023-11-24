@@ -88,8 +88,16 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
   parlay::parallel_for(0, data_num, [&](size_t i) {
     parlay::sequence<Tvec_point<T> *> start_points;
     start_points.push_back(graph[i]);
+
+    // Use original HNSW beam search instead of ParlayANN if k is small, since
+    // in this case the additional cut heuristic means we don't find the true
+    // neighbors more often.
     auto [pairElts, dist_cmps] =
-        beam_search(graph[i], graph, start_points, beamSizeQ, data_dim, D, K);
+        K < 8 ? beam_search(graph[i], graph, start_points, beamSizeQ, data_dim,
+                            D, K)
+              : beam_search_(graph[i], graph, start_points, beamSizeQ, data_dim,
+                             D, K);
+
     auto [beamElts, visitedElts] = pairElts;
     auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first);
@@ -253,7 +261,8 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
           return dep_ptrs[i].first == data_num;
         });
     auto end = std::chrono::system_clock::now();
-    std::cout << "number: " << unfinished_points.size() << " " << (end - start).count() << std::endl;
+    std::cout << "number: " << unfinished_points.size() << " "
+              << (end - start).count() << std::endl;
   }
   std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
   bruteforce_dependent_point_all(data_num, unfinished_points, points, densities,
