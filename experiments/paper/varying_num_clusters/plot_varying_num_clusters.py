@@ -2,6 +2,13 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+import sys
+
+abspath = Path(__file__).resolve().parent.parent
+sys.path.append(str(abspath))
+from plotting_utils import set_superplot_font_sizes, reset_font_sizes
+
 gt_num_clusters = {
     "mnist": 10,
     "imagenet": 1000,
@@ -13,6 +20,8 @@ gt_num_clusters = {
 
 def plot_ari_by_cluster_offset_mult_figures(csv_path):
     plt.clf()
+    set_superplot_font_sizes()
+
     df = pd.read_csv(csv_path)
     num_datasets = len(gt_num_clusters)
     num_cols = 3
@@ -24,14 +33,13 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
         num_cols,
         figsize=(plot_scaler * num_cols, plot_scaler * num_rows),
         tight_layout=True,
-        sharex=True,
     )
     axes = axes.reshape(-1)
 
     dataset_groups = df.groupby("dataset")
 
     for (dataset_name, dataset_group), ax in zip(dataset_groups, axes):
-        ax.set_title(dataset_name, fontsize=22)
+        ax.set_title(dataset_name)
 
         for method_name, method_group in dataset_group.groupby("method"):
             method_group["cluster_ratio"] = (
@@ -42,19 +50,23 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
                 method_group["ARI"],
                 label=f"{method_name}",
             )
+            ax.axvline(1, c="black", linestyle=":")
+            ax.text(1.1, 0, "Correct number of clusters", rotation=90)
 
     for i in range(num_datasets, num_rows * num_cols):
         axes[i].axis("off")
 
-    plt.suptitle(
-        'Effect of Clustering with the "Wrong" Number of Clusters', fontsize=20
-    )
-    plt.tight_layout()
+    plt.suptitle('Effect of Clustering with the "Wrong" Number of Clusters')
 
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc=(0.72, 0.3), fontsize=18)
+    plt.legend(handles, labels, loc=(0.72, 0.3))
 
+    fig.supxlabel("Cluster Ratio: # Clusters Used / # Clusters in Ground Truth")
+    fig.supylabel("ARI")
+    plt.tight_layout()
     plt.savefig("results/paper/varying_num_clusters_all.pdf")
+
+    reset_font_sizes()
 
 
 def plot_ari_by_cluster_offset_one_figure_ours(csv_path):
@@ -98,6 +110,7 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
     plt.xlabel("Homogeneity")
     plt.ylabel("Completeness")
     plt.legend(title="Dataset")
+    plt.tight_layout()
     plt.savefig("results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf")
 
 

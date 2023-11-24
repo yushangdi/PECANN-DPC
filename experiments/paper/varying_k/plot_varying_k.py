@@ -4,6 +4,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 
+from pathlib import Path
+import sys
+
+abspath = Path(__file__).resolve().parent.parent
+sys.path.append(str(abspath))
+from plotting_utils import set_superplot_font_sizes, reset_font_sizes
+
 
 def plot_time_breakdown(df, dataset, ax):
     time_columns = [
@@ -26,7 +33,7 @@ def plot_time_breakdown(df, dataset, ax):
 
     ax.get_legend().remove()
 
-    ax.set_title(dataset, fontsize=16)
+    ax.set_title(dataset)
 
 
 def plot_ari_vs_cluster_time(df, dataset, ax):
@@ -45,15 +52,16 @@ def plot_ari_vs_cluster_time(df, dataset, ax):
             textcoords="offset points",
             xytext=(5, 5),
             ha="right",
-            fontsize=12,
         )
 
     ax.set_xlabel(x_col)
     ax.set_ylabel(y_col)
-    ax.set_title(dataset, fontsize=16)
+    ax.set_title(dataset)
 
 
 def plot_combined_plots(folder_path):
+    set_superplot_font_sizes()
+
     file_pattern = os.path.join(folder_path, "*_varying_k*.csv")
     csv_files = glob.glob(file_pattern)
 
@@ -88,18 +96,20 @@ def plot_combined_plots(folder_path):
         for i in range(num_plots, num_rows * num_cols):
             axes[i % num_rows][i // num_rows].axis("off")
 
-        plt.suptitle(title, fontsize=20)
-
-        plt.tight_layout()
+        plt.suptitle(title)
 
         handles, labels = axes[0][0].get_legend_handles_labels()
         if is_clustering_time:
-            fig.legend(handles, labels, loc=(0.72, 0.3), fontsize=18)
+            fig.legend(handles, labels, loc=(0.72, 0.25))
         else:
-            fig.legend(handles, labels, loc=(0.68, 0.3), fontsize=18)
+            fig.legend(handles, labels, loc=(0.68, 0.25))
 
         combined_title = "_".join(title.split(" "))
+
+        plt.tight_layout()
         plt.savefig(f"results/paper/combined_{combined_title}.pdf")
+
+    reset_font_sizes()
 
 
 if __name__ == "__main__":

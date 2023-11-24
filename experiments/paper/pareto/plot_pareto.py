@@ -1,8 +1,15 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
-from pathlib import Path
 import glob
+
+
+from pathlib import Path
+import sys
+
+abspath = Path(__file__).resolve().parent.parent
+sys.path.append(str(abspath))
+from plotting_utils import set_superplot_font_sizes, reset_font_sizes
 
 Path("results/graphs").mkdir(parents=True, exist_ok=True)
 
@@ -54,6 +61,7 @@ def plot_pareto(ax, comparison, method, df):
 
 
 def create_combined_pareto_plots(df):
+    set_superplot_font_sizes()
     df.loc[df["method"].str.contains("fastdp"), "Total time"] /= 60
 
     # Because some floats are too long for pandas to do this normally?
@@ -83,24 +91,20 @@ def create_combined_pareto_plots(df):
                 ]
 
                 plot_pareto(current_axis, comparison, method, more_filtered_df)
-                current_axis.set_title(dataset_name, fontsize=16)
-                current_axis.set_xlabel("Clustering Time (s)", fontsize=16)
-                current_axis.set_ylabel("ARI", fontsize=16)
+                current_axis.set_title(dataset_name)
+                current_axis.set_xlabel("Clustering Time (s)")
+                current_axis.set_ylabel("ARI")
 
         for i in range(num_plots, num_rows * num_cols):
             axes[i % num_rows][i // num_rows].axis("off")
 
         handles, labels = axes[0][0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc=(0.68, 0.3), fontsize=18)
+        fig.legend(handles, labels, loc=(0.68, 0.3))
 
         if comparison == "ground truth":
-            plt.suptitle(
-                "Pareto Front of ARI vs. Time, Comparing To Ground Truth", fontsize=20
-            )
+            plt.suptitle("Pareto Front of ARI vs. Time, Comparing To Ground Truth")
         else:
-            plt.suptitle(
-                "Pareto Front of ARI vs. Time, Comparing To Brute Force", fontsize=20
-            )
+            plt.suptitle("Pareto Front of ARI vs. Time, Comparing To Brute Force")
 
         plt.tight_layout()
 
@@ -108,6 +112,7 @@ def create_combined_pareto_plots(df):
             f"results/paper/pareto_frontier_plot_{comparison}.pdf",
             bbox_inches="tight",
         )
+    reset_font_sizes()
 
 
 def main():
