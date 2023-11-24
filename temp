@@ -1,0 +1,54 @@
+DPC: Load data.: 0.0663
+Building graph...
+Medoid ID: 418989
+Starting points num: 63
+Index build 10% complete
+Index build 20% complete
+Index build 30% complete
+Index build 40% complete
+Index build 50% complete
+Index build 60% complete
+Index build 70% complete
+Index build 80% complete
+Index build 90% complete
+Index build 100% complete
+beam search time: total: 65.9878
+bidirect time: total: 0.2107
+prune time: total: 7.1823
+Built index: 73.5900
+Index built with average degree 22.77 and max degree 64
+DPC: stats: 0.0129
+num bruteforce 11469
+number: 701
+number: 21
+bruteforce number: 21
+writing decision graph
+Num. cluster = 51
+Vamana_64_1.1_64_64_64_kth_4 had exit code 0!
+DPC: Load data.: 0.0403
+Building graph...
+Medoid ID: 418989
+Starting points num: 63
+Index build 10% complete
+Index build 20% complete
+Index build 30% complete
+Index build 40% complete
+Index build 50% complete
+Index build 60% complete
+Index build 70% complete
+Index build 80% complete
+Index build 90% complete
+Index build 100% complete
+beam search time: total: 66.2964
+bidirect time: total: 0.2050
+prune time: total: 7.1855
+Built index: 73.9128
+Index built with average degree 22.77 and max degree 64
+DPC: stats: 0.0120
+num bruteforce 557
+number: 586
+number: 28
+bruteforce number: 28
+writing decision graph
+Num. cluster = 50
+Vamana_64_1.1_64_64_64_kth_8 had exit code 0!
