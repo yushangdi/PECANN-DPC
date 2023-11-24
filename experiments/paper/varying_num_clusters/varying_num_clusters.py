@@ -55,7 +55,7 @@ def run_varying_num_clusters_vamana_and_kmeans():
     results_file = "results/cluster_analysis_varying_num_clusters.csv"
     eval_metrics = ["ARI", "homogeneity", "completeness", "recall50", "precision50"]
     with open(results_file, "w") as f:
-        f.write("method,dataset,num_clusters" + ",".join(eval_metrics) + "\n")
+        f.write("method,dataset,num_clusters," + ",".join(eval_metrics) + "\n")
 
     for dataset, num_gt_clusters, vamana_param_value in [
         ("mnist", 10, 32),

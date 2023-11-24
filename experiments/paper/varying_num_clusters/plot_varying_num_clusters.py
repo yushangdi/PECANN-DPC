@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 
 
 def plot_ari_by_cluster_offset(csv_path):
+    plt.cla()
+
     df = pd.read_csv(csv_path)
 
-    grouped_data = df.groupby("dataset")
+    grouped_data = df.groupby(["dataset", "method"])
 
     gt_num_clusters = {
         "mnist": 10,
@@ -16,7 +18,7 @@ def plot_ari_by_cluster_offset(csv_path):
         "birds": 525,
     }
     for name, group in grouped_data:
-        group["cluster_ratio"] = group["num_clusters"] / gt_num_clusters[name]
+        group["cluster_ratio"] = group["num_clusters"] / gt_num_clusters[name[0]]
 
         plt.plot(group["cluster_ratio"], group["ARI"], label=f"{name}")
 
@@ -27,6 +29,27 @@ def plot_ari_by_cluster_offset(csv_path):
     plt.ylabel("ARI")
     plt.legend(title="Dataset")
     plt.savefig("results/paper/varying_num_clusters.pdf")
+
+
+def plot_homogeneity_vs_completeness_pareto(csv_path):
+    plt.cla()
+
+    df = pd.read_csv(csv_path)
+
+    grouped_data = df.groupby(["dataset", "method"])
+
+    for name, group in grouped_data:
+        plt.scatter(
+            group["homogeneity"].to_list() + [1, 0],
+            group["completeness"].to_list() + [0, 1],
+            label=f"{name}",
+        )
+
+    plt.title("Homogeneity vs Completeness Pareto")
+    plt.xlabel("Homogeneity")
+    plt.ylabel("Completeness")
+    plt.legend(title="Dataset")
+    plt.savefig("results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf")
 
 
 if __name__ == "__main__":
@@ -43,3 +66,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     plot_ari_by_cluster_offset(args.csv_path)
+    plot_homogeneity_vs_completeness_pareto(args.csv_path)
