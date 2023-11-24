@@ -54,7 +54,7 @@ def plot_pareto(ax, comparison, method, df):
 
 
 def create_combined_pareto_plots(df):
-    df.loc[df['method'].str.contains('fastdp'), 'Total time'] /= 60
+    df.loc[df["method"].str.contains("fastdp"), "Total time"] /= 60
 
     # Because some floats are too long for pandas to do this normally?
     df["ARI"] = pd.to_numeric(df["ARI"])

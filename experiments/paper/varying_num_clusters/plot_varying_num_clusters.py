@@ -20,6 +20,7 @@ def plot_ari_by_cluster_offset(csv_path):
 
         plt.plot(group["cluster_ratio"], group["ARI"], label=f"{name}")
 
+    plt.title('Effect of Clustering with the "Wrong" Number of Clusters')
     plt.axvline(1, c="black", linestyle=":")
     plt.text(1.1, 0, "Correct number of clusters", rotation=90)
     plt.xlabel("Cluster Ratio: # Clusters Used / # Clusters in Ground Truth")

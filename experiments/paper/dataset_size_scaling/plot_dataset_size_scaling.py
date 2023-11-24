@@ -1,6 +1,9 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
 
 
 def plot_scalability_by_dataset_size(csv_file):
@@ -11,17 +14,24 @@ def plot_scalability_by_dataset_size(csv_file):
     grouped_data = df.groupby("num_clusters")
 
     for name, group in grouped_data:
+        # Linear regression
+        x = np.log(group["dataset_size"]).values.reshape(-1, 1)
+        y = np.log(group["Total time"]).values
+        model = LinearRegression().fit(x, y)
+        k = model.coef_[0]
+
         plt.plot(
             group["dataset_size"],
             group["Total time"],
-            label=f"{name} clusters",
+            label=f"{name} clusters, slope = {k:.2f}",
         )
 
+    plt.title("Clustering Time vs. Dataset Size")
     plt.xlabel("Dataset Size")
-    plt.ylabel("Total Time")
+    plt.ylabel("Clustering Time")
     plt.xscale("log")
     plt.yscale("log")
-    plt.legend(title="Dataset")
+    plt.legend()
     plt.savefig("results/paper/dataset_size_scaling.pdf")
 
 

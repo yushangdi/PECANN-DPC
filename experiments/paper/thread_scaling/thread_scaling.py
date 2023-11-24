@@ -30,6 +30,7 @@ def get_core_groups():
                 )
     return main_thread_to_all.values()
 
+
 def run_all_datasets_restrict_threads(current_threads):
     num_threads = len(current_threads)
     os.sched_setaffinity(0, current_threads)
