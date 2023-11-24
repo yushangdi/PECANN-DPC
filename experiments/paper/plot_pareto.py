@@ -38,17 +38,24 @@ def plot_pareto(ax, comparison, method, df):
     if len(df) == 0:
         return
     x, y = pareto_front(df["Total time"].to_numpy(), df["ARI"].to_numpy())
+
+    display_method = method
+    if method == "fastdp":
+        display_method = "(scaled) fastdp"
+
     ax.plot(
         x,
         y,
         marker="o" if comparison == "ground truth" else "s",
         color=colors[method],
         linestyle="--" if comparison == "ground truth" else "-",
-        label=f"{method} vs. {comparison}",
+        label=f"{display_method} vs. {comparison}",
     )
 
 
 def create_combined_pareto_plots(df):
+    df.loc[df['method'].str.contains('fastdp'), 'Total time'] /= 60
+
     # Because some floats are too long for pandas to do this normally?
     df["ARI"] = pd.to_numeric(df["ARI"])
     df["Total time"] = pd.to_numeric(df["Total time"])
