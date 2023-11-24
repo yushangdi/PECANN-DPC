@@ -54,7 +54,7 @@ def run_all_datasets_restrict_threads(current_threads):
             compare_against_bf=False,
             density_methods=["kth"],
             Ks=[16],
-            results_file_prefix=f"restricted_{dataset}_to_{num_threads}_threads",
+            results_file_prefix=f"restricted_{dataset}_to_{num_threads}_cores",
         )
 
 
@@ -68,11 +68,11 @@ def run_experiment():
     threads = flatten(core_groups)
 
     print(threads)
-    for thread in threads:
-        current_threads.append(thread)
+    for core_group in core_groups:
+        current_threads.append(core_group[0])
         # Neccesary to rerun with just len(current_threads) in [60] and
         # numactl -i all to get the best performance
-        if len(current_threads) in [1, 2, 4, 8, 16, 30, 60]:
+        if len(current_threads) in [1, 2, 4, 8, 15, 30]:
             p = multiprocessing.Process(
                 target=run_all_datasets_restrict_threads, args=(current_threads,)
             )
