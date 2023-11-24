@@ -5,7 +5,7 @@ python3 experiments/paper/pareto/plot_pareto.py /data/scratch/jae/dpc_ann_result
 
 python3 experiments/paper/varying_k/plot_varying_k.py /data/scratch/jae/dpc_ann_results
 
-python3 experiments/paper/thread_scaling/plot_thread_scaling.py /data/scratch/jae/dpc_ann_results/restricted
+python3 experiments/paper/thread_scaling/plot_thread_scaling.py /data/scratch/jae/dpc_ann_results/thread_scaling
 
 python3 experiments/paper/varying_num_clusters/plot_varying_num_clusters.py \
     /data/scratch/jae/dpc_ann_results/cluster_analysis_varying_num_clusters.csv

@@ -71,8 +71,7 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
 
 
 def plot_ari_by_cluster_offset_one_figure_ours(csv_path):
-    plt.clf()
-
+    plt.clf()    
     df = pd.read_csv(csv_path)
 
     grouped_data = df.groupby(["dataset", "method"])
@@ -101,16 +100,19 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
     grouped_data = df.groupby(["dataset", "method"])
 
     for name, group in grouped_data:
+        group = group[group["homogeneity"] != 0]
+        group = group[group["completeness"] != 0]
         plt.scatter(
-            group["homogeneity"].to_list() + [1, 0],
-            group["completeness"].to_list() + [0, 1],
+            group["homogeneity"].to_list(),
+            group["completeness"].to_list(),
             label=f"{name}",
         )
 
-    plt.title("Homogeneity vs Completeness Pareto")
+    plt.title("Homogeneity vs Completeness Pareto, Varying Cluster Ratio")
     plt.xlabel("Homogeneity")
     plt.ylabel("Completeness")
-    plt.legend(title="Dataset")
+    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left", title="Dataset, Method")
+    plt.gcf().set_size_inches(10, 5)
     plt.tight_layout()
     plt.savefig("results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf")
 
