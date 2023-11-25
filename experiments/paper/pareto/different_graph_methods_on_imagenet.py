@@ -12,7 +12,6 @@ run_dpc_ann_configurations(
     "imagenet",
     timeout_s=300,
     num_clusters=1000,
-    compare_against_bf=False,
     density_methods=["kth"],
     graph_types=["HCNNG", "pyNNDescent"],  # Can add Vamana from the other experiments
     Ks=[16],
