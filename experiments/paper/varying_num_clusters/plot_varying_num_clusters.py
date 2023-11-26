@@ -71,7 +71,7 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
 
 
 def plot_ari_by_cluster_offset_one_figure_ours(csv_path):
-    plt.clf()    
+    plt.clf()
     df = pd.read_csv(csv_path)
 
     grouped_data = df.groupby(["dataset", "method"])
