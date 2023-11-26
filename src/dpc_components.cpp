@@ -93,9 +93,9 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
     // in this case the additional cut heuristic means we don't find the true
     // neighbors more often.
     auto [pairElts, dist_cmps] =
-        K < 8 ? beam_search(graph[i], graph, start_points, beamSizeQ, data_dim,
+        K < 8 ? beam_search_(graph[i], graph, start_points, beamSizeQ, data_dim,
                             D, K)
-              : beam_search_(graph[i], graph, start_points, beamSizeQ, data_dim,
+              : beam_search(graph[i], graph, start_points, beamSizeQ, data_dim,
                              D, K);
 
     auto [beamElts, visitedElts] = pairElts;
