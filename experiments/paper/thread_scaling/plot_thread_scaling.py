@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import glob
+import numpy as np
 
 
 def plot_scalability_by_number_of_threads(csv_folder, threads):
@@ -21,12 +22,15 @@ def plot_scalability_by_number_of_threads(csv_folder, threads):
 
     grouped_data = df.groupby("dataset")
 
+    speedups = []
     for name, group in grouped_data:
         group["total_speedup"] = group["Total time"].iloc[0] / group["Total time"]
-
+        speedups.append(group["total_speedup"].to_numpy())
         plt.plot(
             group["num_threads"], group["total_speedup"], label=f"{name}", marker="o"
         )
+    speedups = np.array(speedups)
+    print(np.mean(speedups, axis=0))
 
     if threads:
         plt.title("Clustering Time Speedup vs. Number of Threads")

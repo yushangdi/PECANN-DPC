@@ -6,6 +6,7 @@ import argparse
 
 from pathlib import Path
 import sys
+from adjustText import adjust_text
 
 abspath = Path(__file__).resolve().parent.parent
 sys.path.append(str(abspath))
@@ -39,17 +40,22 @@ def plot_ari_vs_cluster_time(df, dataset, ax):
 
     density_groups = df.groupby("density_method")
 
-    for name, group in density_groups:
-        ax.scatter(group[x_col], group[y_col], label=name)
+    markers = ["<", "x", "v", "o", "P"]
+    for (name, group), marker in zip(density_groups, markers):
+        ax.scatter(group[x_col], group[y_col], label=name, marker=marker, s=150)
 
-    for i, label in enumerate(df["K"]):
-        ax.annotate(
-            label,
-            (df[x_col][i], df[y_col][i]),
-            textcoords="offset points",
-            xytext=(5, 5),
-            ha="right",
+    texts = [
+        ax.text(
+            df[x_col][i],
+            df[y_col][i],
+            df["K"][i],
+            ha="center",
+            va="center",
+            fontsize=18,
         )
+        for i in range(len(df))
+    ]
+    adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle="-", color="black", alpha=0.8))
 
     ax.set_title(dataset)
 
