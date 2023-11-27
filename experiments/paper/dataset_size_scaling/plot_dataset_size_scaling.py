@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
 
 
 def plot_scalability_by_dataset_size(csv_file):

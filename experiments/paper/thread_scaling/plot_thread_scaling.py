@@ -5,7 +5,7 @@ import os
 import glob
 
 
-def plot_scalability_by_number_of_threads(csv_folder):
+def plot_scalability_by_number_of_threads(csv_folder, threads):
     file_pattern = os.path.join(csv_folder, "*_restricted_*.csv")
     csv_files = glob.glob(file_pattern)
 
@@ -28,19 +28,34 @@ def plot_scalability_by_number_of_threads(csv_folder):
             group["num_threads"], group["total_speedup"], label=f"{name}", marker="o"
         )
 
-    plt.title("Clustering Time Speedup vs. Number of Cores (No Hyperthreading)")
+    if threads:
+        plt.title("Clustering Time Speedup vs. Number of Threads")
 
-    plt.xlabel("Number of Cores")
-    plt.ylabel("Speedup")
-    plt.legend(title="Dataset")
+        plt.xlabel("Number of Threads")
+        plt.ylabel("Speedup")
+        plt.legend(title="Dataset")
 
-    plt.axvline(15, c="black", linestyle=":")
-    plt.text(14, 0.75, "One NUMA node", rotation=90)
+        plt.axvline(30, c="black", linestyle=":")
+        plt.text(27.5, 0.75, "One complete NUMA node", rotation=90)
 
-    plt.axvline(30, c="black", linestyle=":")
-    plt.text(29, 0.75, "Two NUMA nodes", rotation=90)
+        plt.axvline(60, c="black", linestyle=":")
+        plt.text(57.5, 0.75, "Two complete NUMA nodes", rotation=90)
 
-    plt.savefig("results/paper/core_scaling.pdf")
+        plt.savefig("results/paper/thread_scaling.pdf")
+    else:
+        plt.title("Clustering Time Speedup vs. Number of Cores (No Hyperthreading)")
+
+        plt.xlabel("Number of Cores")
+        plt.ylabel("Speedup")
+        plt.legend(title="Dataset")
+
+        plt.axvline(15, c="black", linestyle=":")
+        plt.text(14, 0.75, "One NUMA node", rotation=90)
+
+        plt.axvline(30, c="black", linestyle=":")
+        plt.text(29, 0.75, "Two NUMA nodes", rotation=90)
+
+        plt.savefig("results/paper/core_scaling.pdf")
 
 
 if __name__ == "__main__":
@@ -54,6 +69,8 @@ if __name__ == "__main__":
         help="Path to the folder containing the dataset size scaling experiment data",
     )
 
+    parser.add_argument("--threads", action=argparse.BooleanOptionalAction)
+
     args = parser.parse_args()
 
-    plot_scalability_by_number_of_threads(args.folder)
+    plot_scalability_by_number_of_threads(args.folder, args.threads)

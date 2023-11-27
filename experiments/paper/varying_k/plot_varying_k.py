@@ -25,9 +25,6 @@ def plot_time_breakdown(df, dataset, ax):
 
     to_plot.plot.barh(stacked=True, ax=ax)
 
-    ax.set_xlabel("Time (seconds)")
-    ax.set_ylabel("Density Method")
-
     ax.set_yticks(range(len(df)))
     ax.set_yticklabels(df["label_col"])
 
@@ -54,8 +51,6 @@ def plot_ari_vs_cluster_time(df, dataset, ax):
             ha="right",
         )
 
-    ax.set_xlabel(x_col)
-    ax.set_ylabel(y_col)
     ax.set_title(dataset)
 
 
@@ -106,7 +101,15 @@ def plot_combined_plots(folder_path):
 
         combined_title = "_".join(title.split(" "))
 
+        if not is_clustering_time:
+            fig.supxlabel("Clustering Time (s)")
+            fig.supylabel("ARI")
+        else:
+            fig.supxlabel("Time (s)")
+            fig.supylabel("Density Method")
+
         plt.tight_layout()
+
         plt.savefig(f"results/paper/combined_{combined_title}.pdf")
 
     reset_font_sizes()

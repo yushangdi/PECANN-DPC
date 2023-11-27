@@ -30,7 +30,7 @@ def generate_synthetic_data(num_datapoints, num_clusters, d=128, variance=0.05):
     return data, gt
 
 
-abspath = Path(__file__).resolve().parent.parent
+abspath = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(abspath))
 sys.path.append(str(abspath.parent))
 os.chdir(abspath.parent)

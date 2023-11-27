@@ -65,14 +65,17 @@ def run_experiment():
     def flatten(l):
         return [item for sublist in l for item in sublist]
 
-    threads = flatten(core_groups)
+    # Threads experiment:
+    # threads = flatten(core_groups)
 
-    print(threads)
-    for core_group in core_groups:
-        current_threads.append(core_group[0])
+    # Core experiment:
+    threads = [core_group[0] for core_group in core_groups]
+
+    for thread in threads:
+        current_threads.append(thread)
         # Neccesary to rerun with just len(current_threads) in [60] and
         # numactl -i all to get the best performance
-        if len(current_threads) in [1, 2, 4, 8, 15, 30]:
+        if len(current_threads) in [1, 2, 4, 8, 15, 30, 60]:
             p = multiprocessing.Process(
                 target=run_all_datasets_restrict_threads, args=(current_threads,)
             )
