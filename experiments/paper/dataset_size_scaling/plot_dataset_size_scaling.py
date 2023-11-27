@@ -27,7 +27,7 @@ def plot_scalability_by_dataset_size(csv_file):
 
     plt.title("Clustering Time vs. Dataset Size")
     plt.xlabel("Dataset Size")
-    plt.ylabel("Clustering Time")
+    plt.ylabel("Clustering Time (s)")
     plt.xscale("log")
     plt.yscale("log")
     plt.legend()
