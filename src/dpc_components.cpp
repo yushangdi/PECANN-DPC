@@ -94,9 +94,9 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
     // neighbors more often.
     auto [pairElts, dist_cmps] =
         K < 8 ? beam_search_(graph[i], graph, start_points, beamSizeQ, data_dim,
-                            D, K)
+                             D, K)
               : beam_search(graph[i], graph, start_points, beamSizeQ, data_dim,
-                             D, K);
+                            D, K);
 
     auto [beamElts, visitedElts] = pairElts;
     auto less = [&](id_dist a, id_dist b) {
@@ -167,6 +167,12 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
   }
 
   for (int round = 0; round < round_limit; ++round) {
+    // TODO(Any): This is a hacky heuristic for now, it is neccesary because
+    // after L is larger than this the search takes much longer than an
+    // exhaustive search. I found this when doing large synthetic datasets;
+    // basically, with 10^3 clusters and 10^5 points per cluster, searches with
+    // large L for the last 10^3 or so of the points (the centers mostly) became
+    // the bottleneck.
     if (L > 10000) {
       break;
     }
