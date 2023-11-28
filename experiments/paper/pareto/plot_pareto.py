@@ -45,7 +45,7 @@ def plot_pareto(ax, comparison, method, df):
         return
     x, y = pareto_front(df["Total time"].to_numpy(), df["ARI"].to_numpy())
 
-    print(comparison, method, x[-1], y[-1])
+    print(comparison, method, x[-1], y[-1], df["dataset"].iloc[0])
     display_method = method
     if method == "fastdp":
         display_method = "(scaled) fastdp"
