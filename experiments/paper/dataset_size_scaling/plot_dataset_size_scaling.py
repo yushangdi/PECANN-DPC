@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
+plt.rcParams.update({"font.size": 14})
+
 
 def plot_scalability_by_dataset_size(csv_file):
     df = pd.read_csv(csv_file)
@@ -25,12 +27,11 @@ def plot_scalability_by_dataset_size(csv_file):
             label=f"{name} clusters, slope = {k:.2f}",
         )
 
-    plt.title("Clustering Time vs. Dataset Size")
     plt.xlabel("Dataset Size")
     plt.ylabel("Clustering Time (s)")
     plt.xscale("log")
     plt.yscale("log")
-    plt.legend()
+    plt.legend(loc="upper left")
     plt.savefig("results/paper/dataset_size_scaling.pdf")
 
 

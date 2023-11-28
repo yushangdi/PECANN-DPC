@@ -10,7 +10,7 @@ from adjustText import adjust_text
 
 abspath = Path(__file__).resolve().parent.parent
 sys.path.append(str(abspath))
-from plotting_utils import set_superplot_font_sizes, reset_font_sizes
+from plotting_utils import set_superplot_font_sizes, reset_font_sizes, dataset_name_map
 
 
 def plot_time_breakdown(df, dataset, ax):
@@ -31,6 +31,7 @@ def plot_time_breakdown(df, dataset, ax):
 
     ax.get_legend().remove()
 
+    dataset = dataset_name_map[dataset]
     ax.set_title(dataset)
 
 
@@ -57,6 +58,7 @@ def plot_ari_vs_cluster_time(df, dataset, ax):
     ]
     adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle="-", color="black", alpha=0.8))
 
+    dataset = dataset_name_map[dataset]
     ax.set_title(dataset)
 
 
@@ -67,7 +69,7 @@ def plot_combined_plots(folder_path):
     csv_files = glob.glob(file_pattern)
 
     num_plots = len(csv_files)
-    num_cols = 3
+    num_cols = 5
     num_rows = (num_plots + num_cols - 1) // num_cols
     plot_scaler = 6
 
@@ -83,6 +85,7 @@ def plot_combined_plots(folder_path):
             tight_layout=True,
             sharey=is_clustering_time,
         )
+        axes = axes.reshape(-1)
         for i, csv_file in enumerate(csv_files):
             df = pd.read_csv(csv_file)
 
@@ -92,18 +95,15 @@ def plot_combined_plots(folder_path):
             df["density_method"] = df[label_col].str[0]
             dataset = df["dataset"][0]
 
-            plot_method(df, dataset, axes[i % num_rows][i // num_rows])
+            plot_method(df, dataset, axes[i])
 
         for i in range(num_plots, num_rows * num_cols):
-            axes[i % num_rows][i // num_rows].axis("off")
+            axes[i].axis("off")
 
-        plt.suptitle(title)
+        # plt.suptitle(title)
 
-        handles, labels = axes[0][0].get_legend_handles_labels()
-        if is_clustering_time:
-            fig.legend(handles, labels, loc=(0.72, 0.25))
-        else:
-            fig.legend(handles, labels, loc=(0.68, 0.25))
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(1.01, 0.8))
 
         combined_title = "_".join(title.split(" "))
 
@@ -116,7 +116,7 @@ def plot_combined_plots(folder_path):
 
         plt.tight_layout()
 
-        plt.savefig(f"results/paper/combined_{combined_title}.pdf")
+        plt.savefig(f"results/paper/combined_{combined_title}.pdf", bbox_inches="tight")
 
     reset_font_sizes()
 

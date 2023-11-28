@@ -4,6 +4,15 @@ import matplotlib.pyplot as plt
 import os
 import glob
 import numpy as np
+from pathlib import Path
+import sys
+
+abspath = Path(__file__).resolve().parent.parent
+sys.path.append(str(abspath))
+from plotting_utils import dataset_name_map
+
+
+plt.rcParams.update({"font.size": 14})
 
 
 def plot_scalability_by_number_of_threads(csv_folder, threads):
@@ -27,37 +36,36 @@ def plot_scalability_by_number_of_threads(csv_folder, threads):
         group["total_speedup"] = group["Total time"].iloc[0] / group["Total time"]
         speedups.append(group["total_speedup"].to_numpy())
         plt.plot(
-            group["num_threads"], group["total_speedup"], label=f"{name}", marker="o"
+            group["num_threads"],
+            group["total_speedup"],
+            label=f"{dataset_name_map[name]}",
+            marker="o",
         )
     speedups = np.array(speedups)
     print(np.mean(speedups, axis=0))
 
     if threads:
-        plt.title("Clustering Time Speedup vs. Number of Threads")
-
         plt.xlabel("Number of Threads")
         plt.ylabel("Speedup")
-        plt.legend(title="Dataset")
+        plt.legend(title="Dataset", loc="upper left")
 
         plt.axvline(30, c="black", linestyle=":")
-        plt.text(27.5, 0.75, "One complete NUMA node", rotation=90)
+        plt.text(27, 0.75, "One complete NUMA node", rotation=90)
 
         plt.axvline(60, c="black", linestyle=":")
-        plt.text(57.5, 0.75, "Two complete NUMA nodes", rotation=90)
+        plt.text(57, 0.75, "Two complete NUMA nodes", rotation=90)
 
         plt.savefig("results/paper/thread_scaling.pdf")
     else:
-        plt.title("Clustering Time Speedup vs. Number of Cores (No Hyperthreading)")
-
         plt.xlabel("Number of Cores")
         plt.ylabel("Speedup")
-        plt.legend(title="Dataset")
+        plt.legend(title="Dataset", loc="upper left")
 
         plt.axvline(15, c="black", linestyle=":")
-        plt.text(14, 0.75, "One NUMA node", rotation=90)
+        plt.text(13.5, 0.75, "One NUMA node", rotation=90)
 
         plt.axvline(30, c="black", linestyle=":")
-        plt.text(29, 0.75, "Two NUMA nodes", rotation=90)
+        plt.text(28.5, 0.75, "Two NUMA nodes", rotation=90)
 
         plt.savefig("results/paper/core_scaling.pdf")
 

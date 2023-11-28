@@ -7,7 +7,7 @@ import sys
 
 abspath = Path(__file__).resolve().parent.parent
 sys.path.append(str(abspath))
-from plotting_utils import set_superplot_font_sizes, reset_font_sizes
+from plotting_utils import set_superplot_font_sizes, reset_font_sizes, dataset_name_map
 
 gt_num_clusters = {
     "mnist": 10,
@@ -17,6 +17,8 @@ gt_num_clusters = {
     "birds": 525,
 }
 
+alg_name_map = {"Vamana": "PECANN", "kmeans": "k-means"}
+
 
 def plot_ari_by_cluster_offset_mult_figures(csv_path):
     plt.clf()
@@ -24,7 +26,7 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
 
     df = pd.read_csv(csv_path)
     num_datasets = len(gt_num_clusters)
-    num_cols = 3
+    num_cols = 5
     num_rows = (num_datasets + num_cols - 1) // num_cols
     plot_scaler = 6
 
@@ -39,28 +41,29 @@ def plot_ari_by_cluster_offset_mult_figures(csv_path):
     dataset_groups = df.groupby("dataset")
 
     for (dataset_name, dataset_group), ax in zip(dataset_groups, axes):
-        ax.set_title(dataset_name)
-
         for method_name, method_group in dataset_group.groupby("method"):
             method_group["cluster_ratio"] = (
                 method_group["num_clusters"] / gt_num_clusters[dataset_name]
             )
             method_group = method_group.sort_values("cluster_ratio")
+            method_name = alg_name_map[method_name]
             ax.plot(
                 method_group["cluster_ratio"],
                 method_group["ARI"],
                 label=f"{method_name}",
             )
             ax.axvline(1, c="black", linestyle=":")
-            ax.text(1.1, 0, "Correct number of clusters", rotation=90)
+            # ax.text(1.1, 0, "Correct number of clusters", rotation=90)
+
+        dataset_name = dataset_name_map[dataset_name]
+        ax.set_title(dataset_name)
 
     for i in range(num_datasets, num_rows * num_cols):
         axes[i].axis("off")
 
-    plt.suptitle('Effect of Clustering with the "Wrong" Number of Clusters')
-
     handles, labels = axes[0].get_legend_handles_labels()
-    plt.legend(handles, labels, loc=(0.72, 0.3))
+
+    fig.legend(handles, labels, ncol=2, bbox_to_anchor=(0.25, 0.18))
 
     fig.supxlabel("Cluster Ratio: # Clusters Used / # Clusters in Ground Truth")
     fig.supylabel("ARI")
