@@ -51,7 +51,7 @@ if num_clusters is None:
 
 print(f"Clustering with {num_clusters} clusters")
 
-x = np.load(f"data/{args.dataset}/{args.dataset}.npy")
+x = np.load(f"data/{args.dataset}/{args.dataset}.npy").astype("float64")
 make_results_folder(args.dataset)
 cluster_result_path = f"results/{args.dataset}/fastdp.cluster"
 results_file = create_results_file("fastdp_pareto")
