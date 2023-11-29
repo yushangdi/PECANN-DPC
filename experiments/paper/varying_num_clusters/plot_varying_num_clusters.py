@@ -9,6 +9,8 @@ abspath = Path(__file__).resolve().parent.parent
 sys.path.append(str(abspath))
 from plotting_utils import set_superplot_font_sizes, reset_font_sizes, dataset_name_map
 
+plt.rcParams.update({"font.size": 14})
+
 gt_num_clusters = {
     "mnist": 10,
     "imagenet": 1000,
@@ -95,6 +97,25 @@ def plot_ari_by_cluster_offset_one_figure_ours(csv_path):
     plt.savefig("results/paper/varying_num_clusters_vamana.pdf")
 
 
+def pareto_front(x, y):
+    sorted_indices = sorted(range(len(x)), key=lambda k: -x[k])
+    x_sorted = [x[i] for i in sorted_indices]
+    y_sorted = [y[i] for i in sorted_indices]
+
+    pareto_front_x = [x_sorted[0]]
+    pareto_front_y = [y_sorted[0]]
+
+    for i in range(1, len(x_sorted)):
+        if y_sorted[i] > pareto_front_y[-1]:
+            pareto_front_x.append(x_sorted[i])
+            pareto_front_y.append(y_sorted[i])
+
+    return pareto_front_x, pareto_front_y
+
+
+import seaborn as sns
+
+
 def plot_homogeneity_vs_completeness_pareto(csv_path):
     plt.clf()
 
@@ -102,22 +123,28 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
 
     grouped_data = df.groupby(["dataset", "method"])
 
-    for name, group in grouped_data:
+    new_dataset = []
+
+    for (dataset, method), group in grouped_data:
         group = group[group["homogeneity"] != 0]
         group = group[group["completeness"] != 0]
-        plt.scatter(
-            group["homogeneity"].to_list(),
-            group["completeness"].to_list(),
-            label=f"{name}",
-        )
+        xs, ys = group["homogeneity"].to_numpy(), group["completeness"].to_numpy()
+        xs, ys = pareto_front(xs, ys)
+        for x, y in zip(xs, ys):
+            new_dataset.append((dataset, method, x, y))
 
-    plt.title("Homogeneity vs Completeness Pareto, Varying Cluster Ratio")
+    new_dataset = pd.DataFrame(new_dataset, columns=["dataset", "method", "x", "y"])
+    sns.lineplot(
+        new_dataset, x="x", y="y", hue="dataset", style="method", linewidth=2.5
+    )
+
     plt.xlabel("Homogeneity")
     plt.ylabel("Completeness")
-    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left", title="Dataset, Method")
-    plt.gcf().set_size_inches(10, 5)
-    plt.tight_layout()
-    plt.savefig("results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf")
+    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
+    plt.savefig(
+        "results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf",
+        bbox_inches="tight",
+    )
 
 
 if __name__ == "__main__":

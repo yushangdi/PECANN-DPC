@@ -3,6 +3,7 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+import numpy as np
 
 from pathlib import Path
 import sys
@@ -23,6 +24,15 @@ def plot_time_breakdown(df, dataset, ax):
     ]
 
     to_plot = df[time_columns]
+    to_plot_numpy = to_plot.to_numpy()
+    breakdowns = to_plot_numpy / np.sum(to_plot_numpy, axis=1)[:, np.newaxis]
+    dataset = dataset_name_map[dataset]
+    print(
+        f"\\datasetname{{{dataset}}} & {' & '.join(df['label_col'].to_list()[5])} & ({', '.join(['%.3f' % b for b in breakdowns.tolist()[6]])})\\\\"
+    )
+    print(
+        f"\\datasetname{{{dataset}}} & {' & '.join(df['label_col'].to_list()[15])} & ({', '.join(['%.3f' % b for b in breakdowns.tolist()[16]])})\\\\"
+    )
 
     to_plot.plot.barh(stacked=True, ax=ax)
 
@@ -31,7 +41,6 @@ def plot_time_breakdown(df, dataset, ax):
 
     ax.get_legend().remove()
 
-    dataset = dataset_name_map[dataset]
     ax.set_title(dataset)
 
 
@@ -100,10 +109,10 @@ def plot_combined_plots(folder_path):
         for i in range(num_plots, num_rows * num_cols):
             axes[i].axis("off")
 
-        # plt.suptitle(title)
-
         handles, labels = axes[0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(1.01, 0.8))
+        fig.legend(
+            handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.98), ncol=5
+        )
 
         combined_title = "_".join(title.split(" "))
 
