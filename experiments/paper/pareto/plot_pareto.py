@@ -163,14 +163,19 @@ def create_table(df):
     methods = ["Vamana", "fastdp", "BruteForce", "kmeans"]
 
     for dataset_name, dataset_group in dataset_groups:
+        dataset_name = dataset_name_map[dataset_name]
+        print("\midrule")
         for method in methods:
             filtered_df = dataset_group[dataset_group["method"].str.contains(method)]
 
             x, y = pareto_front(
                 filtered_df["Total time"].to_numpy(), filtered_df["ARI"].to_numpy()
             )
+            for i in range(len(y)):
+                if abs(y[i] - y[-1]) < 0.003:
+                    break
 
-            x, y = x[-1], y[-1]
+            x, y = x[i], y[i]
 
             if method == "fastdp":
                 x /= 60

@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 import sys
+import seaborn as sns
+import matplotlib
 
 abspath = Path(__file__).resolve().parent.parent
 sys.path.append(str(abspath))
@@ -113,9 +115,6 @@ def pareto_front(x, y):
     return pareto_front_x, pareto_front_y
 
 
-import seaborn as sns
-
-
 def plot_homogeneity_vs_completeness_pareto(csv_path):
     plt.clf()
 
@@ -134,13 +133,22 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
             new_dataset.append((dataset, method, x, y))
 
     new_dataset = pd.DataFrame(new_dataset, columns=["dataset", "method", "x", "y"])
-    sns.lineplot(
+    g = sns.lineplot(
         new_dataset, x="x", y="y", hue="dataset", style="method", linewidth=2.5
     )
 
+    l = matplotlib.lines.Line2D([0], [0], color="w")
+
+    leg = g.get_legend()
+    _, handles = leg.texts, leg.legend_handles
+    handles = handles[:6] + [l] + [l] + handles[6:]
+    plt.legend(handles=handles, bbox_to_anchor=(1.04, 1), loc="upper left")
+
     plt.xlabel("Homogeneity")
     plt.ylabel("Completeness")
-    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
+
+    plt.plot([], [], " ", label="Extra label on the legend")
+
     plt.savefig(
         "results/paper/varying_num_clusters_homogeneity_vs_completeness.pdf",
         bbox_inches="tight",

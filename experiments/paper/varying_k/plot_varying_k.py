@@ -17,22 +17,24 @@ from plotting_utils import set_superplot_font_sizes, reset_font_sizes, dataset_n
 def plot_time_breakdown(df, dataset, ax):
     time_columns = [
         "Built index time",
+        "Combined density time",
         "Compute dependent points time",
-        "Find knn time",
-        "Compute density time",
         "Find clusters time",
     ]
 
+    df["Combined density time"] = df["Compute density time"] + df["Find knn time"]
     to_plot = df[time_columns]
     to_plot_numpy = to_plot.to_numpy()
     breakdowns = to_plot_numpy / np.sum(to_plot_numpy, axis=1)[:, np.newaxis]
     dataset = dataset_name_map[dataset]
     print(
-        f"\\datasetname{{{dataset}}} & {' & '.join(df['label_col'].to_list()[5])} & ({', '.join(['%.3f' % b for b in breakdowns.tolist()[6]])})\\\\"
+        f"\\datasetname{{{dataset}}} & {df['label_col'].to_list()[5][1]} & {' & '.join(['%.2f' % (b * 100) for b in breakdowns.tolist()[6]])}\\\\"
     )
     print(
-        f"\\datasetname{{{dataset}}} & {' & '.join(df['label_col'].to_list()[15])} & ({', '.join(['%.3f' % b for b in breakdowns.tolist()[16]])})\\\\"
+        f"\\datasetname{{{dataset}}} & {df['label_col'].to_list()[15][1]} & {' & '.join(['%.2f' % (b * 100) for b in breakdowns.tolist()[16]])}\\\\"
     )
+
+    print("\midrule")
 
     to_plot.plot.barh(stacked=True, ax=ax)
 
