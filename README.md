@@ -1,4 +1,4 @@
-# DPC-ANN
+# PECANN: Parallel Efficient Clustering with Approximate Nearest Neighbors
 
 ![example workflow](https://github.com/yushangdi/DPC-ANN/actions/workflows/build-package-and-run-tests.yml/badge.svg)
 
