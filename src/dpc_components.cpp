@@ -88,8 +88,16 @@ compute_knn(parlay::sequence<Tvec_point<T> *> &graph,
   parlay::parallel_for(0, data_num, [&](size_t i) {
     parlay::sequence<Tvec_point<T> *> start_points;
     start_points.push_back(graph[i]);
+
+    // Use original HNSW beam search instead of ParlayANN if k is small, since
+    // in this case the additional cut heuristic means we don't find the true
+    // neighbors more often.
     auto [pairElts, dist_cmps] =
-        beam_search(graph[i], graph, start_points, beamSizeQ, data_dim, D, K);
+        K < 8 ? beam_search_(graph[i], graph, start_points, beamSizeQ, data_dim,
+                             D, K)
+              : beam_search(graph[i], graph, start_points, beamSizeQ, data_dim,
+                            D, K);
+
     auto [beamElts, visitedElts] = pairElts;
     auto less = [&](id_dist a, id_dist b) {
       return a.second < b.second || (a.second == b.second && a.first < b.first);
@@ -151,22 +159,29 @@ compute_dep_ptr(parlay::sequence<Tvec_point<T> *> &data, std::size_t query_id,
   parlay::sequence<Tvec_point<T> *> start_points;
   start_points.push_back(data[query_id]);
 
-  int dep_ptr;
-  double minimum_dist;
+  int dep_ptr = densities.size();
+  double minimum_dist = std::numeric_limits<double>::max();
 
   if (round_limit == -1) {
     round_limit = densities.size(); // effectively no limit on round.
   }
 
   for (int round = 0; round < round_limit; ++round) {
+    // TODO(Any): This is a hacky heuristic for now, it is neccesary because
+    // after L is larger than this the search takes much longer than an
+    // exhaustive search. I found this when doing large synthetic datasets;
+    // basically, with 10^3 clusters and 10^5 points per cluster, searches with
+    // large L for the last 10^3 or so of the points (the centers mostly) became
+    // the bottleneck.
+    if (L > 10000) {
+      break;
+    }
     auto [pairElts, dist_cmps] =
         beam_search<T>(data[query_id], data, start_points, L, data_dim, D);
     auto [beamElts, visitedElts] = pairElts;
 
     double query_density = densities[query_id];
     T *query_ptr = data[query_id]->coordinates.begin();
-    minimum_dist = std::numeric_limits<double>::max();
-    dep_ptr = densities.size();
     for (unsigned i = 0; i < beamElts.size(); i++) {
       const auto [id, dist] = beamElts[i];
       if (id == query_id)
@@ -236,6 +251,7 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
   std::vector<unsigned> num_rounds(
       data_num, L); // the L used when dependent point is found.
   int prev_number = std::numeric_limits<int>::max();
+  auto start = std::chrono::system_clock::now();
   while (unfinished_points.size() > 300 &&
          prev_number > unfinished_points.size()) { // stop if unfinished_points
                                                    // number does not decrease
@@ -250,11 +266,15 @@ std::vector<std::pair<int, double>> compute_dep_ptr(
         parlay::filter(unfinished_points, [&dep_ptrs, &data_num](size_t i) {
           return dep_ptrs[i].first == data_num;
         });
-    std::cout << "number: " << unfinished_points.size() << std::endl;
+    auto end = std::chrono::system_clock::now();
+    std::cout << "number: " << unfinished_points.size() << " "
+              << (end - start).count() << std::endl;
   }
   std::cout << "bruteforce number: " << unfinished_points.size() << std::endl;
   bruteforce_dependent_point_all(data_num, unfinished_points, points, densities,
                                  dep_ptrs, D, data_dim);
+  auto end = std::chrono::system_clock::now();
+  std::cout << "bruteforce done " << (end - start).count() << std::endl;
   return dep_ptrs;
 }
 

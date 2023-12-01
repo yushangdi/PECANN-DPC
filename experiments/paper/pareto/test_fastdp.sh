@@ -1,5 +1,9 @@
 #!/bin/bash
 
+BASEDIR=$(dirname "$0")
+
+cd $BASEDIR/../../
+
 python3 test_fastdp.py mnist --window 20 &
 python3 test_fastdp.py mnist --window 40 &
 python3 test_fastdp.py mnist --window 80 &
