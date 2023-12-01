@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import sys
 import multiprocessing
-
+import argparse
 
 abspath = Path(__file__).resolve().parent.parent.parent
 os.chdir(abspath)
@@ -31,7 +31,7 @@ def get_core_groups():
     return main_thread_to_all.values()
 
 
-def run_all_datasets_restrict_threads(current_threads):
+def run_all_datasets_restrict_threads(current_threads, hyperthreading):
     num_threads = len(current_threads)
     os.sched_setaffinity(0, current_threads)
     os.environ["PARLAY_NUM_THREADS"] = f"{num_threads}"
@@ -54,34 +54,34 @@ def run_all_datasets_restrict_threads(current_threads):
             compare_against_bf=False,
             density_methods=["kth"],
             Ks=[16],
-            results_file_prefix=f"restricted_{dataset}_to_{num_threads}_cores",
+            results_file_prefix=f"restricted_{dataset}_to_{num_threads}_threads_hyper={hyperthreading}",
         )
 
 
-def run_experiment():
-    current_threads = []
+def run_experiment(hyperthreading, num_threads):
     core_groups = get_core_groups()
 
     def flatten(l):
         return [item for sublist in l for item in sublist]
 
     # Threads experiment:
-    # threads = flatten(core_groups)
+    if hyperthreading:
+        threads = flatten(core_groups)
 
-    # Core experiment:
-    threads = [core_group[0] for core_group in core_groups]
+    else:
+        threads = [core_group[0] for core_group in core_groups]
 
-    for thread in threads:
-        current_threads.append(thread)
-        # Neccesary to rerun with just len(current_threads) in [60] and
-        # numactl -i all to get the best performance
-        if len(current_threads) in [1, 2, 4, 8, 15, 30, 60]:
-            p = multiprocessing.Process(
-                target=run_all_datasets_restrict_threads, args=(current_threads,)
-            )
-            p.start()
-            p.join()
+    threads = threads[:num_threads]
+    run_all_datasets_restrict_threads(threads, hyperthreading)
 
 
 if __name__ == "__main__":
-    run_experiment()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('choice', choices=['hyperthreading', 'no_hyperthreading'], help='Choose between an experiment with hyperthreading or no hyperthreading')
+
+    parser.add_argument('num_threads', type=int, help='Number of threads to use.')
+
+    args = parser.parse_args()
+
+    run_experiment(args.choice == "hyperthreading", args.num_threads)
