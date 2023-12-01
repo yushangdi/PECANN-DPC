@@ -22,3 +22,13 @@ Test pip3 installation
 python3 tests/test_python_install.py
 ```
 
+```
+@software{Yu_PECANN_Parallel_Efficient_2023,
+author = {Yu, Shangdi and Engels, Joshua  and Huang, Yihao and Shun, Julian },
+month = dec,
+title = {{PECANN: Parallel Efficient Clustering with Graph-Based Approximate Nearest Neighbor Search}},
+url = {https://github.com/yushangdi/PECANN-DPC/},
+version = {1.0.0},
+year = {2023}
+}
+```
