@@ -16,13 +16,15 @@ from plotting_utils import set_superplot_font_sizes, reset_font_sizes, dataset_n
 
 def plot_time_breakdown(df, dataset, ax):
     time_columns = [
-        "Built index time",
-        "Combined density time",
+        "Build index time",
+        "Compute density time",
         "Compute dependent points time",
         "Find clusters time",
     ]
 
-    df["Combined density time"] = df["Compute density time"] + df["Find knn time"]
+    df["Build index time"] = df["Built index time"]
+
+    df["Compute density time"] = df["Compute density time"] + df["Find knn time"]
     to_plot = df[time_columns]
     to_plot_numpy = to_plot.to_numpy()
     breakdowns = to_plot_numpy / np.sum(to_plot_numpy, axis=1)[:, np.newaxis]
@@ -89,10 +91,11 @@ def plot_combined_plots(folder_path):
         plot_ari_vs_cluster_time,
     ]:
         is_clustering_time = title == "Clustering Time Breakdown"
+        row_multiplier = 2 if title == "ARI vs Clustering Time" else 1
         fig, axes = plt.subplots(
             num_rows,
             num_cols,
-            figsize=(plot_scaler * num_cols, plot_scaler * num_rows),
+            figsize=(plot_scaler * num_cols, plot_scaler * num_rows * row_multiplier),
             tight_layout=True,
             sharey=is_clustering_time,
         )
