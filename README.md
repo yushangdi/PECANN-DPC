@@ -95,16 +95,15 @@ pip3 install .
 
 Our experiments expect each dataset to be in a folder named data/<dataset_name> (if you wish to use another location for disk space reasons, you can store the datasets there and add a simlink to the data folder). A dataset consists of two files: a <dataset_name>.npy file that is a 2D float32 numpy array, where each line is a point in the dataset, and a <dataset_name>.gt text file, where the ith line is a number representing the ground truth clustering for the ith point in the dataset.
 
-All of our datasets can be downloaded from the following google drive link:
-TODO: Insert Link
+All of our datasets can be downloaded from [here]().
 
 You can also generate them as follows:
-- `bin/download_simple_datasets.sh` downloads s2, s3, and the unbalance datasets.
+- `bin/download_simple_datasets.sh` downloads s2, s3, and the unbalance datasets from [here](http://cs.joensuu.fi/sipu/datasets/).
 - `bin/download_mnist.sh` downloads mnist.
-- `python3 data_processors/create_imagenet.py --dataset_path <path to kaggle imagenet download>` creates the ImageNet embedding dataset.
-- `python3 data_processors/create_birds.py --dataset_path <path to kaggle birds download train subset folder>` creates the birds embedding dataset.
-- `python3 data_processors/create_huggingface.py mteb/reddit-clustering` creates the reddit dataset.
-- `python3 data_processors/create_huggingface.py mteb/arxiv-clustering-s2s` creates the arxiv dataset.
+- `python3 data_processors/create_imagenet.py --dataset_path <path to kaggle imagenet download>` creates the ImageNet embedding dataset. [link to kaggle](https://www.kaggle.com/c/imagenet-object-localization-challenge/)
+- `python3 data_processors/create_birds.py --dataset_path <path to kaggle birds download train subset folder>` creates the birds embedding dataset. [link to kaggle](https://www.kaggle.com/datasets/gpiosenka/100-bird-species)
+- `python3 data_processors/embed_huggingface.py --dataset_name mteb/reddit-clustering --download_dir <path to store downloaded data> --data_dir <path to store embedded data>` creates the reddit dataset.
+- `python3 data_processors/embed_huggingface.py mteb/arxiv-clustering-s2s  --download_dir <path to store downloaded data> --data_dir <path to store embedded data>` creates the arxiv dataset.
 
 ### Running Experiments
 
