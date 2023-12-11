@@ -95,7 +95,7 @@ pip3 install .
 
 Our experiments expect each dataset to be in a folder named data/<dataset_name> (if you wish to use another location for disk space reasons, you can store the datasets there and add a simlink to the data folder). A dataset consists of two files: a <dataset_name>.npy file that is a 2D float32 numpy array, where each line is a point in the dataset, and a <dataset_name>.gt text file, where the ith line is a number representing the ground truth clustering for the ith point in the dataset.
 
-All of our datasets can be downloaded from [here]().
+All of our datasets can be downloaded from [here](https://zenodo.org/records/10359671).
 
 You can also generate them as follows:
 - `bin/download_simple_datasets.sh` downloads s2, s3, and the unbalance datasets from [here](http://cs.joensuu.fi/sipu/datasets/).
