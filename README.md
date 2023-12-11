@@ -47,7 +47,7 @@ Below are some additional arguments this function takes, as well as a short desc
 
 
 ### Additional arguments
-Certainly! Here's the modified markdown table without the default value column:
+
 | Argument             | Description                                                                                       |
 |----------------------|---------------------------------------------------------------------------------------------------|
 | data                 | A 2d float32 numpy array.                                                                        |
