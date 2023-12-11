@@ -2,8 +2,6 @@
 
 PECANN is an efficient clustering algorithm for large scale, high dimensional density peaks clustering. This library contains PECANN's fast and parallel C++ implementation, as well as easy to use python bindings.
 
-TODO: PR to delete old code
-
 
 ## Building PECANN
 
