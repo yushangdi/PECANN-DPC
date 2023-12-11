@@ -6,8 +6,8 @@ import time
 import pandas as pd
 from pathlib import Path
 
-download_dir = "/data/scratch/jae/data"
-data_dir = "/data/scratch/jae"
+download_dir = ""
+data_dir = ""
 
 
 class Metadata:
@@ -85,6 +85,11 @@ def embed(dataset_name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset_name")
+    parser.add_argument("download_dir")
+    parser.add_argument("data_dir")
     args = parser.parse_args()
+
+    download_dir = args.download_dir
+    data_dir = args.data_dir
 
     embed(args.dataset_name)
