@@ -53,11 +53,10 @@ Certainly! Here's the modified markdown table without the default value column:
 | Lbuild               | The beam search size to use during the underlying graph index construction (default is 12).      |
 | L                    | The beam search size to use while finding the nearest K neighbors for each point (default is 12).|
 | Lnn                  | The initial beam search size to use when finding dependent points (default is 4).                 |
-| center_finder        | The center finder to use to prune the DPC tree. Options include ProductCenterFinder or ThresholdCenterFinder, which can be constructed from the dpc_ann module.|
-| density_computer    | The density computer to use to compute the density of each point. Options include ProductCenterFinder or ThresholdCenterFinder, which can be constructed from the dpc_ann module.|
+| center_finder        | The center finder to use to prune the DPC tree. Options include ProductCenterFinder or ThresholdCenterFinder, both of which can be directly constructed from the dpc_ann module.|
+| density_computer    | The density computer to use to compute the density of each point. Options include KthDistanceDensityComputer, ExpSquaredDensityComputer, and the NormalizedDensityComputer (among others), all of which can be constructed directly from the dpc_ann module.|
 | output_path          | An optional parameter specifying the path to write the cluster assignment to.                      |
-| decision_graph_path  | An optional parameter specifying the decision graph path to write the decision graph to.          |
-| Lbuild               | Another optional clustering parameter for building.                                               |
+| decision_graph_path  | An optional parameter specifying the path to write the decision graph to.          |
 | max_degree           | The maximum degree of the underlying graph index (default 16).                                    |
 | alpha                | The alpha to use for the underlying graph index, for indices that require it (default 1.2).       |
 | num_clusters         | The number of times to independently reconstruct the underlying graph index, for indices that require this (default 4).|
