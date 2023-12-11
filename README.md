@@ -35,8 +35,10 @@ Below are simple examples for how to run PECANN from python and from the command
 import dpc_ann
 cluster_results = dpc_ann.dpc_numpy(
         center_finder=dpc_ann.ThresholdCenterFinder(dependant_dist_threshold=8.36),
+        density_computer=dpc_ann.KthDistanceDensityComputer(),
         data=data
 )
+# You could also do e.g. center_finder=dpc_ann.ProductCenterFinder(num_clusters=4)
 clusters = clustering_result.clusters # 1 X N numpy array of cluster assignments
 metadata = cluster_results.metadata # Dictionary of runtimes for various parts of the clustering process
 ```
@@ -54,7 +56,7 @@ Certainly! Here's the modified markdown table without the default value column:
 | L                    | The beam search size to use while finding the nearest K neighbors for each point (default is 12).|
 | Lnn                  | The initial beam search size to use when finding dependent points (default is 4).                 |
 | center_finder        | The center finder to use to prune the DPC tree. Options include ProductCenterFinder or ThresholdCenterFinder, both of which can be directly constructed from the dpc_ann module.|
-| density_computer    | The density computer to use to compute the density of each point. Options include KthDistanceDensityComputer, ExpSquaredDensityComputer, and the NormalizedDensityComputer (among others), all of which can be constructed directly from the dpc_ann module.|
+| density_computer    | The density computer to use to compute the density of each point. Options include KthDistanceDensityComputer, ExpSquaredDensityComputer, and the NormalizedDensityComputer (among others), all of which can be constructed directly from the dpc_ann module. Default is KthDistanceDensityComputer. |
 | output_path          | An optional parameter specifying the path to write the cluster assignment to.                      |
 | decision_graph_path  | An optional parameter specifying the path to write the decision graph to.          |
 | max_degree           | The maximum degree of the underlying graph index (default 16).                                    |
