@@ -66,14 +66,14 @@ def run_experiment():
         return [item for sublist in l for item in sublist]
 
     # Threads experiment:
-    # threads = flatten(core_groups)
+    threads = flatten(core_groups)
 
     # Core experiment:
-    threads = [core_group[0] for core_group in core_groups]
+    # threads = [core_group[0] for core_group in core_groups]
 
     for thread in threads:
         current_threads.append(thread)
-        # Neccesary to rerun with just len(current_threads) in [60] and
+        # Necessary to rerun with just len(current_threads) in [60] and
         # numactl -i all to get the best performance
         if len(current_threads) in [1, 2, 4, 8, 15, 30, 60]:
             p = multiprocessing.Process(
