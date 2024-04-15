@@ -21,6 +21,7 @@ colors = {
     "HCNNG": "tab:orange",
     "kmeans": "tab:red",
     "fastdp": "tab:purple",
+    "DBSCAN": "tab:brown"
 }
 
 
@@ -70,7 +71,7 @@ def create_combined_pareto_plots(df):
 
     set_superplot_font_sizes()
 
-    methods = ["Vamana", "kmeans", "fastdp"]
+    methods = ["Vamana", "kmeans", "fastdp", "DBSCAN"]
 
     df.loc[df["method"].str.contains("fastdp"), "Total time"] /= 60
 
@@ -102,7 +103,7 @@ def create_combined_pareto_plots(df):
                 ]
 
                 plot_pareto(current_axis, comparison, method, more_filtered_df)
-                current_axis.set_title(dataset_name)
+            current_axis.set_title(dataset_name)
 
         for i in range(num_plots, num_rows * num_cols):
             axes[i].axis("off")
@@ -191,7 +192,7 @@ def create_table(df):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Plot a pareto frontier of total time vs. AMI"
+        description="Plot a pareto frontier of total time vs. ARI"
     )
     parser.add_argument("folder", type=str, help="Folder to read csv files from.")
     args = parser.parse_args()
@@ -201,6 +202,17 @@ def main():
     brute_force_files = glob.glob(args.folder + "/*brute*.csv")
     csv_files += brute_force_files
     df = pd.concat([pd.read_csv(path) for path in csv_files])
+
+    ## Read DBSCAN files
+    dbscan_files = glob.glob(args.folder + "/*dbscan*.csv")
+    df2 = pd.concat([pd.read_csv(path) for path in dbscan_files])
+    df2["method"] = "DBSCAN"
+    df2["num_threads"] = 30
+    df2["comparison"] = "ground truth"
+    df2.rename(columns={"sklearn_time": "Total time"}, inplace=True)
+
+    df = pd.concat([df, df2])
+
     create_table(df)
     create_imagenet_different_graph_methods(df)
     create_combined_pareto_plots(df)
