@@ -9,7 +9,7 @@ import time
 
 
 
-def plot_neighbor_distance(data, n_neighbors = 50):
+def plot_neighbor_distance(dataset, data, n_neighbors = 50):
 
     # Fit nearest neighbors model
     nbrs = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(data)
@@ -23,10 +23,14 @@ def plot_neighbor_distance(data, n_neighbors = 50):
     plt.xlabel('Distance to 50 Nearest Neighbors')
     plt.ylabel('Density')
     plt.title(f"Distribution of Distance to {n_neighbors} Nearest Neighbors")
-    plt.savefig("fig")
+    plt.savefig(f"fig_{dataset}")
 
 
-dataset = "birds"
+dataset = "mnist"
 data = np.load(f"/home/sy/embeddings/{dataset}/{dataset}.npy").astype("float32")
+# dataset = "unbalance"
+# data = np.loadtxt(f"../data/{dataset}/{dataset}.txt").astype("float32")
+# dataset = "s2"
+# data = np.loadtxt(f"../data/s_datasets/{dataset}.txt").astype("float32")
 
-plot_neighbor_distance(data, 50)
+plot_neighbor_distance(dataset, data, 50)
