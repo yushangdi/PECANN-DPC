@@ -5,7 +5,7 @@ from scipy.spatial.distance import pdist
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 import pandas as pd
-import time
+from collections import Counter
 
 
 
@@ -34,3 +34,11 @@ data = np.load(f"/home/sy/embeddings/{dataset}/{dataset}.npy").astype("float32")
 # data = np.loadtxt(f"../data/s_datasets/{dataset}.txt").astype("float32")
 
 plot_neighbor_distance(dataset, data, 50)
+
+labels = np.loadtxt(f"/home/sy/embeddings/{dataset}/{dataset}.gt").flatten()
+# Count occurrences
+counts = Counter(labels)
+
+# Print the counts
+for item, count in counts.most_common():
+    print(f"{item}: {count}")
