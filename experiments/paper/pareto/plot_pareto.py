@@ -161,13 +161,16 @@ def create_imagenet_different_graph_methods(df):
 def create_table(df):
     df = df[df["comparison"] == "ground truth"]
     dataset_groups = df.groupby("dataset")
-    methods = ["Vamana", "fastdp", "BruteForce", "kmeans"]
+    methods = ["Vamana", "fastdp", "BruteForce", "kmeans", "DBSCAN"]
 
     for dataset_name, dataset_group in dataset_groups:
         dataset_name = dataset_name_map[dataset_name]
         print("\midrule")
         for method in methods:
             filtered_df = dataset_group[dataset_group["method"].str.contains(method)]
+            
+            if filtered_df.empty:
+                continue
 
             x, y = pareto_front(
                 filtered_df["Total time"].to_numpy(), filtered_df["ARI"].to_numpy()
