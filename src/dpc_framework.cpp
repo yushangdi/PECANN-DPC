@@ -69,7 +69,9 @@ ClusteringResult dpc_framework(
   output_metadata["Find knn time"] = t.next_time();
   // Output knn graph
   if (knn_graph_path != "") {
+    std::cout << "writing knn graph\n";
     writeKnnGraphToFile(knn, raw_data.num_data, K + 1, knn_graph_path, true);
+    std::cout << "writing done\n";
   }
   t.next_time();
 
