@@ -417,7 +417,6 @@ TEST_F(SmallDPCFrameworkTest, UFClusterAssignerTest) {
   }
   auto cluster = cluster_assigner(densities, reweighted_densities, noise_pts,
                                   dep_ptrs, centers);
-  // TODO (shangdi): change to test groups instead of actual id
   EXPECT_THAT(cluster, ElementsAre(1, 1, 2, 3, 4, 9, 9, 9, 9, 9));
 }
 
