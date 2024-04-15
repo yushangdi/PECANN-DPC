@@ -40,23 +40,23 @@ import time
 #     "mnist": "MNIST",
 #     "birds": "birds",
 
-dataset = "reddit-clustering"
+dataset = "mnist"
 data = np.load(f"/home/sy/embeddings/{dataset}/{dataset}.npy").astype("float32")
 labels = np.loadtxt(f"/home/sy/embeddings/{dataset}/{dataset}.gt").flatten()
 
 print(dataset, "data loaded")
 
 #"mnist"
-# eps_values = [2, 3, 4, 5, 6, 7, 8]
-# min_samples_values = [1, 2, 3, 4, 5]
+# eps_values = [3, 4, 5, 6, 7, 8, 9]
+# min_samples_values = [1, 2 , 3, 4, 5, 10, 50, 100, 300, 500, 600, 700, 800, 900, 1000, 5000, 6000, 7000, 8000, 9000]
 # birds
 # > 30 too few clusters
 # 5, 10, 15, 20, 25
 # eps_values = [6,7,8,9,11,12,13,14]
-# min_samples_values = [1, 2, 3, 4, 5]
+# min_samples_values = [1, 2, 3, 4, 5, 120, 150, 180, 210, 240, 270]
 # "reddit-clustering"
-eps_values = [0.4, 0.46, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66]
-min_samples_values = [1, 2, 3, 4, 5]
+# eps_values = [0.4, 0.46, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.64, 0.66]
+# min_samples_values = [1, 2, 3, 4, 5]
 
 # Initialize an empty list to store results
 results = []
@@ -90,4 +90,4 @@ results_df = pd.DataFrame(results)
 
 # Print or further analyze the results
 print(results_df)
-results_df.to_csv(f"../results/{dataset}.csv")
+results_df.to_csv(f"../results/{dataset}2.csv")
