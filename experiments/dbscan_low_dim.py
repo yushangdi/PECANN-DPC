@@ -26,8 +26,8 @@ print(dataset, "data loaded")
 
 # S2
 eps_values = range(40000, 70000, 2000)
-min_samples_values = list(range(1, 50, 2))
-# range(100, 150, 2)
+min_samples_values = range(100, 150, 2)
+
 
 
 # Initialize an empty list to store results
