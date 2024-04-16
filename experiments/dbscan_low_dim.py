@@ -21,14 +21,13 @@ print(dataset, "data loaded")
 
 
 # Unblance
-# eps_values = [3000, 5000, 4000, 6000, 10000]
-# min_samples_values = [10, 25, 50, 100]
+# eps_values = list(range(5000, 20000, 1000))
+# min_samples_values = list(range(1, 50, 2))
 
 # S2
-eps_values = [75000, 80000] #,85000, 90000
-min_samples_values = [200, 250, 300, 350]
-for i in range(220, 270):
-   min_samples_values.append(i)
+eps_values = range(40000, 70000, 2000)
+min_samples_values = list(range(1, 50, 2))
+# range(100, 150, 2)
 
 
 # Initialize an empty list to store results
@@ -58,21 +57,22 @@ for eps in eps_values:
                         "time": clustering_time})
         # print(eps, min_samples, ari, clustering_time)
         # print(num_clusters, num_noise)
-        plt.clf()
-        plt.figure(figsize=(10, 6))
-        # Plot points
-        plt.scatter(data[:, 0], data[:, 1], c=clustering, cmap='viridis', s=50, alpha=0.7)
+        if eps == 0 and min_samples == 0:
+            plt.clf()
+            plt.figure(figsize=(10, 6))
+            # Plot points
+            plt.scatter(data[:, 0], data[:, 1], c=clustering, cmap='viridis', s=50, alpha=0.7)
 
-        # Add color bar
-        plt.colorbar(label='Cluster Label')
+            # Add color bar
+            plt.colorbar(label='Cluster Label')
 
-        plt.title(f'DBSCAN Clustering {eps}, {min_samples}')
-        plt.savefig(f'DBSCAN-{eps}-{min_samples}.png')
-        plt.close()
+            plt.title(f'DBSCAN Clustering {eps}, {min_samples}')
+            plt.savefig(f'DBSCAN-{eps}-{min_samples}.png')
+            plt.close()
 
 # Convert results list to DataFrame
 results_df = pd.DataFrame(results)
 
 # Print or further analyze the results
-print(results_df)
+print(results_df.sort_values(by="ARI", ascending=False))
 results_df.to_csv(f"../results/{dataset}.csv")
