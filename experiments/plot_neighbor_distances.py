@@ -6,16 +6,17 @@ from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 import pandas as pd
 from collections import Counter
+import faiss
 
 
+def plot_neighbor_distance(dataset, data, n_neighbors = 50, dimension = 784):
 
-def plot_neighbor_distance(dataset, data, n_neighbors = 50):
-
-    # Fit nearest neighbors model
-    nbrs = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(data)
-
-    # Compute distances and indices of 50 nearest neighbors for each point
-    distances, indices = nbrs.kneighbors(data)
+    # nbrs = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(data)
+    # distances, indices = nbrs.kneighbors(data)
+    index = faiss.IndexFlatL2(dimension)   # build the index
+    index.add(data)                  # add vectors to the index
+    distances, _ = index.search(data, n_neighbors)
+    distances = np.sqrt(distances)
 
     # Plot the distance to the 50 nearest neighbors for each point
     plt.figure(figsize=(10, 6))
@@ -30,11 +31,11 @@ def plot_neighbor_distance(dataset, data, n_neighbors = 50):
     np.savetxt(f"distances_{dataset}.txt", distances)
 
 
-# dataset = "mnist"
-# dimension = 784
+dataset = "mnist"
+dimension = 784
     
-dataset = "reddit-clustering"
-dimension = 1024
+# dataset = "arxiv-clustering-s2s"
+# dimension = 1024
 
 data = np.load(f"/home/sy/embeddings/{dataset}/{dataset}.npy").astype("float32")
 # dataset = "unbalance"
@@ -42,7 +43,7 @@ data = np.load(f"/home/sy/embeddings/{dataset}/{dataset}.npy").astype("float32")
 # dataset = "s2"
 # data = np.loadtxt(f"../data/s_datasets/{dataset}.txt").astype("float32")
 
-plot_neighbor_distance(dataset, data,  2 * dimension - 1)
+plot_neighbor_distance(dataset, data,  2 * dimension - 1, dimension)
 # data, y = make_blobs(n_samples=20, centers=3, n_features=784, random_state=0)
 # plot_neighbor_distance(dataset, data,  3)
 
