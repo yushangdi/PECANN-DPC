@@ -27,8 +27,8 @@ import time
 #     "mnist": "MNIST",
 #     "birds": "birds",
 
-# "unbalance", "s2", 
-datasets = ["mnist", "birds", "arxiv-clustering-s2s", "imangenet", "reddit-clustering"]
+# "unbalance", "s2", "mnist", "birds", "arxiv-clustering-s2s",  "reddit-clustering"
+datasets = ["imagenet"]
 
 for dataset in datasets:
     if dataset == "unbalance":
@@ -58,9 +58,9 @@ for dataset in datasets:
     elif dataset == "arxiv-clustering-s2s":
         eps_values = np.arange(0.32, 0.64, 0.02)
         min_samples_values = np.concatenate((np.arange(2000, 2200, 100), np.arange(1, 5, 1)))
-    elif dataset == "imangenet":
+    elif dataset == "imagenet":
         eps_values = np.arange(14, 34, 2)
-        min_samples_values = np.concatenate((np.arange(2000, 2200, 100), np.arange(1, 5, 1), np.arange(500, 1300, 200)))
+        min_samples_values = np.concatenate((np.arange(1, 5, 1), np.arange(500, 1300, 200), np.arange(2000, 2200, 100)))
     elif dataset == "reddit-clustering":
         eps_values = np.arange(0.4, 0.72, 0.02)
         min_samples_values = np.concatenate((np.arange(2000, 2200, 100), np.arange(1, 5, 1), np.arange(3000, 13000, 1000)))
@@ -93,8 +93,7 @@ for dataset in datasets:
                             'num_noise': num_noise,
                             'ARI': ari,
                             "sklearn_time": clustering_time})
-            # print(eps, min_samples, ari, clustering_time)
-            # print(num_clusters, num_noise)
+            print(eps, min_samples, ari, clustering_time, num_clusters, num_noise)
 
     # Convert results list to DataFrame
     results_df = pd.DataFrame(results)
