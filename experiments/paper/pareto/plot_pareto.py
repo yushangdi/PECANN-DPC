@@ -21,7 +21,7 @@ colors = {
     "HCNNG": "tab:orange",
     "kmeans": "tab:red",
     "fastdp": "tab:purple",
-    "DBSCAN": "tab:brown"
+    "DBSCAN": "tab:cyan"
 }
 
 
@@ -48,8 +48,8 @@ def plot_pareto(ax, comparison, method, df, map_method_name=True):
 
     # print(f"{comparison},{method},{x[-1]},{y[-1]},{df['dataset'].iloc[0]}")
     display_method = method
-    if method == "fastdp":
-        display_method = "(scaled) fastdp"
+    # if method == "fastdp":
+    #     display_method = "(scaled) fastdp"
 
     name_map = {"Vamana": "PECANN", "kmeans": "k-means"}
     if map_method_name:
@@ -73,7 +73,7 @@ def create_combined_pareto_plots(df):
 
     methods = ["Vamana", "kmeans", "fastdp", "DBSCAN"]
 
-    df.loc[df["method"].str.contains("fastdp"), "Total time"] /= 60
+    # df.loc[df["method"].str.contains("fastdp"), "Total time"] /= 60
 
     # Because some floats are too long for pandas to do this normally?
     df["ARI"] = pd.to_numeric(df["ARI"])
@@ -122,6 +122,9 @@ def create_combined_pareto_plots(df):
             fig.legend(
                 handles, labels, ncol=6, loc="upper center", bbox_to_anchor=(0.2, 0.1)
             )
+            axes[0].set_xscale('log')
+            axes[2].set_xscale('log')
+            axes[3].set_xscale('log')
 
         plt.tight_layout()
 
@@ -133,7 +136,7 @@ def create_combined_pareto_plots(df):
 
 
 def create_imagenet_different_graph_methods(df):
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 26})
     methods = ["Vamana", "pyNNDescent", "HCNNG"]
 
     df = df[df["dataset"] == "imagenet"]
@@ -181,9 +184,9 @@ def create_table(df):
 
             x, y = x[i], y[i]
 
-            if method == "fastdp":
-                x /= 60
-                method = "fastdp (scaled)"
+            # if method == "fastdp":
+            #     x /= 60
+            #     method = "fastdp (scaled)"
 
             if method == "Vamana":
                 method = "\\framework"
@@ -207,7 +210,7 @@ def main():
     df = pd.concat([pd.read_csv(path) for path in csv_files])
 
     ## Read DBSCAN files
-    dbscan_files = glob.glob(args.folder + "/*dbscan*.csv")
+    dbscan_files = glob.glob(args.folder + "/*dbscan_c_*.csv")
     df2 = pd.concat([pd.read_csv(path) for path in dbscan_files])
     df2["method"] = "DBSCAN"
     df2["num_threads"] = 30
@@ -216,7 +219,7 @@ def main():
 
     df = pd.concat([df, df2])
 
-    create_table(df)
+    # create_table(df)
     create_imagenet_different_graph_methods(df)
     create_combined_pareto_plots(df)
 

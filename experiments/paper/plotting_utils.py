@@ -2,7 +2,7 @@ import matplotlib as plt
 
 
 def set_superplot_font_sizes():
-    SMALL_SIZE = 20
+    SMALL_SIZE = 26
     MEDIUM_SIZE = 26
     BIGGER_SIZE = 30
 
