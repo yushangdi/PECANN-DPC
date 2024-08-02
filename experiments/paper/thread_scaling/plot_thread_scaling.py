@@ -12,8 +12,8 @@ sys.path.append(str(abspath))
 from plotting_utils import dataset_name_map
 
 
-plt.rcParams.update({"font.size": 14})
-
+plt.rcParams.update({"font.size": 25})
+plt.figure(figsize=(14, 6))
 
 def plot_scalability_by_number_of_threads(csv_folder, threads):
     file_pattern = os.path.join(csv_folder, "*_restricted_*.csv")
@@ -45,9 +45,10 @@ def plot_scalability_by_number_of_threads(csv_folder, threads):
     print(np.mean(speedups, axis=0))
 
     if threads:
-        plt.xlabel("Number of Threads")
-        plt.ylabel("Speedup")
-        plt.legend(title="Dataset", loc="upper left")
+        plt.xlabel("Number of Threads", fontsize=29)
+        plt.ylabel("Speedup", fontsize=29)
+        plt.legend(title="Dataset", loc="right", ncol=1, bbox_to_anchor=(1.5, 0.5)) # l
+        plt.xticks([1, 8, 16, 30, 60])
 
         plt.axvline(30, c="black", linestyle=":")
         plt.text(27, 0.75, "One complete NUMA node", rotation=90)
@@ -55,6 +56,10 @@ def plot_scalability_by_number_of_threads(csv_folder, threads):
         plt.axvline(60, c="black", linestyle=":")
         plt.text(57, 0.75, "Two complete NUMA nodes", rotation=90)
 
+        plt.tight_layout()
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        # plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.1)
         plt.savefig("results/paper/thread_scaling.pdf")
     else:
         plt.xlabel("Number of Cores")

@@ -117,6 +117,7 @@ def pareto_front(x, y):
 
 def plot_homogeneity_vs_completeness_pareto(csv_path):
     plt.clf()
+    plt.rcParams.update({"font.size": 18})
 
     df = pd.read_csv(csv_path)
 
@@ -144,8 +145,8 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
     handles = handles[:6] + [l] + [l] + handles[6:]
     plt.legend(handles=handles, bbox_to_anchor=(1.04, 1), loc="upper left")
 
-    plt.xlabel("Homogeneity")
-    plt.ylabel("Completeness")
+    plt.xlabel("Homogeneity", fontsize=20)
+    plt.ylabel("Completeness", fontsize=20)
 
     plt.plot([], [], " ", label="Extra label on the legend")
 
@@ -169,5 +170,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     plot_homogeneity_vs_completeness_pareto(args.csv_path)
-    plot_ari_by_cluster_offset_one_figure_ours(args.csv_path)
-    plot_ari_by_cluster_offset_mult_figures(args.csv_path)
+    # plot_ari_by_cluster_offset_one_figure_ours(args.csv_path)
+    # plot_ari_by_cluster_offset_mult_figures(args.csv_path)
