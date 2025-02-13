@@ -45,7 +45,7 @@ def plot_scalability_by_number_of_threads(csv_folder, threads):
     print(np.mean(speedups, axis=0))
 
     if threads:
-        plt.xlabel("Number of Threads", fontsize=29)
+        plt.xlabel("Number of Hyper-threads", fontsize=29)
         plt.ylabel("Speedup", fontsize=29)
         plt.legend(title="Dataset", loc="right", ncol=1, bbox_to_anchor=(1.5, 0.5)) # l
         plt.xticks([1, 8, 16, 30, 60])

@@ -141,9 +141,19 @@ def plot_homogeneity_vs_completeness_pareto(csv_path):
     l = matplotlib.lines.Line2D([0], [0], color="w")
 
     leg = g.get_legend()
-    _, handles = leg.texts, leg.legend_handles
+    
+    for t in leg.texts:
+        current_label = t.get_text()
+        if current_label == 'arxiv-clustering-s2s':
+            t.set_text('arxiv')
+        elif current_label == 'reddit-clustering':
+            t.set_text('reddit')
+    
+    texts, handles = leg.texts, leg.legend_handles
+    label_texts = [t.get_text() for t in texts]
     handles = handles[:6] + [l] + [l] + handles[6:]
-    plt.legend(handles=handles, bbox_to_anchor=(1.04, 1), loc="upper left")
+    label_texts = label_texts[:6] + ["", ""] + label_texts[6:]
+    plt.legend(handles=handles, labels=label_texts, bbox_to_anchor=(1.04, 1), loc="upper left")
 
     plt.xlabel("Homogeneity", fontsize=20)
     plt.ylabel("Completeness", fontsize=20)
